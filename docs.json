@@ -22,40 +22,38 @@
     "name": "Start Free",
     "url": "https://app.changeguard.ai"
   },
-  "tabs": [
-    {
-      "name": "API Reference",
-      "url": "api-reference"
-    }
-  ],
   "navigation": {
-    "Getting Started": [
-      "introduction",
-      "quickstart",
-      "how-it-works"
-    ],
-    "Agent": [
-      "agent/installation",
-      "agent/configuration",
-      "agent/troubleshooting"
-    ],
-    "Platform": [
-      "platform/csc-score",
-      "platform/argocd",
-      "platform/notifications",
-      "platform/export"
-    ],
-    "Security": [
-      "security/architecture",
-      "security/api-keys"
-    ],
-    "API Reference": [
-      "api-reference/overview",
-      "api-reference/authentication",
-      "api-reference/ingest",
-      "api-reference/validate",
-      "api-reference/clusters",
-      "api-reference/score-history"
+    "tabs": [
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": ["introduction", "quickstart", "how-it-works"]
+          },
+          {
+            "group": "Agent",
+            "pages": ["agent/installation", "agent/configuration", "agent/troubleshooting"]
+          },
+          {
+            "group": "Platform",
+            "pages": ["platform/csc-score", "platform/argocd", "platform/notifications", "platform/export"]
+          },
+          {
+            "group": "Security",
+            "pages": ["security/architecture", "security/api-keys"]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "API Reference",
+            "pages": ["api-reference/overview", "api-reference/authentication", "api-reference/ingest", "api-reference/validate", "api-reference/clusters", "api-reference/score-history"]
+          }
+        ]
+      }
     ]
   },
   "footerSocials": {
