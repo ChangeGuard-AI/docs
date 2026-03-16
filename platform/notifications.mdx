@@ -1,0 +1,51 @@
+---
+title: Notifications
+description: "Slack, Teams, and webhook alerts"
+---
+
+## Setup
+
+Go to **Notification Channels** in the dashboard sidebar to add a webhook.
+
+### Slack
+
+1. Create a Slack webhook at [api.slack.com/messaging/webhooks](https://api.slack.com/messaging/webhooks)
+2. In ChangeGuard, click **Add Channel** → type: `slack`, paste the webhook URL
+
+### Microsoft Teams
+
+1. Create an Incoming Webhook connector in your Teams channel
+2. In ChangeGuard, click **Add Channel** → type: `teams`, paste the webhook URL
+
+### Generic Webhook
+
+Any endpoint that accepts JSON POST requests. ChangeGuard sends:
+
+```json
+{
+  "event": "Score Drop",
+  "title": "Cluster production CSC score dropped to 42 (threshold: 70)",
+  "detail": "5 active risks detected",
+  "source": "changeguard",
+  "timestamp": "2026-03-16T12:00:00Z"
+}
+```
+
+## Alert Rules
+
+Create rules that trigger notifications on specific conditions:
+
+| Condition | Description |
+|-----------|-------------|
+| `score_drop` | CSC score falls below a threshold |
+| `degraded_app` | Deployments with zero available replicas |
+
+A catch-all alert fires when any cluster's CSC score drops below 50.
+
+## Managing Channels
+
+- **List:** `GET /api/notifications/channels`
+- **Create:** `POST /api/notifications/channels`
+- **Delete:** `DELETE /api/notifications/channels`
+
+All operations require operator role or higher.

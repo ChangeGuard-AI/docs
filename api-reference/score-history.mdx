@@ -1,0 +1,63 @@
+---
+title: Score History
+description: "Query historical CSC scores"
+---
+
+## Get Score History
+
+```bash
+GET /api/score-history?clusterId=production
+Authorization: Bearer TOKEN
+```
+
+**Response:**
+```json
+[
+  {
+    "timestamp": "2026-03-16T12:00:00Z",
+    "score": 87,
+    "nodes": 3,
+    "pods": 24,
+    "risks": 2
+  },
+  {
+    "timestamp": "2026-03-16T12:00:10Z",
+    "score": 87,
+    "nodes": 3,
+    "pods": 24,
+    "risks": 2
+  }
+]
+```
+
+Returns up to 8,640 data points (24 hours at 10-second intervals). History is persisted in PostgreSQL and survives backend restarts.
+
+## Export as CSV
+
+```bash
+GET /api/score-history?clusterId=production&format=csv
+Authorization: Bearer TOKEN
+```
+
+**Response:**
+```csv
+timestamp,score,nodes,pods,risks
+2026-03-16T12:00:00Z,87,3,24,2
+2026-03-16T12:00:10Z,87,3,24,2
+```
+
+## Full Cluster Export
+
+```bash
+GET /api/export?clusterId=production&format=csv
+Authorization: Bearer TOKEN
+```
+
+Exports a complete security posture report including deployments, pods, risks, and nodes.
+
+```bash
+GET /api/export?clusterId=production&format=json
+Authorization: Bearer TOKEN
+```
+
+JSON format includes structured data suitable for ingestion into SIEM or compliance tools.

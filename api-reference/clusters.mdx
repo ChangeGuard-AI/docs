@@ -1,0 +1,54 @@
+---
+title: Clusters
+description: "List and query cluster data"
+---
+
+## List Clusters
+
+```bash
+GET /api/clusters
+Authorization: Bearer TOKEN
+```
+
+**Response:**
+```json
+[
+  {
+    "id": "production",
+    "name": "production",
+    "provider": "EKS",
+    "status": "connected",
+    "region": "us-east-1",
+    "cscScore": 87,
+    "pods": 24,
+    "nodes": 3,
+    "risks": 2
+  }
+]
+```
+
+## Get Cluster Snapshot
+
+```bash
+GET /api/cluster?id=production
+Authorization: Bearer TOKEN
+```
+
+Returns the full cluster snapshot including pods, deployments, nodes, events, risks, services, ingresses, and all workload types.
+
+## Cluster Slots
+
+```bash
+GET /api/cluster-slots
+Authorization: Bearer TOKEN
+```
+
+Returns how many clusters are used vs your plan limit:
+
+```json
+{
+  "used": 3,
+  "max": 10,
+  "plan": "professional"
+}
+```

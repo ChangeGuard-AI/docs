@@ -1,0 +1,51 @@
+---
+title: CSC Score
+description: "Understanding the Change Safety Confidence score"
+---
+
+## Overview
+
+The CSC score is calculated on every agent push (every 10 seconds by default). It evaluates four categories weighted to reflect deployment risk.
+
+## Categories
+
+### Policy Compliance (40 points)
+
+Checks every pod and deployment for:
+- Resource limits and requests defined
+- Liveness and readiness probes configured
+- Security context (non-root, read-only filesystem, capabilities dropped)
+- Image pull policy and tag specificity (no `latest` tags)
+
+### Runtime Signals (28 points)
+
+Detects active problems:
+- CrashLoopBackOff pods
+- OOM kills
+- High restart counts (>5)
+- ImagePullBackOff
+- Pending pods
+
+### Historical Stability (17 points)
+
+Tracks recent deployment changes:
+- Image updates in the last 5 minutes
+- Scale changes
+- Rollouts in progress
+- Rollback frequency
+
+### Cluster Health (15 points)
+
+Node-level health:
+- Node Ready/NotReady status
+- Memory and CPU pressure conditions
+- Disk pressure
+- Available capacity vs requested
+
+## Custom Policies
+
+Create custom scoring rules in **Policy Engine** to enforce your organization's standards. Custom policies add or subtract points from the CSC score when conditions match.
+
+## Score History
+
+Score history is persisted in PostgreSQL and survives backend restarts. View trends over days, weeks, or months in the Score History view. Export as CSV for compliance reporting.

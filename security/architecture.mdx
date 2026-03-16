@@ -1,0 +1,60 @@
+---
+title: Security Architecture
+description: "How ChangeGuard protects your data"
+---
+
+## Data Flow
+
+```
+Agent (your cluster) → TLS 1.2+ → ALB → Backend → PostgreSQL (RDS)
+```
+
+- **In transit:** All data encrypted via TLS 1.2+ (enforced in agent HTTP transport)
+- **At rest:** RDS encryption enabled (AES-256, AWS-managed keys)
+- **API keys:** bcrypt hashed before storage — plaintext never stored
+
+## Agent Security
+
+The agent runs with minimal privileges:
+
+- **Read-only access** — never writes to your cluster
+- **Non-root** — runs as UID 1000
+- **Read-only filesystem** — no writable volumes
+- **All capabilities dropped** — `drop: ["ALL"]`
+- **No privilege escalation** — `allowPrivilegeEscalation: false`
+- **Outbound only** — connects to `api.changeguard.ai:443`, no inbound ports
+
+## What the Agent Collects
+
+| Collected | Not Collected |
+|-----------|--------------|
+| Pod names, status, restarts | Secret values |
+| Deployment names, replica counts | ConfigMap data |
+| Node names, status, resource usage | Application environment variables |
+| Kubernetes events | PersistentVolume data contents |
+| Container images and tags | Network traffic |
+| ArgoCD application sync status | Application source code |
+| Pod log lines (configurable) | Credentials or tokens |
+
+## Tenant Isolation
+
+Every API request is scoped to a tenant via API key or auth token. The backend enforces tenant boundaries on every handler — clusters, score history, ArgoCD instances, audit logs, and notifications are all filtered by tenant ID.
+
+## Network Requirements
+
+The agent needs outbound HTTPS to one endpoint:
+
+```
+api.changeguard.ai:443
+```
+
+No inbound connectivity required. Compatible with private clusters that allow egress.
+
+## Infrastructure
+
+- **Compute:** AWS EKS (us-east-1)
+- **Database:** AWS RDS PostgreSQL with encryption at rest
+- **Load balancer:** AWS ALB with ACM-managed TLS certificate
+- **WAF:** AWS WAF with managed rule sets (agent paths excluded from body inspection)
+- **DNS:** AWS Route 53
+- **Agent distribution:** AWS ECR Public

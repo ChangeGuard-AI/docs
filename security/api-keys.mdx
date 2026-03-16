@@ -1,0 +1,64 @@
+---
+title: API Keys
+description: "Managing API key authentication"
+---
+
+## Overview
+
+API keys authenticate agents and CI/CD integrations. Keys start with `cg_` and are bcrypt-hashed before storage — ChangeGuard never stores plaintext keys.
+
+## Creating Keys
+
+**Dashboard:** Go to **Integrations → API Keys → Create Key**
+
+**API:**
+```bash
+curl -X POST https://api.changeguard.ai/api/keys \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Production Agent", "scope": "agent"}'
+```
+
+<Warning>
+  The full key is returned only once at creation. Store it securely — you cannot retrieve it later.
+</Warning>
+
+## Scopes
+
+| Scope | Permissions |
+|-------|------------|
+| `agent` | Push snapshots (`/ingest`), push logs (`/ingest/logs`), ArgoCD discovery |
+| `cicd` | Deployment validation (`/api/validate`) |
+| `full` | All API access |
+
+## How Authentication Works
+
+1. Agent sends `X-API-Key: cg_your_key_here` header
+2. Backend extracts the first 10 characters as the prefix
+3. Looks up the key by prefix in the database
+4. Verifies the full key against the bcrypt hash
+5. Sets the tenant context from the key's tenant ID
+
+The tenant is derived from the API key — agents don't need to know their tenant ID.
+
+## Revoking Keys
+
+**Dashboard:** Integrations → click **Revoke** on the key
+
+**API:**
+```bash
+curl -X DELETE https://api.changeguard.ai/api/keys \
+  -H "Authorization: Bearer TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"key_id": "cg_abcd1234"}'
+```
+
+Revoked keys stop working immediately.
+
+## Key Rotation
+
+1. Create a new key
+2. Update the agent secret with the new key
+3. Restart the agent
+4. Verify pushes succeed with the new key
+5. Revoke the old key
