@@ -1,60 +1,71 @@
 ---
 title: Security Architecture
-description: "How ChangeGuard protects your data"
+description: "How ChangeGuard protects your clusters and data"
 ---
+
+## Overview
+
+ChangeGuard is designed with a zero-trust, outbound-only architecture. The agent runs inside your cluster with read-only access and pushes encrypted metadata to our backend. There is never any inbound access to your infrastructure.
 
 ## Data Flow
 
 ```
-Agent (your cluster) → TLS 1.2+ → ALB → Backend → PostgreSQL (RDS)
+Your Cluster                              ChangeGuard Cloud
+┌──────────────────────┐                 ┌──────────────────────────┐
+│  Agent (Go binary)   │                 │  ALB (TLS termination)   │
+│  Read-only RBAC      │── HTTPS/TLS ──→│  WAF (managed rules)     │
+│  Non-root container  │   1.2+ only     │  Backend (EKS)           │
+│  No inbound ports    │   Gzip + API    │  PostgreSQL (RDS)        │
+│                      │   Key auth      │  AES-256 at rest         │
+└──────────────────────┘                 └──────────────────────────┘
 ```
 
-- **In transit:** All data encrypted via TLS 1.2+ (enforced in agent HTTP transport)
-- **At rest:** RDS encryption enabled (AES-256, AWS-managed keys)
-- **API keys:** bcrypt hashed before storage — plaintext never stored
+Every component in this chain enforces encryption:
 
-## Agent Security
-
-The agent runs with minimal privileges:
-
-- **Read-only access** — never writes to your cluster
-- **Non-root** — runs as UID 1000
-- **Read-only filesystem** — no writable volumes
-- **All capabilities dropped** — `drop: ["ALL"]`
-- **No privilege escalation** — `allowPrivilegeEscalation: false`
-- **Outbound only** — connects to `api.changeguard.ai:443`, no inbound ports
-
-## What the Agent Collects
-
-| Collected | Not Collected |
-|-----------|--------------|
-| Pod names, status, restarts | Secret values |
-| Deployment names, replica counts | ConfigMap data |
-| Node names, status, resource usage | Application environment variables |
-| Kubernetes events | PersistentVolume data contents |
-| Container images and tags | Network traffic |
-| ArgoCD application sync status | Application source code |
-| Pod log lines (configurable) | Credentials or tokens |
-
-## Tenant Isolation
-
-Every API request is scoped to a tenant via API key or auth token. The backend enforces tenant boundaries on every handler — clusters, score history, ArgoCD instances, audit logs, and notifications are all filtered by tenant ID.
+- **Agent → Backend:** TLS 1.2+ enforced in the agent's HTTP transport configuration. The agent will not downgrade to plain HTTP.
+- **ALB:** AWS-managed TLS certificate via ACM. HTTP requests on port 80 receive a 301 redirect to HTTPS.
+- **Backend → Database:** PostgreSQL connections use `sslmode=require`. All queries are encrypted in transit.
+- **Database at rest:** AES-256 encryption via AWS-managed keys on the RDS instance.
 
 ## Network Requirements
 
-The agent needs outbound HTTPS to one endpoint:
+The agent needs outbound HTTPS access to a single endpoint:
 
 ```
 api.changeguard.ai:443
 ```
 
-No inbound connectivity required. Compatible with private clusters that allow egress.
+No inbound connectivity is required. No LoadBalancer, Ingress, or NodePort is created. The agent is compatible with private clusters, air-gapped environments with egress proxies, and clusters behind corporate firewalls — as long as outbound HTTPS to our API is permitted.
 
 ## Infrastructure
 
-- **Compute:** AWS EKS (us-east-1)
-- **Database:** AWS RDS PostgreSQL with encryption at rest
-- **Load balancer:** AWS ALB with ACM-managed TLS certificate
-- **WAF:** AWS WAF with managed rule sets (agent paths excluded from body inspection)
-- **DNS:** AWS Route 53
-- **Agent distribution:** AWS ECR Public
+| Component | Service | Details |
+|-----------|---------|---------|
+| Compute | AWS EKS | Dedicated namespace, private cluster |
+| Database | AWS RDS PostgreSQL | Encryption at rest, SSL connections |
+| Load Balancer | AWS ALB | ACM-managed TLS, HTTP→HTTPS redirect |
+| WAF | AWS WAF | Managed rule sets, rate limiting |
+| DNS | AWS Route 53 | DNSSEC-ready |
+| Agent Distribution | AWS ECR Public | Signed container images |
+| Security Headers | HSTS, CSP, X-Frame-Options | Enforced on all dashboard responses |
+
+## Multi-Tenant Isolation
+
+Every API request is scoped to a tenant through the authenticated API key or session token. The backend enforces tenant boundaries at the middleware layer — before any handler logic runs.
+
+Isolation is verified on every data path: clusters, snapshots, score history, ArgoCD instances, audit logs, notifications, policies, suppressions, integration configs, API keys, and team members.
+
+<Info>
+  Tenants cannot access, query, or infer the existence of other tenants' data. There is no shared namespace or cross-tenant aggregation.
+</Info>
+
+## SSRF Protection
+
+All outbound webhook URLs (Slack, Teams, notification channels) are validated before the backend makes any HTTP request:
+
+- Must use HTTPS (HTTP rejected)
+- Private IP ranges blocked (10.x, 172.16-31.x, 192.168.x)
+- Loopback and link-local addresses blocked (127.x, 169.254.x, localhost)
+- Cloud metadata endpoints blocked (169.254.169.254, metadata.google)
+
+This prevents malicious webhook configurations from being used to probe internal networks.

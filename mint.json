@@ -1,0 +1,99 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "ChangeGuard",
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#00FFA3",
+    "light": "#00FFA3",
+    "dark": "#00D98F",
+    "anchors": {
+      "from": "#00FFA3",
+      "to": "#00D98F"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "Dashboard",
+      "url": "https://app.changeguard.ai"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Start Free",
+    "url": "https://app.changeguard.ai"
+  },
+  "tabs": [
+    {
+      "name": "API Reference",
+      "url": "api-reference"
+    }
+  ],
+  "anchors": [
+    {
+      "name": "Website",
+      "icon": "globe",
+      "url": "https://changeguard.ai"
+    },
+    {
+      "name": "Contact",
+      "icon": "envelope",
+      "url": "mailto:support@changeguard.ai"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Getting Started",
+      "pages": [
+        "introduction",
+        "quickstart",
+        "how-it-works"
+      ]
+    },
+    {
+      "group": "Agent",
+      "pages": [
+        "agent/installation",
+        "agent/configuration",
+        "agent/troubleshooting"
+      ]
+    },
+    {
+      "group": "Platform",
+      "pages": [
+        "platform/csc-score",
+        "platform/argocd",
+        "platform/notifications",
+        "platform/export"
+      ]
+    },
+    {
+      "group": "Security",
+      "pages": [
+        "security/architecture",
+        "security/agent-security",
+        "security/data-handling",
+        "security/authentication",
+        "security/api-keys",
+        "security/compliance"
+      ]
+    },
+    {
+      "group": "API Reference",
+      "pages": [
+        "api-reference/overview",
+        "api-reference/authentication",
+        "api-reference/ingest",
+        "api-reference/validate",
+        "api-reference/clusters",
+        "api-reference/score-history"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "website": "https://changeguard.ai",
+    "linkedin": "https://linkedin.com/company/changeguard"
+  }
+}

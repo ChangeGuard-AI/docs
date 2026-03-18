@@ -1,0 +1,67 @@
+---
+title: Authentication & Access Control
+description: "Sessions, passwords, roles, and rate limiting"
+---
+
+## Dashboard Authentication
+
+Users authenticate with email and password at `app.changeguard.ai`. Passwords are hashed with **bcrypt** (cost factor 10) before storage.
+
+### Password Requirements
+
+All passwords — whether set during signup, password change, or team member creation — must meet these requirements:
+
+- Minimum 8 characters
+- At least one uppercase letter
+- At least one lowercase letter
+- At least one digit
+- Not on the common password blocklist (e.g., `password1`, `admin123`, `qwerty12`)
+
+### Sessions
+
+- Sessions use cryptographically random tokens (256-bit)
+- Tokens expire after **8 hours**
+- Automatic refresh extends the session when less than 10 minutes remain
+- Expired tokens are purged hourly from both in-memory cache and database
+- Password changes invalidate existing sessions
+
+## Role-Based Access Control
+
+ChangeGuard enforces three role levels on the backend:
+
+| Role | Dashboard | Manage Policies | Manage Team & Keys | Manage Integrations |
+|------|-----------|----------------|--------------------|--------------------|
+| **Admin** | Full access | Yes | Yes | Yes |
+| **Operator** | Full access | Yes | No | Yes |
+| **Member** | Read-only | No | No | No |
+
+Role checks happen at the middleware layer — they cannot be bypassed from the UI. If a member attempts to call an admin-only endpoint, they receive a `403 Forbidden` response.
+
+<Tip>
+  Assign the **Member** role to stakeholders who need visibility into cluster health and scores but shouldn't modify policies, notification rules, or team membership.
+</Tip>
+
+## Agent Authentication
+
+Agents authenticate with API keys via the `X-API-Key` header. See [API Keys](/security/api-keys) for details on scopes, creation, and rotation.
+
+Agent API keys are independent from dashboard sessions — revoking a user's dashboard access does not affect running agents, and vice versa.
+
+## Rate Limiting
+
+The backend enforces rate limits to protect against brute force attacks:
+
+| Endpoint | Limit | Window |
+|----------|-------|--------|
+| Login (`/api/auth/login`) | 5 attempts | 5 minutes per IP |
+| Signup (`/api/auth/signup`) | 3 attempts | 10 minutes per IP |
+
+When the limit is exceeded, the backend returns `429 Too Many Requests` with a `Retry-After` header.
+
+Rate-limited and failed login attempts are logged with the source IP address for security monitoring.
+
+## CORS Policy
+
+The dashboard API only accepts browser requests from `app.changeguard.ai`. Cross-origin requests from other domains are rejected. This prevents malicious websites from making authenticated requests using a user's session.
+
+Agent requests (which don't originate from browsers) are not affected by CORS policy.
