@@ -1,0 +1,72 @@
+---
+title: Configuration
+description: "Configure the ChangeGuard agent"
+---
+
+## Environment Variables
+
+All configuration is via environment variables in the `changeguard-agent-config` secret.
+
+### Required
+
+| Variable | Description |
+|----------|-------------|
+| `API_KEY` | Your ChangeGuard API key (starts with `cg_`) |
+| `CLUSTER_ID` | Unique identifier for this cluster |
+
+### Optional
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `BACKEND_URL` | `https://api.changeguard.ai` | Backend endpoint |
+| `CLUSTER_NAME` | Same as CLUSTER_ID | Display name in dashboard |
+| `CLUSTER_PROVIDER` | `Kubernetes` | `EKS`, `GKE`, `AKS`, or `Kubernetes` |
+| `CLUSTER_REGION` | (empty) | Cluster region |
+| `PUSH_INTERVAL` | `10s` | How often to push snapshots |
+| `ENABLE_LOG_COLLECTOR` | `true` | Collect pod logs |
+| `LOG_INTERVAL` | `15s` | How often to push logs |
+| `LOG_TAIL_LINES` | `100` | Lines per container per cycle |
+| `ENABLE_EVENT_WATCHER` | `true` | Watch Kubernetes events |
+| `ENABLE_DEPLOY_WATCHER` | `true` | Watch deployment changes |
+| `ENABLE_ARGOCD_DISCOVERY` | `true` | Auto-discover ArgoCD instances |
+| `HEALTH_PORT` | `9090` | Health endpoint port |
+
+### Log Collection
+
+Exclude specific namespaces from log collection:
+
+```yaml
+LOG_EXCLUDE_NAMESPACES: "kube-system,monitoring,logging"
+```
+
+Include kube-system logs (excluded by default):
+
+```yaml
+LOG_INCLUDE_SYSTEM: "true"
+```
+
+## Health Endpoint
+
+The agent exposes health at `:9090`:
+
+| Path | Purpose |
+|------|---------|
+| `/health` | Full status JSON (push count, errors, payload size) |
+| `/healthz` | Liveness probe (returns 200) |
+| `/readyz` | Readiness probe (fails if no successful push in 2 minutes) |
+
+```bash
+kubectl exec -n changeguard-agent deploy/changeguard-agent -- \
+  wget -qO- http://localhost:9090/health
+```
+
+## Updating Configuration
+
+```bash
+kubectl delete secret changeguard-agent-config -n changeguard-agent
+kubectl create secret generic changeguard-agent-config -n changeguard-agent \
+  --from-literal=API_KEY=cg_your_key \
+  --from-literal=CLUSTER_ID=my-cluster \
+  --from-literal=PUSH_INTERVAL=30s
+kubectl rollout restart deployment/changeguard-agent -n changeguard-agent
+```

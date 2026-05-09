@@ -1,0 +1,75 @@
+---
+title: Security Architecture
+description: "How ChangeGuard protects your clusters and data"
+---
+
+## Overview
+
+ChangeGuard is designed with a zero-trust, outbound-only architecture. The agent runs inside your cluster with read-only access and pushes encrypted metadata to our backend. There is never any inbound access to your infrastructure.
+
+## Data Flow
+
+```
+Your Cluster                              ChangeGuard Cloud
+┌──────────────────────┐                 ┌──────────────────────────┐
+│  Agent (Go binary)   │                 │  ALB (TLS termination)   │
+│  Read-only RBAC      │── HTTPS/TLS ──→│  WAF (managed rules)     │
+│  Non-root container  │   1.2+ only     │  Backend (EKS)           │
+│  No inbound ports    │   Gzip + API    │  PostgreSQL (RDS)        │
+│                      │   Key auth      │  AES-256 at rest         │
+└──────────────────────┘                 └──────────────────────────┘
+```
+
+Every component in this chain enforces encryption:
+
+- **Agent → Backend:** TLS 1.2+ enforced in the agent's HTTP transport configuration. The agent will not downgrade to plain HTTP.
+- **ALB:** AWS-managed TLS certificate via ACM. HTTP requests on port 80 receive a 301 redirect to HTTPS.
+- **Backend → Database:** PostgreSQL connections use `sslmode=require`. All queries are encrypted in transit.
+- **Database at rest:** AES-256 encryption via AWS-managed keys on the RDS instance.
+
+## Network Requirements
+
+The agent needs outbound HTTPS access to a single endpoint:
+
+```
+api.changeguard.ai:443
+```
+
+No inbound connectivity is required. No LoadBalancer, Ingress, or NodePort is created. The agent is compatible with private clusters, air-gapped environments with egress proxies, and clusters behind corporate firewalls — as long as outbound HTTPS to our API is permitted.
+
+## Infrastructure
+
+| Component | Service | Details |
+|-----------|---------|---------|
+| Compute | AWS EKS | Dedicated namespace, private cluster |
+| Database | AWS RDS PostgreSQL | Encryption at rest, SSL connections |
+| Load Balancer | AWS ALB | ACM-managed TLS, HTTP→HTTPS redirect |
+| WAF | AWS WAF | Managed rule sets, rate limiting |
+| DNS | AWS Route 53 | DNSSEC-ready |
+| Agent Distribution | AWS ECR Public | Signed container images |
+| Security Headers | HSTS, CSP, X-Frame-Options | Enforced on all dashboard responses |
+
+## Multi-Tenant Isolation
+
+ChangeGuard enforces tenant isolation in two independent layers:
+
+**Application layer.** Every API request is scoped to a tenant through the authenticated API key or session token. The backend validates tenant ownership at the middleware layer — before any handler logic runs — on every data path: clusters, snapshots, score history, ArgoCD instances, audit logs, notifications, policies, suppressions, integration configs, API keys, and team members.
+
+**Database layer.** Tenant boundaries are also enforced inside PostgreSQL itself. Every tenant table carries a row-level isolation policy that is evaluated by the database independently of the application. This means a hypothetical bug in application code that forgot to filter by tenant would silently return zero rows — not leak data — because the database refuses the operation rather than trusting the application to do it right.
+
+The application's database role does not have the privilege to bypass these policies, and the audit log is append-only at the grant level: the backend can write new entries but cannot modify or delete existing ones. Forensic integrity does not depend on application correctness.
+
+<Info>
+  Tenants cannot access, query, or infer the existence of other tenants' data. There is no shared namespace or cross-tenant aggregation. Cross-tenant operations (used internally for billing, support, and account provisioning) are routed through a separate code path that is reviewed independently and is not reachable through the public API.
+</Info>
+
+## SSRF Protection
+
+All outbound webhook URLs (Slack, Teams, notification channels) are validated before the backend makes any HTTP request:
+
+- Must use HTTPS (HTTP rejected)
+- Private IP ranges blocked (10.x, 172.16-31.x, 192.168.x)
+- Loopback and link-local addresses blocked (127.x, 169.254.x, localhost)
+- Cloud metadata endpoints blocked (169.254.169.254, metadata.google)
+
+This prevents malicious webhook configurations from being used to probe internal networks.

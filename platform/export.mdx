@@ -1,0 +1,59 @@
+---
+title: Export & Reporting
+description: "CSV and JSON exports for compliance"
+---
+
+## Score History Export
+
+Export score history as CSV from the dashboard or API:
+
+**Dashboard:** Score History → **Export Score CSV**
+
+**API:**
+```bash
+curl -H "Authorization: Bearer TOKEN" \
+  "https://api.changeguard.ai/api/score-history?clusterId=production&format=csv"
+```
+
+Returns:
+```csv
+timestamp,score,nodes,pods,risks
+2026-03-16T12:00:00Z,87,3,24,2
+2026-03-16T12:00:10Z,87,3,24,2
+```
+
+## Full Cluster Report
+
+Export a complete security posture snapshot:
+
+**Dashboard:** Score History → **Export Full Report**
+
+**API (CSV):**
+```bash
+curl -H "Authorization: Bearer TOKEN" \
+  "https://api.changeguard.ai/api/export?clusterId=production&format=csv"
+```
+
+**API (JSON):**
+```bash
+curl -H "Authorization: Bearer TOKEN" \
+  "https://api.changeguard.ai/api/export?clusterId=production&format=json"
+```
+
+The report includes:
+- CSC score and breakdown
+- All deployments with replica status
+- All pods with health status and restarts
+- Active change risks with severity and recommendations
+- Node health and resource utilization
+
+## Audit Trail Export
+
+Export the validation audit log:
+
+```bash
+curl -H "Authorization: Bearer TOKEN" \
+  "https://api.changeguard.ai/api/audit/export?format=csv"
+```
+
+Includes deployment validations, decisions (SAFE/WARN/BLOCK), scores, and timestamps.

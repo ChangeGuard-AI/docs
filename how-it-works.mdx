@@ -1,0 +1,42 @@
+---
+title: How the CSC Score Works
+description: "A deterministic, explainable deployment readiness metric"
+---
+
+## Change Safety Confidence (CSC)
+
+The CSC score is a 0-100 metric that answers one question: **is it safe to deploy right now?**
+
+Every point is accounted for. The score is fully deterministic — same cluster state always produces the same score.
+
+## Scoring Model
+
+The CSC score is calculated from four weighted categories:
+
+| Category | Weight | What it measures |
+|----------|--------|------------------|
+| **Policy Compliance** | 40 points | Resource limits, health probes, security context, image policies |
+| **Runtime Signals** | 28 points | Pod restarts, OOM kills, CrashLoopBackOff, error rates |
+| **Historical Stability** | 17 points | Recent deployment success rate, rollback frequency |
+| **Cluster Health** | 15 points | Node status, resource pressure, capacity headroom |
+
+## Score Ranges
+
+| Score | Status | Meaning |
+|-------|--------|---------|
+| 80-100 | ✅ Safe to Deploy | Cluster is healthy, policies met, no active risks |
+| 50-79 | ⚠️ Review Recommended | Some risks detected, review before deploying |
+| 0-49 | 🚨 High Risk | Active issues that should be resolved before deployment |
+
+## Risk Detection
+
+When the CSC score drops, the dashboard shows exactly why. Each risk has:
+
+- **Severity** — Critical, High, Medium, Low
+- **Impact** — how many points it costs
+- **Resource** — which deployment, pod, or node is affected
+- **Recommendation** — specific action to resolve it
+
+## Exclusions
+
+System namespaces are excluded from scoring by default: `kube-system`, `kube-public`, `kube-node-lease`, `changeguard-agent`, `amazon-guardduty`. This prevents infrastructure components from dragging down your application safety score.

@@ -1,0 +1,94 @@
+---
+title: Compliance & Audit
+description: "Audit trail, security headers, and compliance readiness"
+---
+
+## Audit Trail
+
+Every significant action in ChangeGuard is recorded in an immutable audit trail. The application backend can append new entries but does not have the privilege to modify or delete existing ones — audit history is append-only at the database grant level, not just by application convention. Even an elevated session inside the backend cannot rewrite history.
+
+Recorded actions include:
+
+- Deployment gate decisions (SAFE, WARN, BLOCK)
+- Policy evaluations and scoring events
+- CI/CD validation requests and results
+- Suppression changes (muted/unmuted risks)
+- Configuration changes (notification channels, policies)
+- ArgoCD sync events and webhook activity
+
+Each audit entry includes:
+
+| Field | Description |
+|-------|-------------|
+| Timestamp | UTC time of the event |
+| User | Email of the user or `agent` for automated events |
+| Source IP | Originating IP address (from `X-Forwarded-For`) |
+| Cluster | Cluster name and ID |
+| Resource | Kubernetes resource involved (e.g., `deployment/api-server`) |
+| Action | What was attempted (deploy, validate, sync) |
+| Decision | Gate result (SAFE, REVIEW, BLOCK) |
+| CSC Score | Score at the time of the event |
+| Risks | Active risks that influenced the decision |
+
+## Audit Export
+
+Export the full audit trail as CSV from **Intelligence → Audit Trail → Export**.
+
+The CSV includes all fields above, plus GitHub/GitLab context (PR number, approval status, CI pass/fail, branch, commit SHA) when available. Source IP is included in every row for incident correlation.
+
+<Tip>
+  Use audit exports for compliance reviews, incident investigations, and change management reporting. The export covers your full history — there is no time limit on retention.
+</Tip>
+
+## Security Headers
+
+The ChangeGuard dashboard enforces modern security headers on every response:
+
+| Header | Value | Purpose |
+|--------|-------|---------|
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` | Forces HTTPS for 1 year, prevents downgrade attacks |
+| `Content-Security-Policy` | Restricts scripts, styles, and connections to self + API | Prevents XSS and data exfiltration |
+| `X-Frame-Options` | `SAMEORIGIN` | Prevents clickjacking via iframes |
+| `X-Content-Type-Options` | `nosniff` | Prevents MIME type sniffing |
+| `X-XSS-Protection` | `1; mode=block` | Legacy XSS filter (defense in depth) |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Limits referrer leakage |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | Blocks unnecessary browser APIs |
+
+## Error Handling
+
+API error responses for server-side failures return a generic `"Internal server error"` message. Detailed error information is logged server-side only and never exposed to clients. This prevents information disclosure that could aid attackers.
+
+Validation errors (400-level) return specific, actionable messages to help users correct their input.
+
+## Security Monitoring
+
+ChangeGuard logs security-relevant events for monitoring:
+
+- **Login success:** Email, tenant, source IP
+- **Login failure:** Email, source IP
+- **Rate limiting:** Email, source IP, endpoint
+- **API key creation/revocation:** Key prefix, scope, tenant
+- **Integration config changes:** Provider, tenant
+- **Webhook blocks:** URL, reason (SSRF prevention)
+
+These logs are available via Kubernetes log aggregation on the backend deployment.
+
+## SOC 2 Readiness
+
+ChangeGuard implements controls aligned with SOC 2 Trust Service Criteria:
+
+| Category | Controls |
+|----------|----------|
+| **Security** | TLS everywhere, bcrypt hashing, RBAC, rate limiting, WAF, CORS, CSP, HSTS |
+| **Availability** | AWS EKS with multi-AZ, RDS with automated backups, health monitoring |
+| **Confidentiality** | AES-256 at rest, tenant isolation, no secret collection, token masking |
+| **Processing Integrity** | Audit trail on all decisions, score history persistence, deterministic scoring |
+| **Privacy** | Data minimization, no PII collection beyond login email, cascading deletion |
+
+<Info>
+  SOC 2 Type II preparation is underway, with controls already implemented across all five Trust Service Criteria. Contact security@changeguard.ai if your organization requires a formal attestation, the current pre-audit security questionnaire, or has specific compliance questions.
+</Info>
+
+## Responsible Disclosure
+
+If you discover a security vulnerability in ChangeGuard, please report it to **security@changeguard.ai**. We commit to acknowledging reports within 24 hours and providing a remediation timeline within 72 hours.

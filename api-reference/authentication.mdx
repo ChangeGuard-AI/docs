@@ -1,0 +1,92 @@
+---
+title: Authentication
+description: "Login, signup, and token management"
+---
+
+## Login
+
+```bash
+POST /api/auth/login
+```
+
+```json
+{
+  "email": "user@company.com",
+  "password": "your-password"
+}
+```
+
+**Response:**
+```json
+{
+  "token": "tok_abc123...",
+  "email": "user@company.com",
+  "tenantId": "uuid-here",
+  "expiresAt": "2026-03-16T20:00:00Z"
+}
+```
+
+## Signup
+
+```bash
+POST /api/auth/signup
+```
+
+```json
+{
+  "company": "Acme Corp",
+  "email": "admin@acme.com",
+  "password": "min-8-characters"
+}
+```
+
+**Response:**
+```json
+{
+  "status": "created",
+  "tenantId": "uuid-here",
+  "email": "admin@acme.com",
+  "plan": "trial",
+  "apiKey": "cg_abc123...",
+  "token": "tok_xyz789...",
+  "message": "Welcome to ChangeGuard! Save your API key — it cannot be retrieved again."
+}
+```
+
+<Warning>The `apiKey` is returned only once. Save it immediately.</Warning>
+
+## Verify Token
+
+```bash
+POST /api/auth/verify
+```
+
+```json
+{ "token": "tok_abc123..." }
+```
+
+## Refresh Token
+
+```bash
+POST /api/auth/refresh
+```
+
+```json
+{ "token": "tok_abc123..." }
+```
+
+Returns a new token. The old token is revoked. Sessions last 8 hours and auto-refresh when less than 10 minutes remain.
+
+## Change Password
+
+```bash
+POST /api/auth/password
+Authorization: Bearer TOKEN
+```
+
+```json
+{
+  "currentPassword": "old-password",
+  "newPassword": "new-password-min-8"
+}
+```

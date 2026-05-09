@@ -1,0 +1,51 @@
+---
+title: Data Handling
+description: "How ChangeGuard encrypts, stores, and protects your cluster data"
+---
+
+## Encryption
+
+### In Transit
+
+All data is encrypted in transit using TLS 1.2 or higher:
+
+- **Agent → Backend:** The agent's HTTP client enforces `MinVersion: TLS 1.2`. Connections to plain HTTP are rejected.
+- **Dashboard → Backend:** HTTPS enforced via ALB with automatic HTTP→HTTPS redirect. HSTS headers instruct browsers to always use HTTPS (`max-age=31536000`).
+- **Backend → Database:** PostgreSQL connections use `sslmode=require`.
+
+### At Rest
+
+- **Database:** AWS RDS with AES-256 encryption using AWS-managed keys. All tables — including scores, audit entries, API key hashes, and integration configs — are encrypted on disk.
+- **API Keys:** Stored as bcrypt hashes, not reversible. The plaintext key exists only in memory during the initial creation response.
+- **Integration Tokens:** GitHub and GitLab tokens stored encrypted in the database. GET responses mask tokens (first 4 + last 4 characters visible).
+
+## Data Retention
+
+Snapshot data is held in memory and replaced every 10 seconds when the agent pushes a new snapshot. Only the latest snapshot per cluster is retained.
+
+Score history is persisted in PostgreSQL and retained indefinitely. You can export score history and full cluster reports as CSV or JSON at any time from the dashboard.
+
+Audit trail entries are retained indefinitely and can be exported for compliance review.
+
+## Data Minimization
+
+ChangeGuard follows a principle of data minimization — it collects only what's needed to calculate the CSC score and surface risks:
+
+- **Metadata only:** Resource names, status, counts, and configurations — not data contents
+- **No secrets:** Secret values, environment variables, and ConfigMap data are never read
+- **No application data:** Persistent volume contents, network payloads, and source code are never accessed
+- **Configurable logging:** Pod log collection is off by default and only enabled when you choose to turn it on
+
+<Tip>
+  If your security policy requires a detailed list of every Kubernetes field the agent reads, contact us at security@changeguard.ai and we'll provide a complete field-level data dictionary.
+</Tip>
+
+## Data Deletion
+
+When you delete your account or a cluster is removed:
+
+- Cluster snapshot data is removed from memory immediately
+- Score history, audit entries, and configuration are deleted from the database via cascading foreign key constraints
+- API keys associated with the tenant are permanently deleted
+
+There is no backup retention of deleted tenant data.

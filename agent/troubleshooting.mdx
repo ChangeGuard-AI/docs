@@ -1,0 +1,68 @@
+---
+title: Troubleshooting
+description: "Diagnose and fix common agent issues"
+---
+
+## Agent not appearing in dashboard
+
+**Check the agent is running:**
+```bash
+kubectl get pods -n changeguard-agent
+```
+
+**Check push logs:**
+```bash
+kubectl logs -n changeguard-agent -l app=changeguard-agent | grep "\[push\]"
+```
+
+You should see `[push] OK` lines every 10 seconds. If you see errors:
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `AUTH FAILED: Invalid API key` | Wrong or revoked API key | Create a new key in Integrations, update the secret |
+| `FORBIDDEN` | WAF blocking, wrong endpoint | Ensure `BACKEND_URL=https://api.changeguard.ai` |
+| `connection refused` | Can't reach backend | Check cluster egress allows HTTPS to `api.changeguard.ai:443` |
+| `PAYLOAD TOO LARGE` | Cluster snapshot exceeds limit | Contact support — this shouldn't happen with gzip |
+
+## Check agent health
+
+```bash
+kubectl exec -n changeguard-agent deploy/changeguard-agent -- \
+  wget -qO- http://localhost:9090/health
+```
+
+Key fields to check:
+- `pushCount` — should be incrementing
+- `pushErrors` — should be 0
+- `consecutiveFailures` — should be 0
+- `lastPushStatus` — should be 200
+- `lastError` — should be empty
+
+## Agent uses too much memory
+
+Default limits are 256Mi. For very large clusters (500+ pods), increase:
+
+```bash
+kubectl set resources deployment/changeguard-agent -n changeguard-agent \
+  --limits=memory=512Mi --requests=memory=128Mi
+```
+
+## Logs not appearing
+
+Check log collector is enabled:
+```bash
+kubectl exec -n changeguard-agent deploy/changeguard-agent -- \
+  wget -qO- http://localhost:9090/health | grep logCollector
+```
+
+If `logCollector: false`, update the secret with `ENABLE_LOG_COLLECTOR=true` and restart.
+
+## Network requirements
+
+The agent needs outbound HTTPS access to one endpoint:
+
+```
+api.changeguard.ai:443
+```
+
+If your cluster uses a network policy or egress firewall, allow this destination.

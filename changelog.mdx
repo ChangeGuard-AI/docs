@@ -1,0 +1,85 @@
+---
+title: Changelog
+description: "Release history and what shipped when"
+---
+
+ChangeGuard ships frequently. Every release is documented here, with the most recent at the top. Breaking changes are called out explicitly. The agent and backend are versioned together.
+
+For deeper architectural notes, see [Security Architecture](/security/architecture) and [Compliance](/security/compliance).
+
+---
+
+## v3.7.2 — May 2026
+
+### Security
+- **Database-layer tenant isolation strengthened.** Tenant boundaries are now enforced inside PostgreSQL via row-level isolation policies, in addition to the existing application-layer middleware checks. The application backend operates with privileges that prevent it from bypassing these policies, even with elevated session state.
+- **Audit log made grant-level immutable.** The application backend can append entries but cannot modify or delete them — forensic integrity no longer depends on application correctness.
+- **Connection pool separation.** Cross-tenant operations (used internally for billing, support, and account provisioning) now route through a separate, restricted code path that is not reachable through the public API.
+
+### UI
+- React dashboard refactored for maintainability. Bundle size and behavior unchanged for end users.
+
+### Internal
+- Migration framework hardened to handle live policy updates without downtime.
+
+---
+
+## v3.7.1 — Late April 2026
+
+### Internal
+- Backend connection layer prepared for the v3.7.2 isolation upgrade. No user-facing changes; operationally identical to v3.7.0 in production.
+
+---
+
+## v3.7.0 — April 2026
+
+### Platform
+- Score history persistence: full historical trends survive backend restarts and rolling upgrades.
+- CSV and JSON export from the score history page for compliance and incident review workflows.
+- Self-service signup: new tenants can create an account, generate an API key, and install the agent without sales contact.
+
+### UI
+- New score history page with sparkline trends across the fleet.
+- Login page split into Sign In and Create Account flows.
+
+### API
+- `POST /api/auth/signup` — programmatic tenant creation with email verification.
+- `POST /api/auth/refresh` — JWT refresh endpoint for long-running sessions.
+- `POST /api/auth/password` — password change endpoint with token-version invalidation.
+
+---
+
+## v3.6.x — March 2026
+
+### Security
+- 8-hour session tokens with auto-refresh near expiry (was 1 hour fixed).
+- Password change invalidates all existing sessions for that user.
+- API keys now stored as bcrypt hashes with prefix-based lookup.
+
+### Platform
+- Slack and Teams webhook notifications: per-tenant configurable channels and alert rules.
+- Custom policy engine: define your own rules that feed into the CSC score with configurable weights.
+- Suppressions: acknowledge or mute specific risks with full audit trail.
+
+---
+
+## v3.5.x — February 2026
+
+### Platform
+- ArgoCD auto-discovery: agent detects running ArgoCD instances and pulls fleet status without configuration.
+- Cross-cluster intelligence: correlate risks across clusters (image failures, restart storms, node pressure).
+- Compliance framework mapping: every finding mapped to SOC 2, PCI DSS 4.0, HIPAA, FedRAMP, and EO 14028 controls.
+
+---
+
+## Earlier releases
+
+Full version history before v3.5 is available on request from <a href="mailto:support@changeguard.ai">support@changeguard.ai</a>. The platform reached v3.0 in late 2025 with the introduction of the deterministic CSC score and the read-only agent architecture.
+
+---
+
+## Versioning
+
+Backend, UI, and agent versions are released together. The version reported by `GET /health` is the canonical version of the running deployment. Agent images on `public.ecr.aws/m7g7b7v0/changeguard/agent` are tagged with the matching backend version.
+
+Breaking changes (changes that require operator action) are flagged in the release notes here and announced via Slack or email to all customers at least 7 days before deployment.
