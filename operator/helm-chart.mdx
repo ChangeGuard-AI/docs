@@ -1,0 +1,34 @@
+---
+title: "Helm Chart"
+description: "Install and configure ChangeGuard via Helm"
+---
+
+## Install
+
+```bash
+helm repo add changeguard https://charts.changeguard.ai
+helm install changeguard changeguard/changeguard-operator \
+  --namespace changeguard-system --create-namespace \
+  --set apiKey=YOUR_API_KEY \
+  --set clusterName=production
+```
+
+## Key Values
+
+| Key | Default | Description |
+| --- | --- | --- |
+| `apiKey` | _required_ | ChangeGuard API key |
+| `clusterName` | _required_ | Cluster display name |
+| `provider` | `Kubernetes` | EKS, GKE, AKS, Kubernetes |
+| `security.enabled` | `true` | Enable all security scanning |
+| `security.kubeBench.enabled` | `true` | CIS benchmarks |
+| `security.grype.enabled` | `true` | CVE scanning |
+| `security.falco.enabled` | `true` | Runtime detection |
+| `collector.pushInterval` | `10s` | Snapshot frequency |
+
+## Upgrade
+
+```bash
+helm upgrade changeguard changeguard/changeguard-operator \
+  --namespace changeguard-system --reuse-values
+```

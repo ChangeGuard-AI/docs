@@ -1,0 +1,54 @@
+---
+title: "CRD Reference"
+description: "Full ChangeGuardAgent custom resource specification"
+---
+
+The `ChangeGuardAgent` CRD is the single configuration surface. Apply it, and the operator reconciles all components.
+
+## Minimal Example
+
+```yaml
+apiVersion: changeguard.ai/v1alpha1
+kind: ChangeGuardAgent
+metadata:
+  name: changeguard
+  namespace: changeguard-system
+spec:
+  clusterName: production
+  apiKeySecretRef:
+    name: changeguard-api-key
+```
+
+This enables all defaults: data collection every 10s, KubeBench, Grype, Falco, Pluto, and Syft.
+
+## Security Spec
+
+All scanners default to **enabled** when the `security` field is present.
+
+| Scanner | Schedule | What It Does |
+| --- | --- | --- |
+| `kubeBench` | Every 6h | CIS Kubernetes Benchmark |
+| `grype` | Every 4h \+ on deploy | Container image CVE scanning |
+| `syft` | Every 8h \+ on deploy | SBOM generation (CycloneDX or SPDX) |
+| `falco` | Continuous | Runtime syscall monitoring via eBPF |
+| `pluto` | Every 12h | Deprecated/removed API detection |
+
+## AI Spec
+
+| Field | Default | Options |
+| --- | --- | --- |
+| `mode` | `disabled` | `cloud`, `aws`, `oncluster`, `disabled` |
+| `model` | `meta/llama-3.1-70b-instruct` | Any NIM-supported model |
+
+## Status
+
+```bash
+kubectl get changeguardagent -o wide
+```
+
+| Column | Description |
+| --- | --- |
+| CLUSTER | Display name |
+| CSC | Current CSC score (0–100) |
+| PHASE | Pending, Running, Degraded, Error |
+| PUSHES | Total successful pushes |

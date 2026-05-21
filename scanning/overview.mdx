@@ -1,0 +1,48 @@
+---
+title: "Security Scanning"
+description: "Automated vulnerability, compliance, and runtime scanning for Kubernetes"
+---
+
+ChangeGuard includes five integrated security scanners, all managed by the operator and enabled by default.
+
+<CardGroup cols={2}>
+  <Card title="KubeBench" icon="list-check" href="/scanning/kubebench">
+    CIS Kubernetes Benchmark — tests cluster configuration against industry-standard security controls.
+  </Card>
+
+  <Card title="Grype" icon="bug" href="/scanning/grype">
+    Container image CVE scanning — finds known vulnerabilities in every running image.
+  </Card>
+
+  <Card title="Falco" icon="eye" href="/scanning/falco">
+    Runtime threat detection — monitors syscalls on every node via eBPF.
+  </Card>
+
+  <Card title="Pluto" icon="triangle-exclamation" href="/scanning/pluto">
+    Deprecated API detection — finds workloads using removed Kubernetes APIs.
+  </Card>
+
+  <Card title="Syft (SBOM)" icon="box-open" href="/scanning/sbom">
+    Software Bill of Materials — complete package inventory for supply chain compliance.
+  </Card>
+</CardGroup>
+
+## How Scanning Works
+
+1. **KubeBench, Grype, Pluto, Syft** run as Kubernetes CronJobs on configurable schedules
+2. **Falco** runs as a DaemonSet on every node (continuous monitoring)
+3. Results are pushed to the ChangeGuard backend automatically
+4. The dashboard aggregates findings into the CSC score and dedicated views
+
+## CSC Score Impact
+
+| Scanner | Max Impact | Triggered By |
+| --- | --- | --- |
+| KubeBench | 15 points | Failing CIS checks |
+| Grype | 15 points | Critical/high CVEs |
+| Falco | 10 points | Runtime alerts |
+| Pluto | 5 points | Deprecated APIs |
+
+## Configuration
+
+All scanners are configured through the ChangeGuardAgent CRD. To disable a scanner, set `enabled: false` — the operator tears down the corresponding resources automatically.

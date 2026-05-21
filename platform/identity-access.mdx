@@ -1,0 +1,29 @@
+---
+title: "Identity & Access"
+description: "RBAC analysis, overprivileged identity detection, and access findings"
+---
+
+The Identity & Access view analyzes every RBAC binding in your cluster to find security risks.
+
+## Findings
+
+- **Overprivileged ServiceAccounts** — more permissions than needed
+- **Cluster-admin bindings** — non-system accounts with full access
+- **Wildcard permissions** — roles with `*` verbs or resources
+- **Unused ServiceAccounts** — accounts with no associated pods
+- **Cross-namespace access** — broad ClusterRoleBindings
+- **Secret access** — accounts reading secrets outside their namespace
+- **Privilege escalation** — accounts that can create bindings or impersonate
+
+## Risk Levels
+
+| Level | Examples |
+| --- | --- |
+| **Critical** | Non-system cluster-admin, wildcard secrets |
+| **High** | Create/modify RBAC, pod exec across namespaces |
+| **Medium** | List secrets in own namespace, broad read access |
+| **Low** | Unused ServiceAccount, default token mounted |
+
+## Data Collection
+
+The agent collects RBAC data automatically: ClusterRoles, Roles, ClusterRoleBindings, RoleBindings, and ServiceAccounts. No additional configuration needed.

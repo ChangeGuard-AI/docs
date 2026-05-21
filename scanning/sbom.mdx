@@ -1,0 +1,32 @@
+---
+title: "SBOM (Syft)"
+description: "Software Bill of Materials generation for supply chain compliance"
+---
+
+Syft generates a Software Bill of Materials for every unique container image in your cluster.
+
+## Why SBOMs Matter
+
+- **EO 14028** requires SBOMs for software sold to the US government
+- **SOC 2 / FedRAMP** require software inventory documentation
+- **Supply chain security** — know exactly what's running
+- **Faster CVE scanning** — Grype scans SBOMs instead of pulling images
+
+## Formats
+
+| Format | Standard |
+| --- | --- |
+| `cyclonedx-json` | OWASP CycloneDX (default) |
+| `spdx-json` | Linux Foundation SPDX |
+
+## Configuration
+
+```yaml
+spec:
+  security:
+    syft:
+      enabled: true
+      schedule: "0 */8 * * *"
+      format: cyclonedx-json
+      scanOnDeploy: true
+```

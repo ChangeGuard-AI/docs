@@ -1,38 +1,57 @@
 ---
-title: Introduction
-description: "Deployment safety intelligence for Kubernetes"
+title: "Introduction"
+description: "Kubernetes security and deployment safety platform"
 ---
 
 # What is ChangeGuard?
 
-ChangeGuard gives platform engineering teams a single safety score for every Kubernetes deployment — the **Change Safety Confidence (CSC) score**.
+ChangeGuard is a Kubernetes security platform that gives platform engineering teams complete visibility into the safety, compliance, and runtime health of every cluster.
 
-Instead of guessing whether it's safe to deploy, your team gets a deterministic 0-100 score backed by live cluster data, policy compliance, and runtime health signals.
+At its core is the **Change Safety Confidence (CSC) score** — a deterministic 0–100 metric that combines CIS benchmarks, CVE scanning, RBAC analysis, runtime threat detection, GitOps drift, and cluster health into a single deployment readiness number.
 
-## How it works
+## Core Capabilities
+
+<CardGroup cols={2}>
+  <Card title="Security Scanning" icon="shield-halved" href="/scanning/overview">
+    CIS benchmarks (KubeBench), CVE scanning (Grype), runtime threat detection (Falco), deprecated API detection (Pluto), and SBOM generation (Syft) — all managed by the operator.
+  </Card>
+
+  <Card title="Identity & Access" icon="user-lock" href="/platform/identity-access">
+    RBAC analysis across every ServiceAccount, ClusterRole, and binding. Finds overprivileged identities, unused permissions, and privilege escalation paths.
+  </Card>
+
+  <Card title="Attack Path Analysis" icon="route" href="/platform/attack-paths">
+    Maps privilege escalation graphs showing how a compromised pod could reach cluster-admin. Prioritizes the shortest, highest-impact paths.
+  </Card>
+
+  <Card title="Compliance Automation" icon="clipboard-check" href="/platform/compliance">
+    Maps controls to SOC 2, PCI DSS, HIPAA, FedRAMP, and EO 14028. Continuous evidence collection with exportable reports.
+  </Card>
+
+  <Card title="GitOps Intelligence" icon="code-branch" href="/platform/argocd">
+    Deep integration with ArgoCD and Flux CD. Tracks sync status, drift, health, and sync history without requiring API tokens.
+  </Card>
+
+  <Card title="Fleet Management" icon="server" href="/platform/fleet-comparison">
+    Cross-cluster intelligence correlates risks, compares configurations, and detects patterns across your entire fleet.
+  </Card>
+</CardGroup>
+
+## How It Works
 
 <Steps>
-  <Step title="Install the agent">
-    One command deploys a read-only agent to your cluster. It collects pod status, node health, deployments, events, and ArgoCD state — never secrets or application data.
+  <Step title="Install the operator">
+    One command deploys the ChangeGuard operator to your cluster. The operator manages the data collector, security scanners, and runtime detection — all from a single ChangeGuardAgent custom resource.
   </Step>
-  <Step title="Agent pushes snapshots">
-    Every 10 seconds, the agent sends a gzip-compressed snapshot to `api.changeguard.ai` over TLS. The backend calculates your CSC score and stores history.
+  <Step title="Scans run automatically">
+    KubeBench runs CIS benchmarks every 6 hours. Grype scans container images for CVEs every 4 hours and on every new deployment. Falco monitors syscalls on every node in real time. The collector pushes cluster state snapshots every 10 seconds.
   </Step>
   <Step title="View your dashboard">
-    Log in at `app.changeguard.ai` to see scores, risks, ArgoCD fleet status, cross-cluster intelligence, and audit trails — all scoped to your tenant.
+    Log in at app.changeguard.ai to see scores, vulnerabilities, RBAC findings, attack paths, compliance posture, and audit trails — scoped to your tenant.
   </Step>
 </Steps>
 
-## Key features
-
-- **CSC Score (0-100)** — single deployment readiness metric combining policy compliance, runtime health, historical stability, and cluster health
-- **ArgoCD Fleet Management** — auto-discovers ArgoCD instances, tracks sync status, health, and drift across your fleet
-- **Cross-Cluster Intelligence** — correlates risks across clusters (image failures, restart storms, node pressure)
-- **Slack & Teams Alerts** — webhook notifications when scores drop or deployments degrade
-- **Audit Trail** — every deployment validation logged with full context
-- **CSV/JSON Export** — compliance-ready reports for security reviews
-
-## Quick install
+## Quick Install
 
 ```bash
 curl -sL https://install.changeguard.ai | bash -s -- \
@@ -40,18 +59,21 @@ curl -sL https://install.changeguard.ai | bash -s -- \
   --cluster production
 ```
 
-Your dashboard populates within 10 seconds.
+Your dashboard populates within 60 seconds. Security scanning results appear within the first scan cycle.
 
 <CardGroup cols={2}>
   <Card title="Quickstart" icon="rocket" href="/quickstart">
     Get running in 60 seconds
   </Card>
-  <Card title="How the CSC Score Works" icon="chart-line" href="/how-it-works">
-    Understand the scoring model
+
+  <Card title="Operator Installation" icon="gear" href="/operator/installation">
+    Install via Helm or the one-liner
   </Card>
-  <Card title="Agent Configuration" icon="gear" href="/agent/configuration">
-    Customize what the agent collects
+
+  <Card title="CRD Reference" icon="book" href="/operator/crd-reference">
+    Full ChangeGuardAgent spec reference
   </Card>
+
   <Card title="API Reference" icon="code" href="/api-reference/overview">
     Integrate with your CI/CD pipeline
   </Card>
