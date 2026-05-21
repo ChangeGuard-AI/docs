@@ -1,0 +1,35 @@
+---
+title: "AI Analysis"
+description: "AI-powered security analysis with NVIDIA NIM"
+---
+
+ChangeGuard integrates with NVIDIA NIM for AI-powered analysis of your cluster's security posture.
+
+## Modes
+
+| Mode | Where It Runs | Requirements |
+| --- | --- | --- |
+| **Cloud** | NVIDIA-hosted API | NVIDIA API key |
+| **AWS** | Your SageMaker/EC2 endpoint | NIM deployed |
+| **On-cluster** | NIM container in your cluster | GPU node |
+| **Disabled** | Off | None (default) |
+
+## What AI Analyzes
+
+- **Risk explanations** — why a CVE or finding matters
+- **Remediation guidance** — specific commands to fix issues
+- **Compliance mapping** — which controls a finding affects
+- **Attack path narrative** — privilege escalation chains in plain English
+
+## Configuration
+
+```yaml
+spec:
+  ai:
+    mode: cloud
+    apiKeySecretRef:
+      name: nvidia-api-key
+    model: "meta/llama-3.1-70b-instruct"
+```
+
+See [NVIDIA NIM Integration](/ai/nvidia-nim) for detailed setup.

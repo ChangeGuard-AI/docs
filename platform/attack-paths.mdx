@@ -1,0 +1,25 @@
+---
+title: "Attack Paths"
+description: "Privilege escalation graph and blast radius analysis"
+---
+
+Attack Path Analysis maps how a compromised workload could escalate privileges, building a directed graph from pods through ServiceAccounts and Roles to sensitive resources.
+
+## Graph Nodes
+
+| Node Type | Represents |
+| --- | --- |
+| Pod | Running workload (entry point) |
+| ServiceAccount | Kubernetes identity |
+| Role / ClusterRole | Permission set |
+| Binding | Links identity to permissions |
+| Resource | Target (secrets, pods/exec, RBAC) |
+
+## What It Finds
+
+- **Pod → cluster-admin**: full cluster control from a compromised pod
+- **Pod → secrets access**: reading secrets in other namespaces
+- **Pod → pod exec**: lateral movement to other pods
+- **Escalation chains**: self-grant cluster-admin via RoleBinding creation
+
+Paths are ranked by length (fewer hops = higher risk) and severity.

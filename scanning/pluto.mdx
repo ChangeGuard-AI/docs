@@ -1,0 +1,23 @@
+---
+title: "Pluto"
+description: "Deprecated Kubernetes API version detection"
+---
+
+Pluto scans all running workloads for deprecated or removed Kubernetes API versions, preventing upgrade failures.
+
+## What It Finds
+
+- APIs deprecated in future versions (warnings)
+- APIs removed in current or upcoming versions (critical)
+- Workloads that will break on cluster upgrade
+
+## Configuration
+
+```yaml
+spec:
+  security:
+    pluto:
+      enabled: true
+      schedule: "0 */12 * * *"
+      targetVersion: ""  # Defaults to current cluster version
+```

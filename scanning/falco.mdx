@@ -1,0 +1,37 @@
+---
+title: "Falco"
+description: "Runtime threat detection via eBPF syscall monitoring"
+---
+
+Falco monitors syscalls on every node, detecting anomalous runtime behavior in real time.
+
+## Detections
+
+- Unexpected process execution in containers
+- Privilege escalation attempts
+- Container escape attempts
+- Connections to suspicious endpoints
+- File access violations
+- Cryptomining activity
+- Reverse shells
+
+## Architecture
+
+Deployed as a DaemonSet (one pod per node) using the `modern_ebpf` driver. Falco Sidekick forwards alerts to the ChangeGuard backend.
+
+## Configuration
+
+```yaml
+spec:
+  security:
+    falco:
+      enabled: true
+      driver: modern_ebpf
+      sidekickEnabled: true
+      priorityThreshold: warning
+```
+
+## Requirements
+
+- Linux kernel 5.8\+ for `modern_ebpf` (recommended, no kernel headers needed)
+- Kernel 4.14\+ for `ebpf` driver (requires headers)

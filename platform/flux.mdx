@@ -1,0 +1,29 @@
+---
+title: "Flux CD Integration"
+description: "Deep integration with Flux CD for GitOps visibility"
+---
+
+ChangeGuard watches Flux CD custom resources directly via the Kubernetes API — no Flux API tokens required.
+
+## Tracked Resources
+
+| CRD | Data |
+| --- | --- |
+| `Kustomization` | Status, last applied revision, ready condition |
+| `HelmRelease` | Chart, version, status, values drift |
+| `GitRepository` | URL, branch, last fetched revision |
+| `OCIRepository` | URL, tag, last fetched digest |
+| `Bucket` | Endpoint, bucket name, status |
+
+## Configuration
+
+```yaml
+spec:
+  watchers:
+    gitops:
+      flux:
+        enabled: true
+        watchKustomizations: true
+        watchHelmReleases: true
+        watchSources: true
+```

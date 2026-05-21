@@ -1,0 +1,62 @@
+---
+title: "Operator Installation"
+description: "Install the ChangeGuard operator to manage security scanning and data collection"
+---
+
+The ChangeGuard operator manages the full lifecycle of data collection, security scanning, runtime detection, and AI analysis through a single `ChangeGuardAgent` custom resource.
+
+## One-Line Install
+
+```bash
+curl -sL https://install.changeguard.ai | bash -s -- \
+  --api-key YOUR_API_KEY \
+  --cluster production \
+  --provider EKS \
+  --region us-east-1
+```
+
+## What Gets Deployed
+
+| Resource | Type | Purpose |
+| --- | --- | --- |
+| `changeguard-operator` | Deployment | Controller (watches ChangeGuardAgent CRDs) |
+| `changeguard-collector` | Deployment | Read-only data collector (snapshots every 10s) |
+| `changeguard-bench` | CronJob | CIS benchmark scanner (KubeBench) |
+| `changeguard-grype` | CronJob | Container image CVE scanner |
+| `changeguard-syft` | CronJob | SBOM generator |
+| `changeguard-pluto` | CronJob | Deprecated API detector |
+| `changeguard-falco` | DaemonSet | Runtime syscall monitor (every node) |
+| `changeguard-sidekick` | Deployment | Falco alert forwarder |
+
+## RBAC
+
+The operator creates a ClusterRole with read-only access. It collects pods, deployments, nodes, events, services, RBAC resources, network policies, and metrics. It reads secrets only for ArgoCD auto-discovery — never application secrets.
+
+<Info>
+  The agent never reads or stores application secrets.
+</Info>
+
+## Requirements
+
+- Kubernetes 1.25\+
+- Outbound HTTPS to `api.changeguard.ai`
+- For Falco: Linux kernel 5.8\+ (modern\_ebpf driver)
+
+## Helm Install
+
+```bash
+helm repo add changeguard https://charts.changeguard.ai
+helm install changeguard changeguard/changeguard-operator \
+  --namespace changeguard-system --create-namespace \
+  --set apiKey=YOUR_API_KEY \
+  --set clusterName=production
+```
+
+## Uninstall
+
+```bash
+kubectl delete changeguardagent changeguard -n changeguard-system
+helm uninstall changeguard -n changeguard-system
+kubectl delete namespace changeguard-system
+kubectl delete crd changeguardagents.changeguard.ai
+```

@@ -1,0 +1,31 @@
+---
+title: "KubeBench"
+description: "CIS Kubernetes Benchmark scanning"
+---
+
+KubeBench runs the CIS Kubernetes Benchmark against your cluster, testing node configurations, API server settings, etcd encryption, and security policies.
+
+## Targets
+
+| Target | Examples |
+| --- | --- |
+| **Master** | API server flags, controller-manager, scheduler |
+| **Node** | kubelet authentication, read-only port, kernel params |
+| **Etcd** | Encryption at rest, client cert auth, peer encryption |
+| **Policies** | Pod security standards, network policies, RBAC |
+
+## Configuration
+
+```yaml
+spec:
+  security:
+    kubeBench:
+      enabled: true
+      schedule: "0 */6 * * *"
+      image: "aquasec/kube-bench:v0.8.0"
+      targets: ["master", "node", "etcd", "policies"]
+```
+
+## Dashboard
+
+Results appear in **Security Scanning → CIS Benchmarks** with pass/fail/warn counts per section and remediation steps.

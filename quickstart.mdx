@@ -1,5 +1,5 @@
 ---
-title: Quickstart
+title: "Quickstart"
 description: "Get ChangeGuard running in 60 seconds"
 ---
 
@@ -7,17 +7,17 @@ description: "Get ChangeGuard running in 60 seconds"
 
 - A Kubernetes cluster (EKS, GKE, AKS, or any CNCF-conformant cluster)
 - `kubectl` configured and pointing at your cluster
-- A ChangeGuard account ([sign up free](https://app.changeguard.ai))
+- A ChangeGuard account ([start free trial](https://app.changeguard.ai))
 
-## Step 1: Get your API key
+## Step 1: Get Your API Key
 
-After signing up, your API key is shown once on the confirmation screen. If you need a new one, go to **Integrations → API Keys → Create Key**.
+After signing up, your API key is shown on the confirmation screen. You can also create keys in **Settings → API Keys → Create Key**.
 
 <Warning>
   Save your API key immediately — it cannot be retrieved after creation. Only the prefix is stored.
 </Warning>
 
-## Step 2: Install the agent
+## Step 2: Install the Operator
 
 ```bash
 curl -sL https://install.changeguard.ai | bash -s -- \
@@ -25,42 +25,45 @@ curl -sL https://install.changeguard.ai | bash -s -- \
   --cluster my-cluster-name
 ```
 
-That's it. The installer creates:
-- A `changeguard-agent` namespace
-- A Kubernetes Secret with your configuration
-- RBAC roles (read-only access to cluster resources)
-- The agent Deployment (single pod, ~50MB memory)
+The installer deploys the ChangeGuard operator, which creates and manages:
+
+- **Data collector** — read-only snapshot agent pushing every 10 seconds
+- **KubeBench** — CIS Kubernetes benchmark scanning (every 6 hours)
+- **Grype** — container image CVE scanning (every 4 hours \+ on new deploys)
+- **Falco** — runtime syscall threat detection (continuous, every node)
+- **Pluto** — deprecated Kubernetes API detection (every 12 hours)
+- **Syft** — software bill of materials generation (every 8 hours)
 
 ## Step 3: Verify
 
-Check the agent is running:
-
 ```bash
-kubectl logs -n changeguard-agent -l app=changeguard-agent --tail=5
+kubectl get changeguardagent -n changeguard-system
 ```
 
-You should see:
-
+```text
+NAME          CLUSTER        CSC   PHASE     PUSHES   AGE
+changeguard   my-cluster     87    Running   142      2m
 ```
-[push] OK: pods=24 nodes=3 deploys=12 score=87 | 45KB→4KB (10.2x) | 23ms
-```
 
-## Step 4: View your dashboard
+## Step 4: View Your Dashboard
 
-Go to [app.changeguard.ai](https://app.changeguard.ai) and log in. Your cluster appears in the dropdown within 10 seconds.
+Go to [app.changeguard.ai](https://app.changeguard.ai) and log in. Your cluster appears in the sidebar within 10 seconds.
 
-## Optional flags
+## Install Options
 
 | Flag | Default | Description |
-|------|---------|-------------|
+| --- | --- | --- |
+| `--api-key` | _required_ | Your ChangeGuard API key (starts with `cg_`) |
+| `--cluster` | _required_ | Display name for this cluster |
 | `--provider` | `Kubernetes` | `EKS`, `GKE`, `AKS`, or `Kubernetes` |
 | `--region` | auto-detect | Cluster region (e.g., `us-east-1`) |
-| `--version` | `v2.4.0` | Agent image version |
-| `--namespace` | `changeguard-agent` | Namespace for the agent |
+| `--namespace` | `changeguard-system` | Namespace for the operator |
 
 ## Uninstall
 
 ```bash
-kubectl delete namespace changeguard-agent
-kubectl delete clusterrole,clusterrolebinding changeguard-agent
+kubectl delete changeguardagent changeguard -n changeguard-system
+helm uninstall changeguard -n changeguard-system
+kubectl delete namespace changeguard-system
+kubectl delete crd changeguardagents.changeguard.ai
 ```

@@ -1,0 +1,29 @@
+---
+title: "Grype"
+description: "Container image vulnerability (CVE) scanning"
+---
+
+Grype scans every container image running in your cluster for known vulnerabilities using the Grype vulnerability database.
+
+## Features
+
+- **Scheduled scans** — every 4 hours by default
+- **Scan on deploy** — triggers when new images appear
+- **Severity filtering** — configurable threshold
+- **SBOM integration** — scans SBOMs when Syft is enabled (faster)
+
+## Configuration
+
+```yaml
+spec:
+  security:
+    grype:
+      enabled: true
+      schedule: "0 */4 * * *"
+      severityThreshold: medium
+      scanOnDeploy: true
+```
+
+## Dashboard
+
+Results appear in **Security Scanning → Vulnerabilities** with CVE ID, severity, affected package, fixed version, and impacted pods.

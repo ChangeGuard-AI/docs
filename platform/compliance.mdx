@@ -1,0 +1,28 @@
+---
+title: "Compliance"
+description: "Automated compliance mapping for SOC 2, PCI DSS, HIPAA, FedRAMP, and EO 14028"
+---
+
+ChangeGuard continuously maps your cluster's security posture to industry compliance frameworks.
+
+## Supported Frameworks
+
+| Framework | Focus Areas |
+| --- | --- |
+| **SOC 2** | Access control, change management, monitoring |
+| **PCI DSS** | Network segmentation, encryption, vulnerability management |
+| **HIPAA** | Access control, audit controls, integrity |
+| **FedRAMP** | Identity, configuration management, system integrity |
+| **EO 14028** | SBOM generation, vulnerability scanning, supply chain |
+
+## Evidence Sources
+
+- Network policies → segmentation controls
+- RBAC configuration → access control
+- KubeBench → configuration hardening
+- Grype CVE scans → vulnerability management
+- Falco alerts → monitoring and intrusion detection
+- Syft SBOMs → supply chain controls
+- Audit trail → change management
+
+Compliance scores are derived from real cluster state, not self-assessments. Export reports as CSV or JSON for auditors.

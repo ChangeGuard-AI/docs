@@ -2,11 +2,11 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "ChangeGuard",
-  "description": "Deployment safety intelligence for Kubernetes. Documentation, security architecture, and API reference.",
+  "description": "Kubernetes security and deployment safety platform. CSC scoring, CIS benchmarks, CVE scanning, runtime threat detection, RBAC analysis, and compliance automation.",
   "colors": {
-    "primary": "#00FFA3",
-    "light": "#00FFA3",
-    "dark": "#00D98F"
+    "primary": "#3B82F6",
+    "light": "#60A5FA",
+    "dark": "#2563EB"
   },
   "favicon": "/favicon.svg",
   "logo": {
@@ -27,20 +27,52 @@
             ]
           },
           {
-            "group": "Agent",
+            "group": "Operator",
             "pages": [
-              "agent/installation",
-              "agent/configuration",
-              "agent/troubleshooting"
+              "operator/installation",
+              "operator/crd-reference",
+              "operator/helm-chart"
+            ]
+          },
+          {
+            "group": "Security Scanning",
+            "pages": [
+              "scanning/overview",
+              "scanning/kubebench",
+              "scanning/grype",
+              "scanning/falco",
+              "scanning/pluto",
+              "scanning/sbom"
             ]
           },
           {
             "group": "Platform",
             "pages": [
               "platform/csc-score",
+              "platform/identity-access",
+              "platform/attack-paths",
+              "platform/compliance",
+              "platform/resource-graph",
               "platform/argocd",
+              "platform/flux",
+              "platform/fleet-comparison",
               "platform/notifications",
               "platform/export"
+            ]
+          },
+          {
+            "group": "AI Analysis",
+            "pages": [
+              "ai/overview",
+              "ai/nvidia-nim"
+            ]
+          },
+          {
+            "group": "Agent (Legacy)",
+            "pages": [
+              "agent/installation",
+              "agent/configuration",
+              "agent/troubleshooting"
             ]
           },
           {
@@ -103,8 +135,8 @@
     ],
     "primary": {
       "type": "button",
-      "label": "Start Free",
-      "href": "https://app.changeguard.ai/signup"
+      "label": "Start Free Trial",
+      "href": "https://app.changeguard.ai"
     }
   },
   "footer": {

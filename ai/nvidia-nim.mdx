@@ -1,0 +1,53 @@
+---
+title: "NVIDIA NIM"
+description: "Configure NVIDIA NIM for AI-powered security analysis"
+---
+
+## Cloud Mode (Recommended)
+
+### Step 1: Get an API Key
+
+Sign up at [build.nvidia.com](https://build.nvidia.com) and generate an API key.
+
+### Step 2: Create a Secret
+
+```bash
+kubectl create secret generic nvidia-api-key \
+  --from-literal=api-key=nvapi-YOUR_KEY \
+  -n changeguard-system
+```
+
+### Step 3: Configure the CRD
+
+```yaml
+spec:
+  ai:
+    mode: cloud
+    apiKeySecretRef:
+      name: nvidia-api-key
+```
+
+## On-Cluster Mode
+
+For air-gapped environments or data sovereignty:
+
+```yaml
+spec:
+  ai:
+    mode: oncluster
+    onCluster:
+      image: "nvcr.io/nim/meta/llama-3.1-70b-instruct:latest"
+      gpuRequest: "1"
+      memoryLimit: "80Gi"
+```
+
+Requires 1\+ NVIDIA GPU (A100/H100/L40S recommended) with 80GB\+ GPU memory.
+
+## AWS Mode
+
+```yaml
+spec:
+  ai:
+    mode: aws
+    endpoint: https://your-nim-endpoint.sagemaker.aws
+```
