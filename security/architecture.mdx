@@ -15,16 +15,9 @@ ChangeGuard is designed with a zero-trust, outbound-only architecture. The agent
 
 ## Data Flow
 
-```text
-Your Cluster                              ChangeGuard Cloud
-┌──────────────────────┐                 ┌──────────────────────────┐
-│  Agent (Go binary)   │                 │  ALB (TLS termination)   │
-│  Read-only RBAC      │── HTTPS/TLS ──→│  WAF (managed rules)     │
-│  Non-root container  │   1.2+ only     │  Backend (EKS)           │
-│  No inbound ports    │   Gzip + API    │  PostgreSQL (RDS)        │
-│                      │   Key auth      │  AES-256 at rest         │
-└──────────────────────┘                 └──────────────────────────┘
-```
+<Frame caption="The agent connects outbound only — telemetry is encrypted in transit (TLS 1.2+) and at rest (AES-256), with no inbound path into your cluster.">
+  ![ChangeGuard data flow: the in-cluster agent pushes snapshots outbound over HTTPS (TLS 1.2\+, gzip, API key) through AWS WAF and the load balancer to the backend on Amazon EKS, which writes to Amazon RDS PostgreSQL with sslmode=require and AES-256 encryption at rest.](https://install.changeguard.ai/assets/dataflow.svg)
+</Frame>
 
 Every component in this chain enforces encryption:
 
