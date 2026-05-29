@@ -1,5 +1,5 @@
 ---
-title: Security Architecture
+title: "Security Architecture"
 description: "How ChangeGuard protects your clusters and data"
 ---
 
@@ -7,9 +7,15 @@ description: "How ChangeGuard protects your clusters and data"
 
 ChangeGuard is designed with a zero-trust, outbound-only architecture. The agent runs inside your cluster with read-only access and pushes encrypted metadata to our backend. There is never any inbound access to your infrastructure.
 
+## Architecture
+
+<Frame caption="Outbound-only by design: a read-only agent and the five scanners in your cluster push findings out over TLS 1.2+ to the ChangeGuard platform on AWS. No inbound connection is ever opened to your infrastructure.">
+  ![ChangeGuard security architecture: a read-only, non-root agent and the KubeBench, Grype, Falco, Pluto, and Syft scanners in your Kubernetes cluster connect outbound over TLS to AWS WAF, load balancing, the backend on Amazon EKS, Amazon RDS (AES-256 at rest), and Amazon Bedrock for AI analysis.](https://install.changeguard.ai/assets/architecture.svg)
+</Frame>
+
 ## Data Flow
 
-```
+```text
 Your Cluster                              ChangeGuard Cloud
 ┌──────────────────────┐                 ┌──────────────────────────┐
 │  Agent (Go binary)   │                 │  ALB (TLS termination)   │
@@ -22,7 +28,7 @@ Your Cluster                              ChangeGuard Cloud
 
 Every component in this chain enforces encryption:
 
-- **Agent → Backend:** TLS 1.2+ enforced in the agent's HTTP transport configuration. The agent will not downgrade to plain HTTP.
+- **Agent → Backend:** TLS 1.2\+ enforced in the agent's HTTP transport configuration. The agent will not downgrade to plain HTTP.
 - **ALB:** AWS-managed TLS certificate via ACM. HTTP requests on port 80 receive a 301 redirect to HTTPS.
 - **Backend → Database:** PostgreSQL connections use `sslmode=require`. All queries are encrypted in transit.
 - **Database at rest:** AES-256 encryption via AWS-managed keys on the RDS instance.
@@ -31,7 +37,7 @@ Every component in this chain enforces encryption:
 
 The agent needs outbound HTTPS access to a single endpoint:
 
-```
+```text
 api.changeguard.ai:443
 ```
 
@@ -40,7 +46,7 @@ No inbound connectivity is required. No LoadBalancer, Ingress, or NodePort is cr
 ## Infrastructure
 
 | Component | Service | Details |
-|-----------|---------|---------|
+| --- | --- | --- |
 | Compute | AWS EKS | Dedicated namespace, private cluster |
 | Database | AWS RDS PostgreSQL | Encryption at rest, SSL connections |
 | Load Balancer | AWS ALB | ACM-managed TLS, HTTP→HTTPS redirect |

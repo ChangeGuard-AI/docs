@@ -1,18 +1,18 @@
 ---
 title: "AI Analysis"
-description: "AI-powered security analysis with NVIDIA NIM"
+description: "AI-powered security analysis on Amazon Bedrock (Claude), with optional NVIDIA NIM for self-hosted inference"
 ---
 
-ChangeGuard integrates with NVIDIA NIM for AI-powered analysis of your cluster's security posture.
+ChangeGuard includes AI-powered analysis of your cluster's security posture. By default this runs server-side on **Amazon Bedrock** using Anthropic's **Claude** — there is nothing to install and no GPU required. For self-hosted or air-gapped environments, you can route inference through **NVIDIA NIM** instead.
 
-## Modes
+## Inference backends
 
-| Mode | Where It Runs | Requirements |
+| Backend | Where it runs | Requirements |
 | --- | --- | --- |
-| **Cloud** | NVIDIA-hosted API | NVIDIA API key |
-| **AWS** | Your SageMaker/EC2 endpoint | NIM deployed |
-| **On-cluster** | NIM container in your cluster | GPU node |
-| **Disabled** | Off | None (default) |
+| **Amazon Bedrock** (default) | ChangeGuard platform (managed) | None — built in |
+| **NVIDIA NIM — Cloud** | NVIDIA-hosted API | NVIDIA API key |
+| **NVIDIA NIM — AWS** | Your SageMaker/EC2 endpoint | NIM deployed |
+| **NVIDIA NIM — on-cluster** | NIM container in your cluster | GPU node |
 
 ## What AI Analyzes
 
@@ -22,6 +22,10 @@ ChangeGuard integrates with NVIDIA NIM for AI-powered analysis of your cluster's
 - **Attack path narrative** — privilege escalation chains in plain English
 
 ## Configuration
+
+<Note>
+  AI analysis works out of the box on Amazon Bedrock — no configuration required. Add an `ai` block to your `ChangeGuardAgent` resource only if you want to route inference through NVIDIA NIM instead.
+</Note>
 
 ```yaml
 spec:
