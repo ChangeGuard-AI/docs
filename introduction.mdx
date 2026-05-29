@@ -39,6 +39,10 @@ At its core is the **Change Safety Confidence (CSC) score** — a deterministic 
 
 ## How It Works
 
+<Frame caption="ChangeGuard runs as an operator inside your cluster: a collector and five security scanners feed findings to the platform over an outbound TLS connection, and you review everything in the dashboard.">
+  ![ChangeGuard architecture: a read-only agent and five security scanners run in your Kubernetes cluster and connect outbound over TLS to the ChangeGuard platform on AWS.](/images/changeguard-architecture.svg)
+</Frame>
+
 <Steps>
   <Step title="Install the operator">
     One command deploys the ChangeGuard operator to your cluster. The operator manages the data collector, security scanners, and runtime detection — all from a single ChangeGuardAgent custom resource.
