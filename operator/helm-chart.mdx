@@ -7,24 +7,61 @@ description: "Install and configure ChangeGuard via Helm"
 
 ```bash
 helm repo add changeguard https://charts.changeguard.ai
-helm install changeguard changeguard/changeguard-operator \
+helm repo update
+helm upgrade --install changeguard changeguard/changeguard-operator \
   --namespace changeguard-system --create-namespace \
-  --set apiKey=YOUR_API_KEY \
-  --set clusterName=production
+  --set agent.apiKey=YOUR_API_KEY \
+  --set agent.clusterName=production \
+  --set agent.provider=EKS \
+  --set agent.security.enabled=true
 ```
+
+ChangeGuard is operator-managed, and the Helm chart is the single install artifact — it deploys the operator, the read-only data collector, and all five scanners. There is no standalone agent.
 
 ## Key Values
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `apiKey` | _required_ | ChangeGuard API key |
-| `clusterName` | _required_ | Cluster display name |
-| `provider` | `Kubernetes` | EKS, GKE, AKS, Kubernetes |
-| `security.enabled` | `true` | Enable all security scanning |
-| `security.kubeBench.enabled` | `true` | CIS benchmarks |
-| `security.grype.enabled` | `true` | CVE scanning |
-| `security.falco.enabled` | `true` | Runtime detection |
-| `collector.pushInterval` | `10s` | Snapshot frequency |
+| `agent.apiKey` | _required_ | ChangeGuard API key |
+| `agent.clusterName` | _required_ | Cluster display name |
+| `agent.provider` | `Kubernetes` | EKS, GKE, AKS, Kubernetes |
+| `agent.security.enabled` | `true` | Enable all security scanning |
+| `agent.security.kubeBench.enabled` | `true` | CIS benchmarks |
+| `agent.security.grype.enabled` | `true` | CVE scanning |
+| `agent.security.falco.enabled` | `true` | Runtime detection |
+| `agent.collector.pushInterval` | `10s` | Snapshot frequency |
+| `global.imageRegistry` | _unset_ | Override the registry for every image (air-gapped installs) |
+
+## GitOps, OCI, and air-gapped installs
+
+ChangeGuard discovers GitOps state by reading it directly from the Kubernetes API inside the cluster — no ArgoCD or Flux API token is required. Turn discovery on with:
+
+```bash
+  --set gitops.argoCD.enabled=true \
+  --set gitops.flux.enabled=true
+```
+
+See [ArgoCD Integration](/platform/argocd) and [Flux CD Integration](/platform/flux) for details.
+
+The chart is also published as an OCI artifact. To install from the registry — or to run fully air-gapped by mirroring the chart and images and repointing them with a single value:
+
+```bash
+helm upgrade --install changeguard \
+  oci://public.ecr.aws/m7g7b7v0/changeguard-operator \
+  --namespace changeguard-system --create-namespace \
+  --set global.imageRegistry=registry.internal \
+  --set agent.apiKey=YOUR_API_KEY \
+  --set agent.clusterName=production \
+  --set agent.security.enabled=true
+```
+
+## Verify before installing
+
+The chart, the operator and agent images, and a CycloneDX SBOM for each are signed with [cosign](https://github.com/sigstore/cosign) (backed by AWS KMS). Verify any artifact against the published key before installing:
+
+```bash
+cosign verify --key https://charts.changeguard.ai/cosign.pub <image-or-chart>
+```
 
 ## Upgrade
 

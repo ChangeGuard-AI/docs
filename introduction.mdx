@@ -35,6 +35,14 @@ At its core is the **Change Safety Confidence (CSC) score** — a deterministic 
   <Card title="Fleet Management" icon="server" href="/platform/fleet-comparison">
     Cross-cluster intelligence correlates risks, compares configurations, and detects patterns across your entire fleet.
   </Card>
+
+  <Card title="Signed Supply Chain" icon="signature" href="/scanning/sbom">
+    The Helm chart, the operator and agent images, and a CycloneDX SBOM for each are cosign-signed (AWS KMS). Verify exactly what you run before it reaches a cluster.
+  </Card>
+
+  <Card title="AI Risk Analysis" icon="robot" href="/ai/overview">
+    Plain-English explanations and prioritized fixes for findings, powered by Claude on Amazon Bedrock — with optional self-hosted NVIDIA NIM.
+  </Card>
 </CardGroup>
 
 ## How It Works
@@ -58,9 +66,8 @@ At its core is the **Change Safety Confidence (CSC) score** — a deterministic 
 ## Quick Install
 
 ```bash
-curl -sL https://install.changeguard.ai | bash -s -- \
-  --api-key YOUR_API_KEY \
-  --cluster production
+curl -sL https://install.changeguard.ai | \
+  CG_API_KEY=YOUR_API_KEY CG_CLUSTER_NAME=production sh
 ```
 
 Your dashboard populates within 60 seconds. Security scanning results appear within the first scan cycle.

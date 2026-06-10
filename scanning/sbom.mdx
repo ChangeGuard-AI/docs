@@ -30,3 +30,14 @@ spec:
       format: cyclonedx-json
       scanOnDeploy: true
 ```
+
+## Verifying ChangeGuard's own artifacts
+
+ChangeGuard ships its software the same way it asks you to scan yours. The Helm chart, the operator and agent images, and a CycloneDX SBOM attestation for each are signed with [cosign](https://github.com/sigstore/cosign), backed by keys held in AWS KMS. Verify any artifact against the published key before it runs:
+
+```bash
+cosign verify --key https://charts.changeguard.ai/cosign.pub \
+  public.ecr.aws/m7g7b7v0/changeguard/operator:v3.9.18
+```
+
+A successful verification confirms both the signature and the attached SBOM attestation. Wire the same check into your CI pipeline or an admission controller (Sigstore policy-controller or Kyverno) to enforce that only signed ChangeGuard artifacts are admitted to your cluster.

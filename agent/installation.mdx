@@ -1,7 +1,13 @@
 ---
-title: Installation
+title: "Installation"
 description: "Install the ChangeGuard agent in your cluster"
 ---
+
+<Warning>
+  **The standalone agent has been removed.** ChangeGuard is now operator-managed — a single Helm chart installs the operator, the read-only data collector, and all five scanners. The commands on this page are historical and no longer work against the current installer.
+
+  To install, use the [Quickstart](/quickstart), the [operator installation guide](/operator/installation), or the [Helm chart](/operator/helm-chart).
+</Warning>
 
 ## One-Line Install
 
@@ -17,7 +23,7 @@ The install script applies a single kubectl manifest that creates:
 
 1. **Namespace** — `changeguard-agent` (isolated from your workloads)
 2. **Secret** — stores your API key and configuration
-3. **ServiceAccount + RBAC** — read-only cluster access
+3. **ServiceAccount \+ RBAC** — read-only cluster access
 4. **Deployment** — single replica, the agent pod
 
 ## RBAC Permissions
@@ -25,7 +31,7 @@ The install script applies a single kubectl manifest that creates:
 The agent requests the minimum permissions needed:
 
 | Resource | Verbs | Purpose |
-|----------|-------|---------|
+| --- | --- | --- |
 | Pods, Nodes, Namespaces, Events, Services | get, list, watch | Cluster snapshot |
 | Pods/log | get, list | Log collection |
 | Deployments, StatefulSets, DaemonSets, ReplicaSets | get, list, watch | Workload status |
@@ -80,7 +86,7 @@ All clusters share the same API key and appear in the same dashboard.
 
 The agent image is publicly available:
 
-```
+```text
 public.ecr.aws/m7g7b7v0/changeguard/agent:v2.4.0
 ```
 
