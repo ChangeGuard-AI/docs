@@ -33,6 +33,21 @@ All scanners default to **enabled** when the `security` field is present.
 | `falco` | Continuous | Runtime syscall monitoring via eBPF |
 | `pluto` | Every 12h | Deprecated/removed API detection |
 
+## GitOps Spec
+
+ChangeGuard discovers GitOps state by reading custom resources directly over the Kubernetes API — no ArgoCD or Flux API token is required.
+
+```yaml
+spec:
+  gitops:
+    argoCD:
+      enabled: true   # discover ArgoCD Applications
+    flux:
+      enabled: true   # discover Kustomizations, HelmReleases, and Sources
+```
+
+Discovered ArgoCD applications and Flux resources are pushed to ChangeGuard and persisted, so fleet and GitOps views survive backend restarts and stay consistent across replicas. See [ArgoCD Integration](/platform/argocd) and [Flux CD Integration](/platform/flux).
+
 ## AI Spec
 
 | Field | Default | Options |

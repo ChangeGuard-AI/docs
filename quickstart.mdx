@@ -7,6 +7,7 @@ description: "Get ChangeGuard running in 60 seconds"
 
 - A Kubernetes cluster (EKS, GKE, AKS, or any CNCF-conformant cluster)
 - `kubectl` configured and pointing at your cluster
+- `helm` 3.8\+ installed — the installer is a thin wrapper around a Helm install
 - A ChangeGuard account ([start free trial](https://app.changeguard.ai))
 
 ## Step 1: Get Your API Key
@@ -20,9 +21,8 @@ After signing up, your API key is shown on the confirmation screen. You can also
 ## Step 2: Install the Operator
 
 ```bash
-curl -sL https://install.changeguard.ai | bash -s -- \
-  --api-key YOUR_API_KEY \
-  --cluster my-cluster-name
+curl -sL https://install.changeguard.ai | \
+  CG_API_KEY=YOUR_API_KEY CG_CLUSTER_NAME=my-cluster-name sh
 ```
 
 The installer deploys the ChangeGuard operator, which creates and manages:
@@ -51,13 +51,15 @@ Go to [app.changeguard.ai](https://app.changeguard.ai) and log in. Your cluster 
 
 ## Install Options
 
-| Flag | Default | Description |
+The one-liner is configured with environment variables:
+
+| Variable | Default | Description |
 | --- | --- | --- |
-| `--api-key` | _required_ | Your ChangeGuard API key (starts with `cg_`) |
-| `--cluster` | _required_ | Display name for this cluster |
-| `--provider` | `Kubernetes` | `EKS`, `GKE`, `AKS`, or `Kubernetes` |
-| `--region` | auto-detect | Cluster region (e.g., `us-east-1`) |
-| `--namespace` | `changeguard-system` | Namespace for the operator |
+| `CG_API_KEY` | _required_ | Your ChangeGuard API key (starts with `cg_`) |
+| `CG_CLUSTER_NAME` | _required_ | Display name for this cluster |
+| `CG_PROVIDER` | `Kubernetes` | `EKS`, `GKE`, `AKS`, or `Kubernetes` |
+
+The operator installs into the `changeguard-system` namespace. For a custom namespace, air-gapped or OCI installs, GitOps, or finer-grained values, install the [Helm chart](/operator/helm-chart) directly.
 
 ## Uninstall
 

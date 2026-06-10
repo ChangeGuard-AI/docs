@@ -1,17 +1,19 @@
 ---
-title: ArgoCD Integration
+title: "ArgoCD Integration"
 description: "Fleet-wide ArgoCD visibility"
 ---
 
 ## Auto-Discovery
 
-When `ENABLE_ARGOCD_DISCOVERY=true` (default), the agent automatically finds ArgoCD server instances in your cluster by scanning for services with ArgoCD labels. No manual configuration needed.
+When ArgoCD discovery is enabled (`gitops.argoCD.enabled`), the in-cluster agent reads ArgoCD `Application` resources directly from the Kubernetes API and pushes them to ChangeGuard. No ArgoCD API token, admin secret, or server URL is required — and because the read happens inside the cluster, it works even when the ChangeGuard control plane has no network path to your ArgoCD server.
 
 The agent:
-1. Detects `argocd-server` services across all namespaces
-2. Obtains an API token from the initial admin secret
-3. Registers the instance with the ChangeGuard backend
-4. Re-checks every 5 minutes for new instances
+
+1. Reads `Application` custom resources across all namespaces over the Kubernetes API
+2. Pushes each application's name, health, sync status, and drift count to the backend
+3. Re-reads on a short interval so the fleet view stays current
+
+Discovered applications are persisted server-side, so the fleet view survives backend restarts and stays consistent across replicas.
 
 ## ArgoCD Fleet View
 
@@ -30,14 +32,6 @@ ChangeGuard correlates ArgoCD data across clusters to detect fleet-wide issues:
 - Sync failures spreading across the fleet
 - Degraded applications correlated with recent deployments
 
-## Manual Registration
+## No tokens to manage
 
-If auto-discovery doesn't find your ArgoCD instance (e.g., non-standard naming), register it manually via the API:
-
-```bash
-curl -X POST https://api.changeguard.ai/api/argo/discover \
-  -H "X-API-Key: YOUR_KEY" \
-  -H "X-Cluster-Id: my-cluster" \
-  -H "Content-Type: application/json" \
-  -d '{"name": "prod-argocd", "url": "https://argocd.internal:443", "token": "ARGOCD_TOKEN"}'
-```
+Because discovery reads `Application` resources directly, there is no ArgoCD token or admin secret to create, store, or rotate. If applications don't appear, confirm that `gitops.argoCD.enabled` is set and that the collector's ClusterRole can read `argoproj.io` resources — the Helm chart grants this by default.

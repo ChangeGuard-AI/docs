@@ -8,11 +8,10 @@ The ChangeGuard operator manages the full lifecycle of data collection, security
 ## One-Line Install
 
 ```bash
-curl -sL https://install.changeguard.ai | bash -s -- \
-  --api-key YOUR_API_KEY \
-  --cluster production \
-  --provider EKS \
-  --region us-east-1
+curl -sL https://install.changeguard.ai | \
+  CG_API_KEY=YOUR_API_KEY \
+  CG_CLUSTER_NAME=production \
+  CG_PROVIDER=EKS sh
 ```
 
 ## What Gets Deployed
@@ -30,7 +29,7 @@ curl -sL https://install.changeguard.ai | bash -s -- \
 
 ## RBAC
 
-The operator creates a ClusterRole with read-only access. It collects pods, deployments, nodes, events, services, RBAC resources, network policies, and metrics. It reads secrets only for ArgoCD auto-discovery — never application secrets.
+The operator creates a ClusterRole with read-only access. It reads pods, deployments, nodes, events, services, RBAC objects (for Identity & Access and Attack Paths), network policies, and metrics, plus ArgoCD `Application` and Flux (`Kustomization`, `HelmRelease`, `Source`) custom resources for GitOps discovery. GitOps state is read directly from those resources — no ArgoCD or Flux API token is required — and the agent never reads application Secrets.
 
 <Info>
   The agent never reads or stores application secrets.
@@ -39,6 +38,7 @@ The operator creates a ClusterRole with read-only access. It collects pods, depl
 ## Requirements
 
 - Kubernetes 1.25\+
+- `helm` 3.8\+ and `kubectl` (for installation)
 - Outbound HTTPS to `api.changeguard.ai`
 - For Falco: Linux kernel 5.8\+ (modern\_ebpf driver)
 
@@ -46,10 +46,13 @@ The operator creates a ClusterRole with read-only access. It collects pods, depl
 
 ```bash
 helm repo add changeguard https://charts.changeguard.ai
-helm install changeguard changeguard/changeguard-operator \
+helm repo update
+helm upgrade --install changeguard changeguard/changeguard-operator \
   --namespace changeguard-system --create-namespace \
-  --set apiKey=YOUR_API_KEY \
-  --set clusterName=production
+  --set agent.apiKey=YOUR_API_KEY \
+  --set agent.clusterName=production \
+  --set agent.provider=EKS \
+  --set agent.security.enabled=true
 ```
 
 ## Uninstall

@@ -3,6 +3,24 @@ title: "Changelog"
 description: "Release history and what shipped when"
 ---
 
+## v3.9.19 — June 2026
+
+**Cross-cluster GitOps, a signed supply chain, and a single-artifact enterprise install.**
+
+### New Features
+
+- **Cross-cluster GitOps discovery** — the in-cluster agent reads ArgoCD `Application` resources and Flux `Kustomization`, `HelmRelease`, and `Source` resources directly over the Kubernetes API. No ArgoCD or Flux API token is required, so discovery works even on clusters the SaaS control plane can't reach. GitOps state persists in Postgres and survives restarts and replicas.
+- **Signed supply chain** — the Helm chart, the operator and agent images, and a CycloneDX SBOM for each are signed with cosign (backed by AWS KMS). Verify any artifact with `cosign verify --key https://charts.changeguard.ai/cosign.pub`.
+- **Single Helm chart install** — the chart is now the one install artifact (the standalone agent is removed; the one-liner is a thin Helm bootstrap). It is published to both the chart repo and as an OCI artifact, with a `global.imageRegistry` override for air-gapped clusters and ready-made ArgoCD/Flux install examples.
+- **Automatic SBOM collection** — Syft SBOMs are harvested and posted automatically on every install, like the other scanners.
+
+### Fixes
+
+- Customer compliance scoring now excludes ChangeGuard's own namespaces and cluster RBAC, so the score reflects only your workloads.
+- Cross-cluster ArgoCD fleet view and Flux GitOps state now render reliably across backend replicas.
+
+---
+
 ## v3.9.3 — May 21, 2026
 
 **Operator as default install method.** The ChangeGuard operator now manages the full lifecycle — data collector, security scanners, runtime detection, and AI analysis — through a single ChangeGuardAgent CRD.

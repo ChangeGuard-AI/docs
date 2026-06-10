@@ -3,7 +3,7 @@ title: "Flux CD Integration"
 description: "Deep integration with Flux CD for GitOps visibility"
 ---
 
-ChangeGuard watches Flux CD custom resources directly via the Kubernetes API — no Flux API tokens required.
+ChangeGuard watches Flux CD custom resources directly via the Kubernetes API inside the cluster — no Flux API tokens required, and it works even on clusters the ChangeGuard control plane can't reach.
 
 ## Tracked Resources
 
@@ -17,13 +17,13 @@ ChangeGuard watches Flux CD custom resources directly via the Kubernetes API —
 
 ## Configuration
 
+Enable Flux discovery on the `ChangeGuardAgent` resource:
+
 ```yaml
 spec:
-  watchers:
-    gitops:
-      flux:
-        enabled: true
-        watchKustomizations: true
-        watchHelmReleases: true
-        watchSources: true
+  gitops:
+    flux:
+      enabled: true
 ```
+
+Or set `gitops.flux.enabled=true` via [Helm](/operator/helm-chart). When enabled, the collector reads Kustomizations, HelmReleases, and Sources directly and posts a GitOps snapshot that persists across backend restarts and replicas.
