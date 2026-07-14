@@ -23,6 +23,7 @@
             "pages": [
               "introduction",
               "quickstart",
+              "gate-your-pipeline",
               "how-it-works"
             ]
           },

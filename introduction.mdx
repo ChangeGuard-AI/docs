@@ -1,15 +1,71 @@
 ---
 title: "Introduction"
-description: "Kubernetes security and deployment safety platform"
+description: "Every Kubernetes deploy scored before it ships"
 ---
 
 # What is ChangeGuard?
 
-ChangeGuard is a Kubernetes security platform that gives platform engineering teams complete visibility into the safety, compliance, and runtime health of every cluster.
+ChangeGuard scores every Kubernetes deploy **0–100, before it lands**.
 
-At its core is the **Change Safety Confidence (CSC) score** — a deterministic 0–100 metric that combines CIS benchmarks, CVE scanning, RBAC analysis, runtime threat detection, GitOps drift, and cluster health into a single deployment readiness number.
+The **Change Safety Confidence (CSC) score** is deterministic and explainable — one number computed from four kinds of evidence already in your cluster:
 
-## Core Capabilities
+- **Policy** — CIS benchmarks (KubeBench), your custom rules, deprecated APIs (Pluto)
+- **Runtime** — Falco events, crash loops, OOMKills, restart storms
+- **History** — how deploys like this one actually went in this cluster
+- **Health** — node pressure, resource saturation, pending pods
+
+Wire the score into CI and every deploy gets a verdict: ship, or hold with the evidence cited.
+
+## Get to a gated pipeline
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    One command installs the operator. Your dashboard populates in about a minute.
+  </Card>
+
+  <Card title="How the CSC Score Works" icon="gauge-high" href="/how-it-works">
+    What's in the number, and why every point is traceable to a specific check.
+  </Card>
+
+  <Card title="Gate Your Pipeline" icon="traffic-light" href="/gate-your-pipeline">
+    Fail the job on a bad score — GitHub Actions, GitLab, ArgoCD PreSync, or any CI.
+  </Card>
+
+  <Card title="ArgoCD" icon="code-branch" href="/platform/argocd">
+    Score and gate GitOps deploys fleet-wide. No ArgoCD tokens to manage.
+  </Card>
+</CardGroup>
+
+## How It Works
+
+<Frame caption="ChangeGuard runs a lightweight, read-only agent inside your cluster that connects outbound over TLS — there is never any inbound access to your infrastructure.">
+  ![ChangeGuard architecture: a read-only agent and scanners in your Kubernetes cluster connect outbound over TLS to the ChangeGuard platform on AWS, which scores posture and serves your dashboard.](https://install.changeguard.ai/assets/architecture.svg)
+</Frame>
+
+<Steps>
+  <Step title="Install the operator">
+    One command deploys the ChangeGuard operator. It manages the data collector, security scanners, and runtime detection from a single ChangeGuardAgent custom resource.
+  </Step>
+  <Step title="Evidence collects automatically">
+    The collector pushes cluster snapshots every 10 seconds. KubeBench runs CIS benchmarks every 6 hours, Grype scans images every 4 hours and on every new deploy, Falco watches syscalls on every node in real time.
+  </Step>
+  <Step title="Every deploy gets a verdict">
+    Watch scores at [app.changeguard.ai](https://app.changeguard.ai), then wire the [validate endpoint](/api-reference/validate) into CI so risky deploys are held before they land.
+  </Step>
+</Steps>
+
+## Quick Install
+
+```bash
+curl -sL https://install.changeguard.ai | \
+  CG_API_KEY=YOUR_API_KEY CG_CLUSTER_NAME=production sh
+```
+
+Your dashboard populates within 60 seconds. Full scan evidence appears within the first scan cycle.
+
+## Everything below feeds the score
+
+Every capability is evidence the score can cite — not a separate dashboard to watch.
 
 <CardGroup cols={2}>
   <Card title="Security Scanning" icon="shield-halved" href="/scanning/overview">
@@ -41,51 +97,6 @@ At its core is the **Change Safety Confidence (CSC) score** — a deterministic 
   </Card>
 
   <Card title="AI Risk Analysis" icon="robot" href="/ai/overview">
-    Plain-English explanations and prioritized fixes for findings, powered by Claude on Amazon Bedrock — with optional self-hosted NVIDIA NIM.
-  </Card>
-</CardGroup>
-
-## How It Works
-
-<Frame caption="ChangeGuard runs a lightweight, read-only agent inside your cluster that connects outbound over TLS — there is never any inbound access to your infrastructure.">
-  ![ChangeGuard architecture: a read-only agent and scanners in your Kubernetes cluster connect outbound over TLS to the ChangeGuard platform on AWS, which scores posture and serves your dashboard.](https://install.changeguard.ai/assets/architecture.svg)
-</Frame>
-
-<Steps>
-  <Step title="Install the operator">
-    One command deploys the ChangeGuard operator to your cluster. The operator manages the data collector, security scanners, and runtime detection — all from a single ChangeGuardAgent custom resource.
-  </Step>
-  <Step title="Scans run automatically">
-    KubeBench runs CIS benchmarks every 6 hours. Grype scans container images for CVEs every 4 hours and on every new deployment. Falco monitors syscalls on every node in real time. The collector pushes cluster state snapshots every 10 seconds.
-  </Step>
-  <Step title="View your dashboard">
-    Log in at app.changeguard.ai to see scores, vulnerabilities, RBAC findings, attack paths, compliance posture, and audit trails — scoped to your tenant.
-  </Step>
-</Steps>
-
-## Quick Install
-
-```bash
-curl -sL https://install.changeguard.ai | \
-  CG_API_KEY=YOUR_API_KEY CG_CLUSTER_NAME=production sh
-```
-
-Your dashboard populates within 60 seconds. Security scanning results appear within the first scan cycle.
-
-<CardGroup cols={2}>
-  <Card title="Quickstart" icon="rocket" href="/quickstart">
-    Get running in 60 seconds
-  </Card>
-
-  <Card title="Operator Installation" icon="gear" href="/operator/installation">
-    Install via Helm or the one-liner
-  </Card>
-
-  <Card title="CRD Reference" icon="book" href="/operator/crd-reference">
-    Full ChangeGuardAgent spec reference
-  </Card>
-
-  <Card title="API Reference" icon="code" href="/api-reference/overview">
-    Integrate with your CI/CD pipeline
+    Plain-English explanations and prioritized fixes, grounded in your cluster's evidence — powered by Claude on Amazon Bedrock, with optional self-hosted NVIDIA NIM.
   </Card>
 </CardGroup>
