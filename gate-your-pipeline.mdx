@@ -1,0 +1,94 @@
+---
+title: "Gate Your Pipeline"
+description: "Fail the job on a bad score — in any CI"
+icon: "traffic-light"
+---
+
+The score becomes useful the day it can say no. One API call before deploy returns the cluster's current CSC score and a decision; fail the job on `BLOCK` and risky changes stop shipping.
+
+<Info>
+  Everything on this page uses the [validate endpoint](/api-reference/validate). You need an API key with CI scope — create one in **Settings → API Keys**.
+</Info>
+
+## GitHub Actions
+
+```yaml
+- name: ChangeGuard Safety Check
+  run: |
+    RESULT=$(curl -s -X POST https://api.changeguard.ai/api/validate \
+      -H "X-API-Key: ${{ secrets.CHANGEGUARD_KEY }}" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "cluster_id": "production",
+        "resource": "deployment/${{ github.event.repository.name }}",
+        "namespace": "default",
+        "action": "image_update",
+        "image": "${{ env.IMAGE_TAG }}",
+        "user": "${{ github.actor }}",
+        "source": "github-actions"
+      }')
+    DECISION=$(echo $RESULT | jq -r '.decision')
+    SCORE=$(echo $RESULT | jq -r '.csc_score')
+    echo "CSC Score: $SCORE — Decision: $DECISION"
+    if [ "$DECISION" = "BLOCK" ]; then
+      echo "::error::Deployment blocked — CSC score too low ($SCORE)"
+      exit 1
+    fi
+```
+
+## GitLab CI
+
+The same call as a job — add it as the last stage before your deploy job and make the deploy job depend on it:
+
+```yaml
+changeguard-gate:
+  stage: pre-deploy
+  image: curlimages/curl:latest
+  script:
+    - |
+      RESULT=$(curl -s -X POST https://api.changeguard.ai/api/validate \
+        -H "X-API-Key: ${CHANGEGUARD_KEY}" \
+        -H "Content-Type: application/json" \
+        -d "{\"cluster_id\":\"production\",\"resource\":\"${CI_PROJECT_NAME}\",\"source\":\"gitlab-ci\"}")
+      DECISION=$(echo $RESULT | grep -o '"decision":"[^"]*"' | cut -d'"' -f4)
+      SCORE=$(echo $RESULT | grep -o '"csc_score":[0-9]*' | cut -d':' -f2)
+      echo "CSC Score: $SCORE — Decision: $DECISION"
+      test "$DECISION" != "BLOCK"
+```
+
+## ArgoCD PreSync Hook
+
+Validate before every sync — the sync fails if the cluster isn't safe to absorb it:
+
+```yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: changeguard-check
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+spec:
+  template:
+    spec:
+      containers:
+        - name: validate
+          image: curlimages/curl
+          command: ["sh", "-c"]
+          args:
+            - |
+              RESULT=$(curl -sf -X POST https://api.changeguard.ai/api/validate \
+                -H "X-API-Key: $(cat /secret/api-key)" \
+                -H "Content-Type: application/json" \
+                -d '{"cluster_id":"production","resource":"argocd-sync","source":"argocd"}')
+              DECISION=$(echo $RESULT | grep -o '"decision":"[^"]*"' | cut -d'"' -f4)
+              [ "$DECISION" = "BLOCK" ] && exit 1 || exit 0
+      restartPolicy: Never
+```
+
+## Any other CI
+
+The gate is one `curl` — it runs anywhere a shell does. POST to `/api/validate` with your cluster and resource, read `.decision` and `.csc_score` from the response, and fail the job on `BLOCK`. See the [validate reference](/api-reference/validate) for the full request schema.
+
+## What your team sees
+
+A held deploy isn't a mystery. The dashboard shows the score at the moment of the gate and the exact checks that drove it down — the failing CIS rule, the crash-looping pod, the deploy history that went badly. Fix the finding, re-run the job, ship.

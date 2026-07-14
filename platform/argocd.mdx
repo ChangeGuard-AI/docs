@@ -1,7 +1,17 @@
 ---
 title: "ArgoCD Integration"
-description: "Fleet-wide ArgoCD visibility"
+description: "Score and gate ArgoCD deploys fleet-wide"
 ---
+
+## Gate Every Sync
+
+Add a [PreSync hook](/gate-your-pipeline#argocd-presync-hook) and every ArgoCD sync checks the cluster's CSC score before it applies — a sync into a degraded cluster fails instead of becoming an incident.
+
+## What the score catches for ArgoCD operators
+
+- **Controller trouble before the outage** — an ArgoCD controller trending toward its memory limit degrades the runtime score while apps are still healthy, not after the OOMKill takes them all to `Unknown`.
+- **Upgrades with history** — the score's history dimension remembers how the last controller upgrade went on this cluster.
+- **Fleet-wide blast radius** — the same bad image or sync failure appearing across clusters is correlated automatically.
 
 ## Auto-Discovery
 
