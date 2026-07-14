@@ -32,6 +32,21 @@ ChangeGuard correlates ArgoCD data across clusters to detect fleet-wide issues:
 - Sync failures spreading across the fleet
 - Degraded applications correlated with recent deployments
 
+## Scoring an ArgoCD upgrade
+
+ArgoCD upgrades are exactly the kind of change ChangeGuard exists for: a controller bump touches the component that deploys everything else, and its failure modes (controller crash-loops, degraded shard distribution, mass OutOfSync) show up as cluster state — which is what ChangeGuard scores.
+
+A practical upgrade workflow:
+
+1. **Check the baseline.** Run `changeguard preflight --cluster <id>` (or check the dashboard) before you begin. If the verdict is already `HOLD` from unrelated findings, fix those first — you want a clean read on the upgrade itself.
+2. **Validate the rendered upgrade.** ArgoCD ships as a Helm chart, so validate what the new version actually renders before syncing it:
+   ```bash
+   changeguard validate --helm ./argo-cd --values your-values.yaml \
+     --cluster production --fail-on-warn
+   ```
+3. **Sync, then watch the score.** After the upgrade syncs, the collector picks up the new controller pods within seconds. A healthy upgrade holds the score steady; a degrading one moves it — controller restarts and application health regressions register as findings, and the score history view shows the dip aligned with the upgrade timestamp.
+4. **Gate the rollout to the next cluster.** If you upgrade dev → staging → production, put `changeguard preflight` between stages so a degradation in staging blocks the production sync instead of following it there.
+
 ## No tokens to manage
 
 Because discovery reads `Application` resources directly, there is no ArgoCD token or admin secret to create, store, or rotate. If applications don't appear, confirm that `gitops.argoCD.enabled` is set and that the collector's ClusterRole can read `argoproj.io` resources — the Helm chart grants this by default.
