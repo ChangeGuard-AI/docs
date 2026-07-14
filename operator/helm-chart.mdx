@@ -30,15 +30,28 @@ ChangeGuard is operator-managed, and the Helm chart is the single install artifa
 | `agent.security.grype.enabled` | `true` | CVE scanning |
 | `agent.security.falco.enabled` | `true` | Runtime detection |
 | `agent.collector.pushInterval` | `10s` | Snapshot frequency |
+| `agent.ai.mode` | `holmes` | AI investigator mode (`holmes` or `disabled`) |
+| `agent.ai.holmes.mcpURL` | ChangeGuard SaaS MCP | Where the investigator reads posture data (tenant-authenticated with your agent key) |
+| `agent.ai.holmes.serviceAccountAnnotations` | _unset_ | Annotations for the investigator's ServiceAccount — set the IRSA role on EKS |
 | `global.imageRegistry` | _unset_ | Override the registry for every image (air-gapped installs) |
+
+## AI investigator (Holmes)
+
+Chart 5.1.1\+ deploys the AI investigator and the daily Sentinel verdict by default. The investigator authenticates to ChangeGuard with the same agent API key you installed with — no extra credentials for data access. It does need model access for its own reasoning: on EKS, grant Amazon Bedrock via IRSA by annotating its ServiceAccount at install time:
+
+```bash
+  --set-string "agent.ai.holmes.serviceAccountAnnotations.eks\.amazonaws\.com/role-arn=arn:aws:iam::ACCOUNT:role/your-bedrock-role"
+```
+
+To run without the AI layer, set `agent.ai.mode=disabled` — scanning, scoring, and the dashboard are unaffected.
 
 ## GitOps, OCI, and air-gapped installs
 
-ChangeGuard discovers GitOps state by reading it directly from the Kubernetes API inside the cluster — no ArgoCD or Flux API token is required. Turn discovery on with:
+ChangeGuard discovers GitOps state by reading it directly from the Kubernetes API inside the cluster — no ArgoCD or Flux API token is required. Discovery is **on by default** for both ArgoCD and Flux; disable either with:
 
 ```bash
-  --set gitops.argoCD.enabled=true \
-  --set gitops.flux.enabled=true
+  --set agent.watchers.gitops.argoCD.enabled=false \
+  --set agent.watchers.gitops.flux.enabled=false
 ```
 
 See [ArgoCD Integration](/platform/argocd) and [Flux CD Integration](/platform/flux) for details.

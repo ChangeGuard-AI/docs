@@ -23,7 +23,8 @@
             "pages": [
               "introduction",
               "quickstart",
-              "how-it-works"
+              "how-it-works",
+              "api-reference/validate"
             ]
           },
           {
@@ -103,7 +104,6 @@
               "api-reference/overview",
               "api-reference/authentication",
               "api-reference/ingest",
-              "api-reference/validate",
               "api-reference/clusters",
               "api-reference/score-history"
             ]
@@ -144,5 +144,12 @@
       "website": "https://changeguard.ai",
       "linkedin": "https://linkedin.com/company/changeguard"
     }
-  }
+  },
+  "redirects": [
+    {
+      "source": "/cicd/gate-your-pipeline",
+      "destination": "/api-reference/validate",
+      "permanent": false
+    }
+  ]
 }

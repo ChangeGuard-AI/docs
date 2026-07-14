@@ -25,6 +25,17 @@ curl -sL https://install.changeguard.ai | \
   CG_API_KEY=YOUR_API_KEY CG_CLUSTER_NAME=my-cluster-name sh
 ```
 
+Flags work too, if you prefer them:
+
+```bash
+curl -sL https://install.changeguard.ai | \
+  sh -s -- --api-key YOUR_API_KEY --cluster my-cluster-name --provider EKS
+```
+
+<Note>
+  The installer validates your API key against the ChangeGuard API **before** installing anything. An invalid or revoked key fails immediately with a pointer to **Settings → API Keys** — nothing is installed, so you never end up with a silently dead agent.
+</Note>
+
 The installer deploys the ChangeGuard operator, which creates and manages:
 
 - **Data collector** — read-only snapshot agent pushing every 10 seconds
@@ -38,12 +49,16 @@ The installer deploys the ChangeGuard operator, which creates and manages:
 
 ```bash
 kubectl get changeguardagent -n changeguard-system
+kubectl get pods -n changeguard-system
 ```
 
-```text
-NAME          CLUSTER        CSC   PHASE     PUSHES   AGE
-changeguard   my-cluster     87    Running   142      2m
-```
+The agent resource should show `PHASE: Running`, and within about a minute you should see the collector, Falco (one pod per node), and the operator all `Running`, plus short-lived scanner init jobs completing.
+
+**What to expect in the first 10 minutes:** the collector pushes its first snapshot within ~10 seconds of starting, and your score appears in the dashboard within a couple of minutes. The first vulnerability scan (Grype) takes about 3 minutes; CIS benchmark results land a few minutes after that. The score refines as each scanner reports in — an early score based on snapshots alone is normal.
+
+<Tip>
+  If the collector pod stays `0/1` and its logs show `AUTH FAILED`, the API key in the cluster is invalid or revoked — create a fresh key in **Settings → API Keys** and re-run the installer.
+</Tip>
 
 ## Step 4: View Your Dashboard
 
@@ -53,13 +68,18 @@ Go to [app.changeguard.ai](https://app.changeguard.ai) and log in. Your cluster 
 
 The one-liner is configured with environment variables:
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `CG_API_KEY` | _required_ | Your ChangeGuard API key (starts with `cg_`) |
-| `CG_CLUSTER_NAME` | _required_ | Display name for this cluster |
-| `CG_PROVIDER` | `Kubernetes` | `EKS`, `GKE`, `AKS`, or `Kubernetes` |
+| Variable | Flag | Default | Description |
+| --- | --- | --- | --- |
+| `CG_API_KEY` | `--api-key` | _required_ | Your ChangeGuard API key (starts with `cg_`) |
+| `CG_CLUSTER_NAME` | `--cluster` | _required_ | Display name for this cluster |
+| `CG_PROVIDER` | `--provider` | `Kubernetes` | `EKS`, `GKE`, `AKS`, or `Kubernetes` |
+| `CG_REGION` | `--region` | `us-east-1` | Cloud region label for this cluster |
 
 The operator installs into the `changeguard-system` namespace. For a custom namespace, air-gapped or OCI installs, GitOps, or finer-grained values, install the [Helm chart](/operator/helm-chart) directly.
+
+## Next: gate your pipeline
+
+The score is most valuable at the moment a change is about to ship. Wire the verdict into your CI so every pull request gets a `SHIP` / `HOLD` / `BLOCK` answer before merge: [Gate Your Pipeline](/api-reference/validate).
 
 ## Uninstall
 

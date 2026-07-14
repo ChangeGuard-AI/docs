@@ -1,63 +1,126 @@
 ---
-title: Validate
-description: "Pre-deployment safety checks for CI/CD"
+title: "Gate Your Pipeline"
+description: "Get a ChangeGuard verdict on every pull request — and block the risky ones"
 ---
 
-## CI/CD Integration
+Every pull request that touches your cluster deserves an answer to one question before it merges: **is it safe to ship?** ChangeGuard answers with a verdict — `SHIP`, `HOLD`, or `BLOCK` — backed by your cluster's live security posture: the CSC score, unresolved CVEs, attack paths, compliance state, and score history. This page wires that verdict into GitHub Actions, GitLab CI, or any pipeline via the CLI.
 
-Add a safety gate to your pipeline. Before deploying, call the validate endpoint to check if the target cluster is safe.
+Both templates start **advisory** — the verdict is posted, the pipeline continues. Flip one line to make them enforcing once you trust the signal.
 
-### GitHub Actions
+## Prerequisites
 
-```yaml
-- name: ChangeGuard Safety Check
-  run: |
-    RESULT=$(curl -s -X POST https://api.changeguard.ai/api/validate \
-      -H "X-API-Key: ${{ secrets.CHANGEGUARD_KEY }}" \
-      -H "Content-Type: application/json" \
-      -d '{
-        "cluster_id": "production",
-        "resource": "deployment/${{ github.event.repository.name }}",
-        "namespace": "default",
-        "action": "image_update",
-        "image": "${{ env.IMAGE_TAG }}",
-        "user": "${{ github.actor }}",
-        "source": "github-actions"
-      }')
-    DECISION=$(echo $RESULT | jq -r '.decision')
-    SCORE=$(echo $RESULT | jq -r '.csc_score')
-    echo "CSC Score: $SCORE — Decision: $DECISION"
-    if [ "$DECISION" = "BLOCK" ]; then
-      echo "::error::Deployment blocked — CSC score too low ($SCORE)"
-      exit 1
-    fi
-```
+- A cluster with the [ChangeGuard agent installed](/quickstart)
+- A **cicd-scoped API key** — create one at **app.changeguard.ai → Settings → API Keys**
 
-### ArgoCD PreSync Hook
+## GitHub Actions
 
-Add a Job with the PreSync annotation to validate before every sync:
+Save as `.github/workflows/changeguard-preflight.yml`. Configure once in the repo: `CHANGEGUARD_API_KEY` as a secret, `CHANGEGUARD_CLUSTER` as a variable.
 
 ```yaml
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: changeguard-check
-  annotations:
-    argocd.argoproj.io/hook: PreSync
-spec:
-  template:
-    spec:
-      containers:
-        - name: validate
-          image: curlimages/curl
-          command: ["sh", "-c"]
-          args:
-            - |
-              RESULT=$(curl -sf -X POST https://api.changeguard.ai/api/validate \
-                -H "X-API-Key: $(cat /secret/api-key)" \
-                -H "Content-Type: application/json" \
-                -d '{"cluster_id":"production","resource":"argocd-sync","source":"argocd"}')
-              DECISION=$(echo $RESULT | grep -o '"decision":"[^"]*"' | cut -d'"' -f4)
-              [ "$DECISION" = "BLOCK" ] && exit 1 || exit 0
-      restartPolicy: Never
+name: ChangeGuard Pre-Flight
+on:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: ChangeGuard pre-flight verdict
+        env:
+          CHANGEGUARD_API_KEY: ${{ secrets.CHANGEGUARD_API_KEY }}
+          CLUSTER_ID: ${{ vars.CHANGEGUARD_CLUSTER }}
+        run: |
+          RESP=$(curl -sf -X POST "https://api.changeguard.ai/api/cicd/preflight" \
+            -H "Content-Type: application/json" \
+            -H "X-API-Key: ${CHANGEGUARD_API_KEY}" \
+            -d "{\"cluster_id\":\"${CLUSTER_ID}\",\"source\":\"ci\",\"change\":{\"pr\":{\"repo\":\"${GITHUB_REPOSITORY}\",\"sha\":\"${GITHUB_SHA}\"}}}") || {
+            echo "ChangeGuard unreachable — skipping (advisory)"; exit 0; }
+
+          VERDICT=$(echo "$RESP" | grep -o '"verdict":"[^"]*"' | head -1 | cut -d'"' -f4)
+          CSC=$(echo "$RESP" | grep -o '"csc":[0-9]*' | head -1 | cut -d: -f2)
+
+          {
+            echo "## 🛡️ ChangeGuard Pre-Flight"
+            echo ""
+            echo "**Verdict: ${VERDICT:-unknown}** · CSC ${CSC:-?}/100"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          echo "Verdict: ${VERDICT:-unknown} (CSC ${CSC:-?}/100)"
+          # To enforce: uncomment the next line.
+          # [ "$VERDICT" = "BLOCK" ] && { echo "BLOCK verdict — failing"; exit 1; }
+          exit 0
 ```
+
+The verdict and score land in the job summary of every PR. To **enforce**, uncomment the final check so a `BLOCK` verdict fails the job.
+
+## GitLab CI
+
+Add to `.gitlab-ci.yml`. Set `CHANGEGUARD_API_KEY` and `CHANGEGUARD_CLUSTER` in **Settings → CI/CD → Variables**; add a `GITLAB_PAT` project access token (api scope) if you want the score posted as an MR comment.
+
+```yaml
+changeguard-safety-check:
+  stage: test
+  image: curlimages/curl:latest
+  rules:
+    - if: $CI_MERGE_REQUEST_IID
+  script:
+    - |
+      RESPONSE=$(curl -s -X POST "https://api.changeguard.ai/api/cicd/pr-check" \
+        -H "Content-Type: application/json" \
+        -H "X-API-Key: ${CHANGEGUARD_API_KEY}" \
+        -d "{
+          \"provider\": \"gitlab\",
+          \"repo\": \"${CI_PROJECT_PATH}\",
+          \"prNumber\": ${CI_MERGE_REQUEST_IID},
+          \"commitSha\": \"${CI_COMMIT_SHA}\",
+          \"clusterId\": \"${CHANGEGUARD_CLUSTER}\",
+          \"token\": \"${GITLAB_PAT}\",
+          \"baseUrl\": \"${CI_SERVER_URL}\"
+        }")
+      CSC_SCORE=$(echo "$RESPONSE" | grep -o '"cscScore":[0-9]*' | head -1 | cut -d: -f2)
+      echo "🛡️ ChangeGuard CSC Score: ${CSC_SCORE}/100"
+      # To enforce a minimum score, uncomment:
+      # [ "$CSC_SCORE" -lt "${CHANGEGUARD_THRESHOLD:-70}" ] && exit 1
+  allow_failure: true   # remove to make the job enforcing
+```
+
+## Any pipeline: the `changeguard` CLI
+
+The CLI validates the _actual manifests in the change_ — rendered Helm charts, Kustomize output, or raw YAML — against your cluster's posture, then exits nonzero when the gate should close.
+
+```bash
+# Validate what this PR renders, against production, and fail on warnings
+changeguard validate --helm ./chart --values prod.yaml \
+  --cluster production --threshold 70 --fail-on-warn
+
+# Or ask for the cluster-level verdict directly
+changeguard preflight --cluster production
+```
+
+`validate` returns `SAFE`, `WARN`, or `FAIL` — exit code 1 on `FAIL` (add `--fail-on-warn` to also fail on `WARN`). `preflight` returns the full `SHIP` / `HOLD` / `BLOCK` verdict.
+
+## CLI reference
+
+```text
+changeguard login                          Authenticate and save credentials
+changeguard status                         Show CSC score for current cluster
+changeguard clusters                       List all clusters with scores
+changeguard validate -f <file.yaml>        Validate manifests before deploy
+changeguard validate --helm <chart/>       Validate a Helm chart
+changeguard validate --kustomize <dir/>    Validate Kustomize output
+changeguard preflight --cluster ID         Is it safe to ship? (SHIP/HOLD/BLOCK)
+changeguard version                        Print CLI version
+```
+
+**validate flags** — `-f, --file` (YAML file or directory, repeatable) · `--helm <chart>` (runs `helm template`, validates output) · `--values <file>` (repeatable, with `--helm`) · `--set <key=value>` (repeatable, with `--helm`) · `--kustomize <dir>` (runs `kustomize build`) · `-c, --cluster` (cluster to check against) · `-t, --threshold` (CSC threshold, default 70) · `-o, --output` (`text` or `json`) · `-q, --quiet` (decision line only) · `--fail-on-warn`
+
+**login flags** — `--api-key <key>` · `--backend <url>` (default `https://api.changeguard.ai`) · `--cluster <id>` (default cluster)
+
+**status / clusters flags** — `-c, --cluster` · `-o, --output` (`text`/`json`)
+
+**Environment variables** — `CHANGEGUARD_API_KEY`, `CHANGEGUARD_BACKEND`, and `CHANGEGUARD_CLUSTER` override saved config, which is how you run the CLI in CI without a login step.
+
+## How the verdict is decided
+
+`SHIP` requires a CSC score of 75 or higher **and** no unresolved CRITICAL finding, no exploitable end-to-end attack path, and no newly failing compliance control. `HOLD` covers scores of 50–74, unstable score history, or unresolved HIGH-severity findings. `BLOCK` means a score under 50, an exploitable attack path, or an active CRITICAL finding on a workload being changed. Borderline scores never round up — missing evidence downgrades the verdict, never upgrades it. See [How the CSC Score Works](/how-it-works) for the scoring model itself.
