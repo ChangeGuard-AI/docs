@@ -1,0 +1,48 @@
+---
+title: "Audit Trail & Activity Timeline"
+description: "An append-only record of every autonomous decision, rendered as a timeline on every incident"
+---
+
+Operators extend trust to automation in proportion to how completely they can answer four questions after the fact: _what happened, why did it happen, what changed, and who authorized it?_ ChangeGuard's answer is an append-only audit trail that records every step of every remediation, surfaced directly in the dashboard as an **activity timeline** on each incident.
+
+## The activity timeline
+
+Expand any incident in the dashboard and the timeline shows the complete lifecycle in order, each entry with a state-aware badge, the actor, detail, and timestamp:
+
+- **Detection** - the incident opened, with the symptom
+- **Analysis** - root cause attached, incident `analyzed`
+- **Queued** - a remediation was created (`proposed` or policy-`approved`)
+- **Approval** - who approved: a named human, or `agent-policy` under Auto
+- **Execution** - the executor applied the fix
+- **Verification** - `verified`, or `verify_failed` after the 20-minute window
+- **Rollback** (if any) - `rollback_initiated`, then `rollback_verified`, `rollback_failed`, or `rollback_policy_denied`
+- **Resolution or escalation** - resolved with attribution, or `escalated` to a human
+
+The same data is available as ordered JSON from `GET /api/timeline?incident_id=...` for export or tooling.
+
+## Properties of the record
+
+- **Append-only.** Events are only ever added, each stamped with actor, timestamp, and detail. Nothing in the product edits or deletes an audit event - state transitions add entries rather than rewriting history.
+- **Attribution is total.** Every execution traces to a named human approval or to `agent-policy`, and a policy approval implies the policy's terms at that moment (namespace, confidence, cap) were satisfied - there is no anonymous path to a cluster write.
+- **Failure is as visible as success.** `verify_failed`, `rollback_failed`, `rollback_policy_denied`, and drift refusals are first-class events. The timeline of an escalated incident shows precisely where automation stopped and why it handed control to you.
+- **Crash-consistent.** Controller crash injection during validation confirmed every lifecycle event lands exactly once - no lost events, no duplicates - so the trail remains trustworthy evidence even across control-plane restarts.
+
+## Reading a timeline: a failed fix, done right
+
+A healthy escalation reads like this - every hop attributable, terminating with a human:
+
+| # | Event | Actor | Meaning |
+| --- | --- | --- | --- |
+| 1 | incident detected | system | OOM crash loop on `payments/api` |
+| 2 | analyzed | system | Root cause: memory limit below working set |
+| 3 | queued \+ approved | agent-policy | Auto mode; policy allowed `payments`, high confidence |
+| 4 | applied | executor | Limit raised; pre-state captured first |
+| 5 | verify\_failed | system | Still crash-looping after 20 minutes |
+| 6 | rollback\_initiated | agent-rollback | Policy still allows - auto-rollback |
+| 7 | applied | executor | Original limit restored, only touched fields |
+| 8 | rollback\_verified | system | Restore confirmed |
+| 9 | escalated | system | Incident waits for a human, full history attached |
+
+<Note>
+  Audit events and timelines are tenant-scoped like all ChangeGuard data. For platform-level authentication and API-access auditing, see [Compliance & Audit](/security/compliance).
+</Note>

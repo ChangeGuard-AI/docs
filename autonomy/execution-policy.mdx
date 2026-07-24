@@ -1,0 +1,44 @@
+---
+title: "Execution Policy"
+description: "The allowlist contract that bounds Auto mode - namespaces, fix types, confidence floor, and an hourly cap"
+---
+
+The execution policy is the contract that bounds what Auto mode may do. It is deny-by-default in every dimension: a new tenant's policy is empty, and an empty or incomplete policy means **nothing auto-executes**, even with the autonomy dial at Auto.
+
+You edit the policy in the dashboard - the **Execution policy (Auto mode)** card sits directly under the autonomy dial on the Incidents view - or via `GET`/`POST /api/settings/execution-policy`. The card always shows a plain-language summary of the net effect, for example:
+
+> Auto mode may apply manifest patches in _production, payments_ at _high_\+ confidence, up to _5_/hour.
+
+or, when the policy is incomplete:
+
+> Nothing auto-executes - Auto mode requires a complete policy (namespaces, fix types, confidence floor, hourly cap).
+
+## Policy dimensions
+
+| Dimension | What it controls | Behavior when unset |
+| --- | --- | --- |
+| **Namespaces** | An explicit allowlist of namespaces where fixes may auto-execute | No namespace allowed - nothing executes |
+| **Fix types** | Which remediation classes may auto-execute. Today: `manifest_patch`. Code patches are never auto-executed | No type allowed - nothing executes |
+| **Minimum confidence** | The floor on analysis confidence (`low` / `medium` / `high`) a fix must meet | No confidence accepted - nothing executes |
+| **Max per hour** | A hard cap on automatic executions per hour, per tenant | Zero - nothing executes |
+
+## When the policy is evaluated
+
+The policy is not a one-time gate. It is enforced at two points:
+
+1. **Queue time** - when analysis completes at Auto, the controller checks every dimension before creating an `approved` remediation attributed to `agent-policy`. Anything outside policy is created as `proposed` for a human instead.
+2. **Serve time** - when the in-cluster executor asks for work, the controller re-evaluates the current policy. If the policy no longer covers a queued remediation (you removed the namespace, disabled the fix type), the approval is demoted and the work is **not** served. Tightening the policy takes effect immediately, including for work already in the queue.
+
+Rollbacks are subject to the same policy: a policy-approved original only rolls back automatically if the **current** policy still allows it - otherwise the rollback waits for a human with a `rollback_policy_denied` audit event. See [Compensating actions](/autonomy/compensating-actions).
+
+## Interaction with hard safety limits
+
+The policy is a tenant-configurable envelope _inside_ platform-level guarantees that you cannot accidentally disable:
+
+- Every manifest patch is validated server-side against a **field allowlist** (resource limits and requests, replicas, environment variables, probe tuning, and similar operational fields). Patches touching identity or metadata are rejected outright, no matter what the policy says.
+- The executor's own [RBAC](/autonomy/rbac-boundaries) is namespace-scoped at install time, so even a maximally permissive policy cannot reach namespaces you never granted.
+- Concurrent remediations for the same workload are refused (HTTP 409) while one is in flight.
+
+<Warning>
+  Treat the namespace allowlist as your primary blast-radius control and start narrow: one non-critical namespace, `high` confidence, a low hourly cap. Widen it only after you have watched the [audit trail](/autonomy/audit-trail) for a while and trust what you see.
+</Warning>
