@@ -1,0 +1,41 @@
+---
+title: "Safety Guarantees"
+description: "The invariants that hold even when models are wrong, policies change mid-flight, or the control plane crashes"
+---
+
+Autonomous execution is only trustworthy if its safety properties are _invariants_ - things that stay true when a model produces a bad patch, an operator changes the policy mid-flight, or the control plane crashes at the worst possible moment. These are the invariants ChangeGuard maintains, and each one is exercised against a live production cluster as part of release validation.
+
+## What may be changed at all
+
+- **Server-side field allowlist.** Every manifest patch - model-generated or not - is validated by the control plane against an allowlist of safe operational fields (resources, replicas, environment variables, probes, and similar). Patches that touch identity or metadata are rejected. The executor only ever receives patches that have already passed this validation, so a compromised or confused analysis step cannot smuggle an unsafe write.
+- **Manifest patches only.** Code-level fixes are never executed automatically, at any autonomy level, under any policy.
+
+## Who authorized it, and is that still true
+
+- **Deny-by-default policy, enforced twice.** The [execution policy](/autonomy/execution-policy) is checked when work is queued _and re-checked when the executor fetches it_. Tightening the policy takes effect immediately, including for work already queued - stale approvals are demoted, not executed.
+- **Same-or-stronger rollback authorization.** A rollback never runs with more autonomy than its original; a policy-approved fix whose policy no longer covers it gets a human-gated rollback instead (`rollback_policy_denied`).
+- **Attribution everywhere.** Every approval is recorded as a named human or `agent-policy` - there is no anonymous execution path.
+
+## What happens when a fix is wrong
+
+- **No un-undoable writes.** Pre-state is captured read-before-write before the first apply; if it cannot be recorded, the executor refuses to execute. See [Compensating actions](/autonomy/compensating-actions).
+- **Drift refusal.** If the touched fields changed since the remediation (a human intervened), the rollback stops rather than overwriting - preserving the human's change and escalating.
+- **Exactly one compensating action.** An atomic one-shot claim guarantees at most one rollback per remediation - no retry loops, no rollback-of-a-rollback - and a rollback terminal state always leaves the incident `escalated`, never silently resolved.
+
+## Concurrency and rate limits
+
+- **One remediation per workload at a time.** While any remediation or rollback is in flight for a workload, further apply requests are refused with HTTP 409.
+- **Hourly execution cap.** Auto mode cannot exceed the per-tenant `max_per_hour` you set, whatever the incident volume.
+- **Duplicate suppression.** Incident creation is race-free (a partial unique index over open incidents), so a noisy symptom cannot fan out into parallel remediation attempts.
+
+## Crash tolerance
+
+The control plane is deliberately crash-tolerant: controller restarts were injected at every lifecycle boundary - during apply, after rollback creation, and between apply and verification - and in every case the system converged within about two minutes of restart with **no duplicated executions, no duplicated rollbacks, and no lost or duplicated audit events**. In-flight verification windows resume; one-shot claims hold across restarts.
+
+## Validated, not asserted
+
+These guarantees are backed by an end-to-end validation matrix run against ChangeGuard's own production stack - successful rollback, drift refusal, executor restart mid-rollback, concurrent contention, rollback-verification failure, policy denial after the fact, preservation of unrelated human edits, and controller-crash convergence at each step. The matrix is re-run when the remediation pipeline changes.
+
+<Note>
+  Two of the guarantees above exist because the validation matrix caught real bugs before customers could: the field allowlist once correctly rejected benign-but-unlisted identity fields in a model-generated patch, and a result-classification bug was found and fixed the same day. The point of publishing invariants is that they are tested adversarially, not assumed.
+</Note>

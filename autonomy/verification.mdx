@@ -1,0 +1,31 @@
+---
+title: "Verification"
+description: "ChangeGuard never claims success it hasn't observed - every applied fix is verified against real workload health"
+---
+
+Applying a fix is not the same as fixing the problem. ChangeGuard treats every applied remediation as an open question until the workload itself answers it: after the executor applies a fix, the remediation enters a **verification window** and the platform watches actual workload health before deciding anything.
+
+## How a fix is verified
+
+1. The executor applies the validated patch and reports `applied`.
+2. The controller's verification sweep watches the target workload's live health - restarts, readiness, and the original symptom - using the same cluster telemetry that detected the incident.
+3. **If the workload becomes healthy**, the remediation is marked `verified` and the incident is resolved with explicit attribution: the incident record says which remediation fixed it, who approved that remediation, and when verification confirmed it.
+4. **If the workload is still unhealthy after 20 minutes**, the remediation is marked `failed` with a `verify_failed` audit event - and, for manifest fixes, exactly one [compensating action](/autonomy/compensating-actions) is triggered.
+
+There is no third outcome. A fix ends `verified` or it ends `failed`; it cannot linger as "probably fine."
+
+## Verification applies to rollbacks too
+
+A rollback is itself a remediation, and it gets the same treatment: after the executor restores the pre-remediation state, the sweep must confirm the restore. A confirmed rollback moves the original remediation to `rolled_back` and writes a `rollback_verified` audit event; a rollback that cannot be confirmed within its own 20-minute window is marked `failed` once, with a `rollback_failed` event. Either way the incident is **escalated** - a verified rollback restores your cluster, but it does not fix the underlying problem, so the loop always ends with a human in it.
+
+## Why this matters
+
+Verification is what turns "an AI applied a patch" into a safe control loop:
+
+- **Resolution is earned, not assumed.** Incidents are only closed by observed recovery (or by a human). ChangeGuard never marks something fixed because a patch applied cleanly.
+- **Failure has a bounded, predictable consequence.** One verification failure produces one rollback and one escalation - never a retry storm.
+- **Attribution survives.** Months later, the incident record still shows what was wrong, what was changed, whether it worked, and on whose authority - see [Audit trail](/autonomy/audit-trail).
+
+<Note>
+  The 20-minute window is deliberately conservative: it is long enough for rollout completion, probe stabilization, and a crash-looping container to reveal itself. Verification resumes automatically after a controller restart - convergence was validated to occur within about two minutes of the control plane coming back. See [Safety guarantees](/autonomy/safety-guarantees).
+</Note>

@@ -1,0 +1,40 @@
+---
+title: "Autonomy Model"
+description: "Four explicit levels - Observe, Advise, Approve, Auto - decide what ChangeGuard may do on its own"
+---
+
+Every tenant has a single autonomy dial with four positions. It is the master switch for the closed loop: each level strictly adds capability on top of the previous one, and nothing in the platform ever acts above the level you have set. You change it in the dashboard on the Incidents view, next to the [execution policy editor](/autonomy/execution-policy).
+
+## The four levels
+
+| Level | ChangeGuard will... | ChangeGuard will not... |
+| --- | --- | --- |
+| **Observe** | Detect incidents and record them | Diagnose, propose, or touch anything |
+| **Advise** | Add root-cause analysis and a concrete recommended fix to each incident | Queue anything for execution |
+| **Approve** | Queue the recommended fix for execution **when a human clicks Apply fix** | Execute anything without a human click |
+| **Auto** | Queue and execute fixes automatically - but only inside the [execution policy](/autonomy/execution-policy) | Execute anything the policy does not explicitly allow |
+
+The default for every new tenant is **Advise**: you get diagnosis and recommendations with zero write risk, and you opt into execution deliberately.
+
+## What "Auto" actually means
+
+Auto is not a blank check. A fix is queued automatically only when **all** of the following hold:
+
+1. The autonomy dial is set to Auto.
+2. The execution policy is complete and allows the target namespace, the fix type, and the analysis confidence, and the hourly cap has headroom. An empty or partial policy means **nothing auto-executes** - the dashboard says this explicitly.
+3. The fix is expressible as a safe, server-validated manifest patch. Code-level fixes are never auto-executed; they surface as recommendations.
+
+Remediations approved this way are attributed to `agent-policy` in the [audit trail](/autonomy/audit-trail), so you can always distinguish machine approvals from human ones. The policy is also re-checked at execution time - if you tighten it after something was queued, the queued work is demoted rather than executed. See [Safety guarantees](/autonomy/safety-guarantees).
+
+## Rollback authorization follows the same dial
+
+When a fix fails [verification](/autonomy/verification), the compensating rollback requires **same-or-stronger authorization** than the original:
+
+- A **human-approved** fix gets a rollback proposed for human approval (Approve mode behavior).
+- A **policy-approved** fix (Auto) rolls back automatically **only if the current policy still allows it**. If the policy has changed since - say the namespace was removed from the allowlist - the rollback is created as `proposed` for a human instead, with a `rollback_policy_denied` audit event.
+
+Autonomy never escalates itself: nothing in the loop can move the dial, widen the policy, or approve on your behalf.
+
+<Note>
+  Changing the dial takes effect immediately for **new** decisions. Work already queued is still re-validated against the policy at execution time, so lowering autonomy is always safe: it can only reduce what happens next.
+</Note>

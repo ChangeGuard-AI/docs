@@ -62,6 +62,20 @@
             ]
           },
           {
+            "group": "Autonomous Remediation",
+            "icon": "arrows-rotate",
+            "pages": [
+              "autonomy/overview",
+              "autonomy/autonomy-model",
+              "autonomy/execution-policy",
+              "autonomy/verification",
+              "autonomy/compensating-actions",
+              "autonomy/safety-guarantees",
+              "autonomy/rbac-boundaries",
+              "autonomy/audit-trail"
+            ]
+          },
+          {
             "group": "AI Analysis",
             "pages": [
               "ai/overview",
