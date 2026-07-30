@@ -1,0 +1,112 @@
+---
+title: "Your first 30 minutes"
+description: "From an installed collector to real value: see what changed, run a pre-flight check, and read an incident with cited evidence."
+---
+
+You've [installed](/get-started/install) ChangeGuard and your cluster is in Fleet. This guide takes you from "it's connected" to "I understand what this does for me" — in about half an hour, using only **generally available** capabilities.
+
+<Note>
+  Everything below is **advisory and read-only**. Nothing here changes a workload. ChangeGuard does not act on your cluster until you explicitly opt into [remediation](/autonomy/autonomy-model).
+</Note>
+
+## Minute 0–5 — Read your CSC Score
+
+Open the dashboard. Your cluster has a **CSC Score** (Change Safety Confidence): a deterministic 0–100 read of how safe it is to ship right now.
+
+<Steps>
+  <Step title="Open Safe to Ship?">
+    The dashboard leads with a plain-language verdict and the score behind it.
+  </Step>
+  <Step title="Expand the reasons">
+    The score is explainable — every point up or down ties to a concrete signal (workload health, recent changes, open findings). It is never a black box.
+  </Step>
+</Steps>
+
+<Tip>
+  The score is **deterministic**: the same inputs produce the same score. That's what makes it usable as a gate signal in CI later.
+</Tip>
+
+## Minute 5–15 — Run a pre-flight check
+
+This is the core loop most teams use every day: before you ship, ask "is it safe right now?"
+
+<Steps>
+  <Step title="Open a pre-flight check">
+    From **Safe to Ship?**, run a pre-flight check against your cluster.
+  </Step>
+  <Step title="Read the verdict">
+    You get **SHIP**, **HOLD**, or **BLOCK**, plus the CSC Score and the specific reasons. It's advisory — a recommendation, not an enforced block.
+  </Step>
+  <Step title="(Optional) wire it into CI later">
+    The same check is available to your pipeline via the API. Start by reading the verdicts in the UI; wire the gate once you trust it. See [Integrations](/integrations/overview).
+  </Step>
+</Steps>
+
+## Minute 15–25 — Follow a change to its impact
+
+This is **Change Intelligence**, and it's what makes the incident view different from a normal alert.
+
+<Steps>
+  <Step title="Make (or find) a change">
+    Deploy something, change a config, or let a recent GitOps change flow in. ChangeGuard is already tracking deployments, config, and GitOps changes across the fleet.
+  </Step>
+  <Step title="See the change recorded">
+    The change appears with its diff — what actually shipped, not just "a deploy happened."
+  </Step>
+  <Step title="See correlation if something breaks">
+    If a workload starts failing, ChangeGuard links it back to the change that caused it — so you're looking at cause, not just symptom.
+  </Step>
+</Steps>
+
+## Minute 25–30 — Open an incident investigation
+
+If you have a failing or recently-recovered workload, open its investigation.
+
+<Steps>
+  <Step title="Read the root cause">
+    You get a root-cause explanation with **cited evidence** — the events, logs, and change that support it — not an unsupported guess.
+  </Step>
+  <Step title="Read the proposed fix and how to verify it">
+    ChangeGuard proposes a fix and tells you how to confirm it worked. **It does not apply anything** — this is advice you act on.
+  </Step>
+  <Step title="Check the activity timeline">
+    Every incident carries an append-only timeline of what was observed and decided. This is your audit trail.
+  </Step>
+</Steps>
+
+## Set your comfort level
+
+ChangeGuard's autonomy is a dial, not a switch. The four levels are **Observe → Advise → Approve → Auto**, and the default is **Advise**.
+
+| Level | What ChangeGuard does |
+| --- | --- |
+| **Observe** | Watches and records only. |
+| **Advise** _(default)_ | Recommends actions; a human does everything. |
+| **Approve** | Prepares an action and waits for a human to authorize it. |
+| **Auto** | Executes within policy, then verifies — and rolls back once if verification fails. |
+
+<Warning>
+  `Approve` and `Auto` only do anything after you opt into [Autonomous Remediation](/autonomy/autonomy-model) and grant its RBAC. Until then, ChangeGuard stays at advice.
+</Warning>
+
+## You've now seen the whole GA loop
+
+In 30 minutes you've used every generally-available pillar: a CSC Score, a pre-flight verdict, a change correlated to its impact, and an incident explained with evidence.
+
+<CardGroup cols={2}>
+  <Card title="Understand the concepts" icon="book" href="/concepts/overview">
+    What CSC Score, Change Intelligence, and the autonomy model really mean.
+  </Card>
+
+  <Card title="Operate it day-to-day" icon="gear" href="/operations/overview">
+    Health checks, upgrades, notifications, and keeping the collector happy.
+  </Card>
+
+  <Card title="Wire in your tools" icon="plug" href="/integrations/overview">
+    GitOps, CI gates, and notifications — what each reads, writes, and needs.
+  </Card>
+
+  <Card title="Review permissions" icon="shield" href="/get-started/permissions">
+    Exactly what ChangeGuard can and cannot see or do in your cluster.
+  </Card>
+</CardGroup>

@@ -1,0 +1,114 @@
+---
+title: "Operations handbook (Day 2)"
+description: "Running ChangeGuard after install: health checks, upgrades, key handling, notifications, and troubleshooting."
+---
+
+Install is Day 1. This is everything after: how to know it's healthy, how to upgrade it, how to handle the API key, and what to do when something looks off. Every command uses read-only checks or standard Helm operations.
+
+## Daily health check
+
+A single glance tells you ChangeGuard is doing its job.
+
+```bash
+# Both components Ready?
+kubectl get pods -n changeguard-system -n changeguard-agent
+
+# Collector still pushing successfully?
+kubectl logs -n changeguard-agent deploy/changeguard-collector --tail=30
+```
+
+<Check>
+  Operator and collector are `Running` / `1/1`, and recent collector logs show successful pushes with no repeated `401` or egress errors.
+</Check>
+
+In the product, the dashboard's connection indicators ("Agent connected", "Workloads detected", "Security scanning") are the fastest confirmation that data is flowing.
+
+## Health endpoints
+
+| Component | Endpoint | Port | Meaning |
+| --- | --- | --- | --- |
+| Collector | `/healthz` | 9090 | Liveness — process is up. |
+| Collector | `/readyz` | 9090 | Readiness — able to collect and push. |
+| Operator | health probe | 8081 | Controller is up. |
+
+If Kubernetes marks a pod `Ready`, these probes are passing. You rarely need to hit them directly; use `kubectl get pods` first.
+
+## Upgrades
+
+ChangeGuard upgrades are standard Helm upgrades. Analysis and scoring logic live in the control plane and update on the ChangeGuard side — so most improvements reach you without any cluster change. In-cluster upgrades are for the operator, collector, and scanners.
+
+```bash
+helm repo update
+helm upgrade changeguard changeguard/changeguard-operator \
+  -n changeguard-system --reuse-values
+kubectl rollout status deploy/changeguard-operator -n changeguard-system
+```
+
+<Warning>
+  **Check for version skew.** Keep the operator and collector on the same chart family. If you installed long ago from a pinned manifest or an old `install.sh`, confirm you're on the current chart before assuming a feature is present. When in doubt, re-run the current install command over the existing release — Helm reconciles it in place.
+</Warning>
+
+## API key handling
+
+The collector authenticates with a single API key, stored in the `changeguard-credentials` Secret (key `api-key`) in `changeguard-agent`.
+
+To move to a new key:
+
+<Steps>
+  <Step title="Create the new key">
+    In [app.changeguard.ai](https://app.changeguard.ai) → API keys, create a new key and copy it once.
+  </Step>
+  <Step title="Update the in-cluster Secret">
+    ```bash
+    kubectl create secret generic changeguard-credentials \
+      --from-literal=api-key=<NEW_API_KEY> \
+      -n changeguard-agent \
+      --dry-run=client -o yaml | kubectl apply -f -
+    kubectl rollout restart deploy/changeguard-collector -n changeguard-agent
+    ```
+  </Step>
+  <Step title="Confirm the collector reconnects">
+    Watch the logs for a clean push with the new key, then retire the old key in-app.
+  </Step>
+</Steps>
+
+<Warning>
+  **Know the current limitation.** Key revocation behavior and its durability across control-plane restarts are **not fully documented**, and there is no self-serve key-rotation API today. For high-assurance rotation (for example, after a suspected key exposure), rotate the key **and** contact [support](mailto:support@changeguard.ai) to confirm the old key is fully invalidated. Treat any exposed key as compromised until confirmed.
+</Warning>
+
+## Notifications
+
+ChangeGuard can notify your team when it detects a change or an incident. Configure destinations in-app. Wire notifications to the channels your on-call already watches so signal lands where people look. See [Integrations](/integrations/overview) for the supported destinations and what each one carries.
+
+## Scaling & footprint
+
+The collector is intentionally small (~50m CPU / 64Mi memory requested; 200m / 128Mi limits) and stateless — no PersistentVolumeClaims. On very large clusters, if you see the collector hitting its memory limit, raise the limit via Helm values rather than running multiple collectors:
+
+```bash
+helm upgrade changeguard changeguard/changeguard-operator \
+  -n changeguard-system --reuse-values \
+  --set collector.resources.limits.memory=256Mi
+```
+
+<Check>
+  After any resource change, confirm the collector returns to `Ready` and resumes pushing.
+</Check>
+
+## Security scanners
+
+The optional scanners (CIS via KubeBench, CVE via Grype, deprecated-APIs via Pluto, SBOM via Syft, runtime via Falco) run as jobs in `changeguard-agent`. They are **plan-gated** — availability depends on your plan. Their findings are sent to the control plane; the scanned images and manifests are not.
+
+## Troubleshooting quick reference
+
+| Symptom | Check | Fix |
+| --- | --- | --- |
+| Collector `CrashLoopBackOff` | `kubectl describe pod` / `logs` in `changeguard-agent` | Confirm the Secret exists and the key is valid. |
+| Repeated `401` in logs | API key invalid or revoked | Rotate the key (above). |
+| Push timeouts | Egress to `api.changeguard.ai:443` | Confirm direct HTTPS egress and DNS. **No proxy support.** |
+| Cluster stale in Fleet | Collector `Ready`? Logs pushing? | Restart the collector; give it a few minutes. |
+| Operator won't reconcile | CRD present? RBAC applied? | Re-run the Helm upgrade to reconcile. |
+| A feature seems missing | Version skew or a gated/Early-Access flag | Confirm chart version; confirm the capability is GA on your plan. |
+
+## When to contact support
+
+Reach [support@changeguard.ai](mailto:support@changeguard.ai) for: confirming full key invalidation after exposure, full-tenant data erasure (in-app removal is per-cluster), proxy-only network environments, and anything where the docs don't give you a confident answer. We would rather you ask than guess.

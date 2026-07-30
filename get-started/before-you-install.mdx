@@ -1,0 +1,68 @@
+---
+title: "Before you install"
+description: "A pre-install checklist so the install works the first time."
+---
+
+Read this once before installing. If you can check every box in **You are ready when…**, the install will succeed.
+
+## Supported environment
+
+| Requirement | Detail |
+| --- | --- |
+| Kubernetes | **1.24\+**, any conformant distribution (EKS, GKE, AKS, or self-managed). Provider-agnostic. |
+| Tooling | `kubectl` (context set to the target cluster) and **Helm 3.8\+**. |
+| Architecture | Images are multi-arch: **amd64 and arm64**. |
+| Nodes | A workload node able to schedule a tiny pod (see resources below). |
+
+<Note>
+  "1.24\+" is the recommended floor; it is not enforced by the chart. Very old clusters may work but are untested.
+</Note>
+
+## Resource footprint
+
+| Component | Namespace | CPU request / limit | Memory request / limit | Storage |
+| --- | --- | --- | --- | --- |
+| Operator | `changeguard-system` | 50m / 200m | 64Mi / 128Mi | none |
+| Collector | `changeguard-agent` | 50m / 200m | 64Mi / 128Mi | none |
+| Optional scanners | `changeguard-agent` | per-job | per-job | none |
+
+<Check>
+  No PersistentVolumeClaims are created. The collector runs non-root with a read-only root filesystem and all Linux capabilities dropped.
+</Check>
+
+## Network
+
+- **Outbound HTTPS (TCP 443)** from the cluster to `api.changeguard.ai` (TLS 1.2\+).
+- DNS resolution for `api.changeguard.ai` (and `install.changeguard.ai` if you use the one-line installer).
+- Image pulls from `public.ecr.aws` (or your mirror — the chart supports a custom `global.imageRegistry` for air-gapped setups).
+
+<Warning>
+  **No outbound HTTP proxy support today.** The collector needs direct HTTPS egress; `HTTP_PROXY` / `HTTPS_PROXY` env vars are not honored by its push client. If your cluster only reaches the internet through a proxy, contact us before installing.
+</Warning>
+
+## Permissions to install
+
+You need rights to create namespaces, a CRD, ClusterRoles/Bindings, and Deployments. **`cluster-admin` is not required**, and ChangeGuard requests **no wildcard** RBAC. See [Permissions](/get-started/permissions) for the exact grants (including that the operator and collector read Secrets and RBAC objects cluster-wide, read-only).
+
+## Credentials & secrets
+
+- A ChangeGuard **API key** (create one at [app.changeguard.ai](https://app.changeguard.ai) → API keys). Treat it like a password.
+- The chart creates **one** Kubernetes Secret, `changeguard-credentials` (key `api-key`), in `changeguard-agent`. You can also create it yourself and reference it.
+
+## Data collected vs. not collected
+
+| Sent to the control plane | Never leaves your cluster |
+| --- | --- |
+| Cluster snapshots (workloads, events, posture) | Application source code / container images |
+| Change metadata and diffs from your CI/GitOps | Kubernetes Secret **values** |
+| Scanner findings (CVE, CIS, SBOM) and logs you ingest | Full workload/customer data |
+
+## What the installer changes — and doesn't
+
+**Creates:** namespaces `changeguard-system` and `changeguard-agent`; the `changeguardagents.changeguard.ai` CRD; the operator (Deployment \+ RBAC); a `ChangeGuardAgent` custom resource; the collector Deployment; one Secret; optionally scanner CronJobs/DaemonSet.
+
+**Does not change:** any of your existing workloads, your RBAC for other principals, your Secrets, or your CI/CD — unless you later opt into remediation and apply its namespaced RBAC.
+
+## You are ready when…
+
+Next: [**Install →**](/get-started/install)
