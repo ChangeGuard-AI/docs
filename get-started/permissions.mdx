@@ -1,0 +1,104 @@
+---
+title: "Permissions & RBAC"
+description: "Exactly what ChangeGuard can read, what it cannot do, and how to inspect or revoke its access."
+---
+
+This page states ChangeGuard's cluster permissions plainly, including the parts security teams most want to scrutinize. Nothing here is softened.
+
+## The short version
+
+- ChangeGuard does **not** request `cluster-admin`.
+- ChangeGuard does **not** use wildcard (`*`) RBAC rules.
+- The operator and collector **read** cluster resources. To correlate changes and score posture, that read is **cluster-wide** and **includes Secrets and RBAC objects** (read-only).
+- ChangeGuard **writes nothing** to your workloads unless you separately opt into remediation and grant a **namespaced** Role.
+
+<Warning>
+  **Read this carefully:** because the collector reads Secrets cluster-wide, it can _see_ the values of your Kubernetes Secrets. It is designed **not to transmit** secret values off-cluster (see [what leaves your cluster](/get-started/architecture)), but the in-cluster read grant is real. If your security posture forbids any component reading all Secrets, raise this with your team before installing.
+</Warning>
+
+## What the collector reads
+
+The collector needs a fleet-wide picture of state and change. Its ClusterRole grants **read verbs only** (`get`, `list`, `watch`) across the resources it correlates:
+
+| Resource area | Why it's read |
+| --- | --- |
+| Workloads (Deployments, StatefulSets, DaemonSets, Pods, ReplicaSets) | Detect what's running and what changed. |
+| Config (ConfigMaps, Secrets) | Correlate config changes to incidents. **Secret values are read in-cluster but not sent off-cluster.** |
+| Cluster events & node conditions | Explain incidents with real evidence. |
+| RBAC objects (Roles, ClusterRoles, and their bindings) | Posture and compliance evidence (who can do what). |
+| Networking & storage metadata | Posture and change context. |
+
+<Info>
+  "Read verbs only" means `get` / `list` / `watch`. The collector's ClusterRole contains no `create`, `update`, `patch`, or `delete` on your workloads.
+</Info>
+
+## What the operator does
+
+The operator manages ChangeGuard's own components (the collector and optional scanners) through the `changeguardagents.changeguard.ai` CRD. Its write access is scoped to **ChangeGuard's own resources** — it does not get write access to your applications.
+
+## What ChangeGuard cannot do (by default)
+
+<CardGroup cols={2}>
+  <Card title="No workload writes" icon="ban">
+    It cannot create, patch, or delete your Deployments, Pods, or configs.
+  </Card>
+
+  <Card title="No secret exfiltration" icon="ban">
+    Secret **values** are not transmitted to the control plane.
+  </Card>
+
+  <Card title="No inbound access" icon="ban">
+    ChangeGuard opens no inbound path into your cluster. All communication is outbound HTTPS from the collector.
+  </Card>
+
+  <Card title="No cluster-admin" icon="ban">
+    No wildcard rules, no `cluster-admin` binding.
+  </Card>
+</CardGroup>
+
+## Remediation permissions (opt-in only)
+
+If — and only if — you enable [Autonomous Remediation](/autonomy/autonomy-model), ChangeGuard needs permission to act. That permission is deliberately narrow:
+
+- It is a **namespaced Role**, not a ClusterRole — you grant it per namespace.
+- It allows the specific write actions remediation performs (e.g. scaling, rolling back a Deployment).
+- It does **not** grant delete of arbitrary resources, and does **not** grant write access to Secrets or RBAC.
+
+<Warning>
+  Until you create this Role, `Approve` and `Auto` autonomy levels have nothing to act with. Remediation is off until you both flip it on and grant the Role.
+</Warning>
+
+## Inspect what's actually granted
+
+Don't take this page's word for it — read the live grants in your own cluster:
+
+```bash
+# The collector's cluster-wide read role
+kubectl get clusterrole -l app.kubernetes.io/part-of=changeguard
+kubectl describe clusterrole changeguard-collector
+
+# What the collector's ServiceAccount is bound to
+kubectl get clusterrolebinding -o wide | grep changeguard
+
+# Any namespaced remediation role (only present if you opted in)
+kubectl get role -A -l app.kubernetes.io/part-of=changeguard
+```
+
+<Check>
+  Confirm the ClusterRole verbs are limited to `get`, `list`, `watch`, and that no rule uses `*` for resources or verbs on your workloads.
+</Check>
+
+## Revoke access
+
+To remove all of ChangeGuard's in-cluster permissions, uninstall it — the ClusterRoles, bindings, and ServiceAccounts are removed with the release:
+
+```bash
+helm uninstall changeguard -n changeguard-system
+kubectl delete crd changeguardagents.changeguard.ai
+```
+
+To revoke only remediation while keeping visibility, delete the namespaced remediation Role (or set autonomy back to `Advise`/`Observe`).
+
+<Note>
+  Revoking API-key access on the control-plane side is handled in-app under API keys. See the [Operations handbook](/operations/overview) for key rotation guidance and its current limitations.
+</Note>

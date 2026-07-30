@@ -1,0 +1,159 @@
+---
+title: "Install ChangeGuard"
+description: "One Helm command installs the operator and a read-only collector. Follow these steps exactly and the install will succeed."
+---
+
+This page is written so that if you run each step in order and see the result shown under it, you are done — with no guesswork about whether it worked.
+
+<Note>
+  You should have finished [Before you install](/get-started/before-you-install). You need a cluster on **Kubernetes 1.24\+** reachable with `kubectl`, **Helm 3.8\+**, cluster-scoped install rights (no `cluster-admin` required), outbound HTTPS to `api.changeguard.ai:443` (no proxy), and a ChangeGuard **API key**.
+</Note>
+
+## Step 1 — Point kubectl at the right cluster
+
+<Steps>
+  <Step title="Confirm your context">
+    ```bash
+    kubectl config current-context
+    ```
+
+    **You should see:** the name of the cluster you intend to install into. If it isn't, switch with `kubectl config use-context <name>` before continuing.
+  </Step>
+  <Step title="Confirm Helm">
+    ```bash
+    helm version --short
+    ```
+
+    **You should see:** `v3.8` or newer.
+  </Step>
+</Steps>
+
+## Step 2 — Install the operator and collector
+
+Pick **one** of the two options. Both install the same thing: the operator into `changeguard-system`, which then creates the read-only collector in `changeguard-agent`.
+
+<Tabs>
+  <Tab title="One-line installer (simplest)">
+    The installer validates your API key first, then runs Helm for you.
+
+    ```bash
+    curl -sL https://install.changeguard.ai | CG_API_KEY=<YOUR_API_KEY> sh
+    ```
+
+    <Warning>
+      Replace `<YOUR_API_KEY>` with your real key. Never paste a real key into a shared terminal, a ticket, or a screenshot.
+    </Warning>
+  </Tab>
+  <Tab title="Helm directly (most control)">
+    Use this in CI, GitOps, or when you want to see every flag.
+
+    ```bash
+    helm repo add changeguard https://charts.changeguard.ai
+    helm repo update
+    
+    helm upgrade --install changeguard changeguard/changeguard-operator \
+      --namespace changeguard-system --create-namespace \
+      --set agent.apiKey=<YOUR_API_KEY>
+    ```
+
+    If you prefer to manage the Secret yourself, create `changeguard-credentials` (key `api-key`) in `changeguard-agent` and reference it instead of passing `agent.apiKey`.
+  </Tab>
+</Tabs>
+
+<Check>
+  The command exits `0` and prints the installed release name (`changeguard`).
+</Check>
+
+## Step 3 — Confirm the operator is running
+
+```bash
+kubectl rollout status deploy/changeguard-operator -n changeguard-system --timeout=120s
+kubectl get pods -n changeguard-system
+```
+
+<Check>
+  `deployment "changeguard-operator" successfully rolled out` and the operator pod shows `Running` / `1/1`.
+</Check>
+
+The operator creates a `ChangeGuardAgent` custom resource, which is what tells it to deploy the collector:
+
+```bash
+kubectl get changeguardagent -A
+```
+
+<Check>
+  One `ChangeGuardAgent` resource is listed.
+</Check>
+
+## Step 4 — Confirm the collector is connected
+
+```bash
+kubectl rollout status deploy/changeguard-collector -n changeguard-agent --timeout=180s
+kubectl logs -n changeguard-agent deploy/changeguard-collector --tail=20
+```
+
+<Check>
+  The collector pod is `Running` / `1/1`, and the logs show a **successful push** to `api.changeguard.ai` with no repeated `401` (bad key) or connection-refused (egress) errors.
+</Check>
+
+The collector serves health on port `9090` (`/healthz` liveness, `/readyz` readiness). If Kubernetes reports it `Ready`, those probes are already passing.
+
+## Step 5 — Confirm your cluster appears in the product
+
+<Steps>
+  <Step title="Open the app">
+    Sign in at [app.changeguard.ai](https://app.changeguard.ai).
+  </Step>
+  <Step title="Find your cluster">
+    Within a few minutes your cluster appears in **Fleet**, workload counts populate, and a **CSC Score** is computed.
+  </Step>
+  <Step title="Run a pre-flight check">
+    Open **Safe to Ship?** and run a pre-flight check. You get a **SHIP / HOLD / BLOCK** verdict with the score and the reasons behind it. This is **advisory** — it never blocks your pipeline on its own.
+  </Step>
+</Steps>
+
+<Check>
+  Cluster visible in Fleet, CSC Score populated, and a pre-flight check returns a verdict. **That is a successful install.**
+</Check>
+
+## What the install created
+
+So you can review — or fully remove — everything:
+
+| Kind | Name | Namespace |
+| --- | --- | --- |
+| Namespace | `changeguard-system`, `changeguard-agent` | — |
+| CRD | `changeguardagents.changeguard.ai` | cluster-scoped |
+| Deployment | `changeguard-operator` (\+ its RBAC) | `changeguard-system` |
+| Custom resource | a `ChangeGuardAgent` | `changeguard-agent` |
+| Deployment | `changeguard-collector` | `changeguard-agent` |
+| Secret | `changeguard-credentials` (key `api-key`) | `changeguard-agent` |
+| CronJob / DaemonSet | security scanners (optional) | `changeguard-agent` |
+
+No PersistentVolumeClaims are created, and **none of your existing workloads are modified**. ChangeGuard is read-only until you explicitly opt into [remediation](/autonomy/autonomy-model) and grant its namespaced RBAC.
+
+## If a step didn't produce the result shown
+
+| Symptom | Most likely cause | What to check |
+| --- | --- | --- |
+| Collector logs show repeated `401` | Wrong or revoked API key | Re-check the key; re-run Step 2 with a valid key. |
+| Collector logs show connection timeouts | No egress to `api.changeguard.ai:443` | Confirm outbound HTTPS and DNS. **There is no HTTP-proxy support today** — the cluster needs direct egress. |
+| Cluster never appears in Fleet | Collector not `Ready` | Confirm Step 4 is green; give it a few minutes; check the logs for pushes. |
+| Operator `CrashLoopBackOff` | RBAC or CRD not applied | `kubectl describe`/`logs` in `changeguard-system`; confirm the CRD installed. |
+
+## Uninstall / rollback
+
+The in-cluster footprint comes out cleanly:
+
+```bash
+helm uninstall changeguard -n changeguard-system
+kubectl delete changeguardagent --all -A
+kubectl delete namespace changeguard-agent changeguard-system
+kubectl delete crd changeguardagents.changeguard.ai
+```
+
+<Note>
+  This removes ChangeGuard from your cluster. To remove data already sent to the control plane, remove the cluster in-app (per-cluster removal). Full-tenant data erasure is handled through [support](mailto:support@changeguard.ai).
+</Note>
+
+Next: [**Your first 30 minutes →**](/get-started/first-30-minutes)

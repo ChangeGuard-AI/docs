@@ -3,100 +3,45 @@ title: "Introduction"
 description: "Every Kubernetes deploy scored before it ships"
 ---
 
-# What is ChangeGuard?
+ChangeGuard is **change intelligence for Kubernetes**. It continuously tracks every deployment, config, and GitOps change across your fleet, correlates each failing workload to the change that caused it, explains the root cause with cited evidence, and helps your team decide what's safe to ship — before, during, and after production changes.
 
-ChangeGuard scores every Kubernetes deploy **0–100, before it lands**.
+<Note>
+  **Who these docs are for.** Platform/Kubernetes operators (install & operate) and developers / on-call engineers (day-to-day use). If you're evaluating ChangeGuard for your organization, start at [changeguard.ai](https://changeguard.ai).
+</Note>
 
-The **Change Safety Confidence (CSC) score** is deterministic and explainable — one number computed from four kinds of evidence already in your cluster:
-
-- **Policy** — CIS benchmarks (KubeBench), your custom rules, deprecated APIs (Pluto)
-- **Runtime** — Falco events, crash loops, OOMKills, restart storms
-- **History** — how deploys like this one actually went in this cluster
-- **Health** — node pressure, resource saturation, pending pods
-
-Wire the score into CI and every deploy gets a verdict: ship, or hold with the evidence cited.
-
-## Get to a gated pipeline
+## What you get today
 
 <CardGroup cols={2}>
-  <Card title="Quickstart" icon="rocket" href="/quickstart">
-    One command installs the operator. Your dashboard populates in about a minute.
+  <Card title="Change Intelligence" icon="timeline">
+    Every failing workload linked to the change — and the diff — that shipped it. **GA**
   </Card>
 
-  <Card title="How the CSC Score Works" icon="gauge-high" href="/how-it-works">
-    What's in the number, and why every point is traceable to a specific check.
+  <Card title="Incident investigation" icon="magnifying-glass">
+    Root cause with cited evidence, a proposed fix, and how to verify it. **GA**
   </Card>
 
-  <Card title="Gate Your Pipeline" icon="traffic-light" href="/gate-your-pipeline">
-    Fail the job on a bad score — GitHub Actions, GitLab, ArgoCD PreSync, or any CI.
+  <Card title="CSC Score & pre-flight" icon="gauge">
+    A deterministic deploy-readiness score and a SHIP / HOLD / BLOCK verdict — advisory. **GA**
   </Card>
 
-  <Card title="ArgoCD" icon="code-branch" href="/platform/argocd">
-    Score and gate GitOps deploys fleet-wide. No ArgoCD tokens to manage.
+  <Card title="Autonomous Remediation" icon="arrows-rotate">
+    Policy-governed detect → fix → verify → rollback, at the autonomy level you choose. **GA · opt-in**
   </Card>
 </CardGroup>
 
-## How It Works
+<Info>
+  **Maturity labels.** We mark capabilities **GA** (generally available), **Early Access** (design partners / on request), or **Roadmap**. The **Engineering Advisor**, **Engineering Opinion / Experience / Reasoning**, and **Multiplayer AI** are **Early Access** — powerful, but not yet self-serve. We never document an emerging capability as if it ships today. See [Product concepts](/concepts/overview).
+</Info>
 
-<Frame caption="ChangeGuard runs a lightweight, read-only agent inside your cluster that connects outbound over TLS — there is never any inbound access to your infrastructure.">
-  ![ChangeGuard architecture: a read-only agent and scanners in your Kubernetes cluster connect outbound over TLS to the ChangeGuard platform on AWS, which scores posture and serves your dashboard.](https://install.changeguard.ai/assets/architecture.svg)
-</Frame>
+## How it works, in one line
+
+A lightweight, read-only **collector** runs in your cluster (installed by the ChangeGuard **operator**) and pushes cluster state and your changes over HTTPS to the ChangeGuard control plane, which does the correlation, scoring, and analysis. Your source code, secret values, and workload data stay in your cluster. See [Architecture & data flow](/get-started/architecture).
+
+## Time to value
 
 <Steps>
-  <Step title="Install the operator">
-    One command deploys the ChangeGuard operator. It manages the data collector, security scanners, and runtime detection from a single ChangeGuardAgent custom resource.
-  </Step>
-  <Step title="Evidence collects automatically">
-    The collector pushes cluster snapshots every 10 seconds. KubeBench runs CIS benchmarks every 6 hours, Grype scans images every 4 hours and on every new deploy, Falco watches syscalls on every node in real time.
-  </Step>
-  <Step title="Every deploy gets a verdict">
-    Watch scores at [app.changeguard.ai](https://app.changeguard.ai), then wire the [validate endpoint](/api-reference/validate) into CI so risky deploys are held before they land.
-  </Step>
 </Steps>
 
-## Quick Install
-
-```bash
-curl -sL https://install.changeguard.ai | \
-  CG_API_KEY=YOUR_API_KEY CG_CLUSTER_NAME=production sh
-```
-
-Your dashboard populates within 60 seconds. Full scan evidence appears within the first scan cycle.
-
-## Everything below feeds the score
-
-Every capability is evidence the score can cite — not a separate dashboard to watch.
-
-<CardGroup cols={2}>
-  <Card title="Security Scanning" icon="shield-halved" href="/scanning/overview">
-    CIS benchmarks (KubeBench), CVE scanning (Grype), runtime threat detection (Falco), deprecated API detection (Pluto), and SBOM generation (Syft) — all managed by the operator.
-  </Card>
-
-  <Card title="Identity & Access" icon="user-lock" href="/platform/identity-access">
-    RBAC analysis across every ServiceAccount, ClusterRole, and binding. Finds overprivileged identities, unused permissions, and privilege escalation paths.
-  </Card>
-
-  <Card title="Attack Path Analysis" icon="route" href="/platform/attack-paths">
-    Maps privilege escalation graphs showing how a compromised pod could reach cluster-admin. Prioritizes the shortest, highest-impact paths.
-  </Card>
-
-  <Card title="Compliance Automation" icon="clipboard-check" href="/platform/compliance">
-    Maps controls to SOC 2, PCI DSS, HIPAA, FedRAMP, and EO 14028. Continuous evidence collection with exportable reports.
-  </Card>
-
-  <Card title="GitOps Intelligence" icon="code-branch" href="/platform/argocd">
-    Deep integration with ArgoCD and Flux CD. Tracks sync status, drift, health, and sync history without requiring API tokens.
-  </Card>
-
-  <Card title="Fleet Management" icon="server" href="/platform/fleet-comparison">
-    Cross-cluster intelligence correlates risks, compares configurations, and detects patterns across your entire fleet.
-  </Card>
-
-  <Card title="Signed Supply Chain" icon="signature" href="/scanning/sbom">
-    The Helm chart, the operator and agent images, and a CycloneDX SBOM for each are cosign-signed (AWS KMS). Verify exactly what you run before it reaches a cluster.
-  </Card>
-
-  <Card title="AI Risk Analysis" icon="robot" href="/ai/overview">
-    Plain-English explanations and prioritized fixes, grounded in your cluster's evidence — powered by Claude on Amazon Bedrock, with optional self-hosted NVIDIA NIM.
-  </Card>
-</CardGroup>
+<Tip>
+  ChangeGuard is **advisory by default** (autonomy level _Advise_). It changes none of your workloads until you explicitly opt into remediation and grant the RBAC.
+</Tip>

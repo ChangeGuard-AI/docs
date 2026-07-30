@@ -2,11 +2,11 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "ChangeGuard",
-  "description": "Kubernetes security and deployment safety platform. CSC scoring, CIS benchmarks, CVE scanning, runtime threat detection, RBAC analysis, and compliance automation.",
+  "description": "Kubernetes change-safety platform. Know what changed, understand incidents with cited evidence, score deploys before they ship, and remediate within the autonomy you grant.",
   "colors": {
-    "primary": "#3B82F6",
-    "light": "#60A5FA",
-    "dark": "#2563EB"
+    "primary": "#4f46e5",
+    "light": "#6366f1",
+    "dark": "#4338ca"
   },
   "favicon": "/favicon.svg",
   "logo": {
@@ -22,9 +22,35 @@
             "group": "Getting Started",
             "pages": [
               "introduction",
+              "get-started/before-you-install",
+              "get-started/first-30-minutes",
+              "get-started/install",
               "quickstart",
               "gate-your-pipeline",
               "how-it-works"
+            ]
+          },
+          {
+            "group": "Concepts & Architecture",
+            "icon": "book-open",
+            "pages": [
+              "concepts/overview",
+              "get-started/architecture",
+              "get-started/permissions"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "icon": "plug",
+            "pages": [
+              "integrations/overview"
+            ]
+          },
+          {
+            "group": "Operations",
+            "icon": "gear",
+            "pages": [
+              "operations/overview"
             ]
           },
           {

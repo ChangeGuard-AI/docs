@@ -1,0 +1,77 @@
+---
+title: "Integrations"
+description: "How ChangeGuard connects to your GitOps, CI, and notification tooling — what each reads, writes, needs, and how supported it is."
+---
+
+ChangeGuard is designed to sit alongside the tools you already run, not replace them. This page describes each integration with the same structure — what it **reads**, what it **writes**, the **permissions** and **effort** it takes, and its **support level** — so you can plan a rollout without surprises.
+
+<Info>
+  This list covers the integrations we verified for this release. If you need one that isn't here (a specific chat platform, ticketing system, or CI vendor), contact [support@changeguard.ai](mailto:support@changeguard.ai) — several are handled case-by-case and aren't self-serve yet.
+</Info>
+
+## GitOps — Argo CD & Flux
+
+ChangeGuard ingests changes from GitOps controllers so that "what changed" reflects your real delivery pipeline, not just raw cluster mutations.
+
+| Aspect | Detail |
+| --- | --- |
+| **Reads** | Application / sync state and the change metadata (what was applied, when, from which revision). |
+| **Writes** | Nothing. GitOps ingest is read-only. |
+| **Permissions** | Covered by the collector's existing read grants — no extra Git credentials required for cluster-side change detection. |
+| **Effort** | Low. If Argo CD or Flux is running in the cluster, changes are correlated automatically. |
+| **Support level** | **GA.** |
+| **Value** | Change Intelligence attributes incidents to the actual synced change and its diff. |
+
+## CI / CD — pre-flight gate via API
+
+The same **pre-flight check** you run in the UI is available to your pipeline, so you can ask "is it safe to ship right now?" as a step in CI.
+
+| Aspect | Detail |
+| --- | --- |
+| **Reads** | Your cluster's current posture and change context to compute the verdict. |
+| **Writes** | Returns a **SHIP / HOLD / BLOCK** verdict and CSC Score to your pipeline. It does not modify your cluster. |
+| **Permissions** | A ChangeGuard API key with access to the target cluster. |
+| **Effort** | Low–medium. Start by **reading** verdicts (log them, don't fail the build); once you trust the signal, promote it to a gate you enforce. |
+| **Support level** | **GA.** |
+| **Value** | Turns the CSC Score into an automated go/no-go signal at the moment you deploy. |
+
+<Tip>
+  Roll this out in two phases: first log the verdict without acting on it so your team sees it match reality, then make `BLOCK` fail the build. The score is deterministic, so a gate built on it is stable.
+</Tip>
+
+## Notifications
+
+ChangeGuard can alert your team when it detects a change or an incident, so the signal lands where people already look.
+
+| Aspect | Detail |
+| --- | --- |
+| **Reads** | The events it already produces (detected changes, incidents, verdicts). |
+| **Writes** | Outbound notifications to the destinations you configure in-app. |
+| **Permissions** | Configured in the product; destination-specific credentials are entered in-app, not in your cluster. |
+| **Effort** | Low. Point it at the channel your on-call watches. |
+| **Support level** | **GA** (available destinations are configured in-app). |
+| **Value** | Change and incident signal reaches the team without another dashboard to babysit. |
+
+<Note>
+  Specific notification destinations are configured inside the product and may vary by plan. Check the in-app notification settings for the current list, or ask support if you need a destination you don't see.
+</Note>
+
+## Security scanners (bundled)
+
+The scanners aren't third-party integrations you wire up — they ship with ChangeGuard and run as optional in-cluster jobs. They're listed here so you know what's producing findings.
+
+| Scanner | Finds | Support level |
+| --- | --- | --- |
+| KubeBench | CIS Kubernetes benchmark posture | **GA, plan-gated** |
+| Grype | CVEs in images | **GA, plan-gated** |
+| Pluto | Deprecated / removed Kubernetes APIs | **GA, plan-gated** |
+| Syft | SBOM (software bill of materials) | **GA, plan-gated** |
+| Falco | Runtime security signals | **GA, plan-gated** |
+
+<Info>
+  Scanner **findings** are sent to the control plane; the scanned **images and manifests are not**. See [Architecture & data flow](/get-started/architecture).
+</Info>
+
+## What ChangeGuard does not integrate with (yet)
+
+To keep this honest: there is **no outbound HTTP-proxy support** for the collector today, and **no SSO/SAML** for app sign-in as of this release. If either is a requirement for you, raise it with [support](mailto:support@changeguard.ai) before you plan a rollout — we'd rather set the right expectation up front.

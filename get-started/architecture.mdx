@@ -1,0 +1,148 @@
+---
+title: "Architecture & data flow"
+description: "Where each component runs, how they communicate, what data leaves your cluster, and what never does."
+---
+
+ChangeGuard has two halves: a small, read-only footprint **in your cluster**, and the **control plane** that does correlation, scoring, and analysis. This page shows exactly how they fit together and where your data lives.
+
+## Deployment topology
+
+The operator runs in `changeguard-system` and manages the collector (and optional scanners) in `changeguard-agent` through a CRD. Only the collector talks to the outside world.
+
+```mermaid
+flowchart TB
+  subgraph cluster["Your Kubernetes cluster"]
+    subgraph sys["namespace: changeguard-system"]
+      op["changeguard-operator<br/>(controller)"]
+      crd["ChangeGuardAgent<br/>(custom resource)"]
+    end
+    subgraph agentns["namespace: changeguard-agent"]
+      col["changeguard-collector<br/>(read-only)"]
+      scan["security scanners<br/>(optional: CronJob / DaemonSet)"]
+      sec["Secret: changeguard-credentials"]
+    end
+    workloads["Your workloads,<br/>config, events, RBAC"]
+  end
+
+  op -->|"manages via CRD"| col
+  op -->|"manages"| scan
+  crd -.->|"desired state"| op
+  col -->|"read: get / list / watch"| workloads
+  scan -->|"scan"| workloads
+  sec -.->|"api-key"| col
+
+  col ==>|"outbound HTTPS 443 (TLS 1.2+)"| cp
+
+  subgraph external["ChangeGuard control plane (api.changeguard.ai)"]
+    cp["Ingest &amp; correlation"]
+    score["CSC scoring &amp; pre-flight"]
+    ai["Analysis &amp; AI reasoning"]
+    ui["app.changeguard.ai (dashboard)"]
+    cp --> score --> ai --> ui
+  end
+```
+
+<Info>
+  There is **no inbound path** into your cluster. The control plane never connects _to_ you — the collector always initiates the connection _out_.
+</Info>
+
+## Communication paths
+
+Exactly three network relationships exist, and all cluster-originated traffic is outbound HTTPS on 443.
+
+```mermaid
+flowchart LR
+  col["Collector<br/>(in cluster)"] -->|"HTTPS 443, TLS 1.2+<br/>push state &amp; changes"| api["api.changeguard.ai"]
+  reg["public.ecr.aws<br/>(or your mirror)"] -->|"image pull"| col
+  you["You / your team"] -->|"HTTPS"| app["app.changeguard.ai<br/>dashboard &amp; API"]
+```
+
+<Warning>
+  There is **no HTTP-proxy support** today. The collector's push client does not honor `HTTP_PROXY` / `HTTPS_PROXY`. The cluster needs direct outbound HTTPS to `api.changeguard.ai:443`. For air-gapped image pulls you can point `global.imageRegistry` at your own mirror, but the egress requirement stands.
+</Warning>
+
+## What leaves your cluster — and what never does
+
+This is the boundary that matters most for review. The collector sends the metadata needed to correlate and score change; it does not send your code, images, or secret values.
+
+```mermaid
+flowchart LR
+  subgraph inside["Stays in your cluster"]
+    a1["Application source code"]
+    a2["Container images"]
+    a3["Secret values"]
+    a4["Full workload / customer data"]
+  end
+  subgraph boundary["Crosses the boundary (HTTPS 443)"]
+    b1["Cluster snapshots:<br/>workloads, events, posture"]
+    b2["Change metadata &amp; diffs<br/>from CI / GitOps"]
+    b3["Scanner findings<br/>(CVE, CIS, SBOM)"]
+    b4["Logs you choose to ingest"]
+  end
+  inside -.->|"never transmitted"| x["🛑"]
+  boundary ==>|"transmitted"| cp["ChangeGuard control plane"]
+```
+
+| Sent to the control plane | Never leaves your cluster |
+| --- | --- |
+| Cluster snapshots (workloads, events, posture) | Application source code / container images |
+| Change metadata and diffs from CI / GitOps | Kubernetes Secret **values** |
+| Scanner findings (CVE, CIS, SBOM) | Full workload / customer data |
+| Logs you explicitly ingest | — |
+
+<Note>
+  **Optional code graph.** If you enable the code-graph feature, ChangeGuard reads your repositories **in-cluster** and ships **only the derived knowledge graph** — never your raw source. Your source code still does not leave the cluster.
+</Note>
+
+<Info>
+  Data the control plane stores is **tenant-isolated** at the database level using PostgreSQL row-level security, so one tenant's data is never visible to another.
+</Info>
+
+## Where the AI runs
+
+All correlation, scoring, and AI reasoning run **in the control plane** — not in your cluster. AI analysis is powered by **Amazon Bedrock** (Claude models). The in-cluster collector does no analysis; it reads state and pushes it out. This keeps the cluster footprint tiny (a ~50m / 64Mi collector with no persistent storage) and means model/analysis changes ship on the control-plane side without touching your cluster.
+
+```mermaid
+flowchart TB
+  col["Collector<br/>reads &amp; pushes<br/><i>no analysis</i>"] ==>|"HTTPS 443"| cp
+  subgraph cp["Control plane"]
+    correlate["Correlate change → impact"]
+    csc["Compute CSC Score (deterministic)"]
+    rca["Root-cause analysis + evidence"]
+    advisor["AI reasoning<br/>(Advisor / Opinion — Early Access)"]
+    correlate --> csc
+    correlate --> rca
+    rca --> advisor
+  end
+```
+
+<Note>
+  The deterministic **CSC Score** and the **AI reasoning** capabilities are distinct. Scoring is deterministic and generally available; the reasoning layers (Engineering Advisor, Engineering Opinion, and related) are **Early Access** and off by default. See [Product concepts](/concepts/overview).
+</Note>
+
+## Where data lives
+
+| Data | Location | Notes |
+| --- | --- | --- |
+| Secret values, source, images | Your cluster only | Never transmitted. |
+| Cluster snapshots, change history, findings | ChangeGuard control plane | Powers dashboards, scoring, and audit trails. |
+| Your API key | A single in-cluster Secret (`changeguard-credentials`) \+ the control plane | Treat like a password; see [Operations](/operations/overview) for rotation. |
+| Audit / activity timeline | Control plane | Append-only record per incident. |
+
+## Cluster footprint at a glance
+
+<CardGroup cols={3}>
+  <Card title="Tiny" icon="feather">
+    Collector requests ~50m CPU / 64Mi memory (limits 200m / 128Mi). No PersistentVolumeClaims.
+  </Card>
+
+  <Card title="Hardened" icon="lock">
+    Runs non-root with a read-only root filesystem and dropped Linux capabilities.
+  </Card>
+
+  <Card title="Read-only" icon="eye">
+    `get` / `list` / `watch` only — no writes to your workloads unless you opt into remediation.
+  </Card>
+</CardGroup>
+
+For the exact RBAC grants behind this, see [Permissions & RBAC](/get-started/permissions).
