@@ -68,8 +68,8 @@ The operator installs into the `changeguard-system` namespace. For a custom name
 ## Uninstall
 
 ```bash
-kubectl delete changeguardagent changeguard -n changeguard-system
+kubectl delete changeguardagent changeguard -n changeguard-agent
 helm uninstall changeguard -n changeguard-system
-kubectl delete namespace changeguard-system
+kubectl delete namespace changeguard-agent changeguard-system
 kubectl delete crd changeguardagents.changeguard.ai
 ```
