@@ -62,6 +62,7 @@ The one-liner is configured with environment variables:
 | `CG_API_KEY` | _required_ | Your ChangeGuard API key (starts with `cg_`) |
 | `CG_CLUSTER_NAME` | _required_ | Display name for this cluster |
 | `CG_PROVIDER` | `Kubernetes` | `EKS`, `GKE`, `AKS`, or `Kubernetes` |
+| `CG_REGION` | `us-east-1` | Cloud region reported for this cluster |
 
 The operator installs into the `changeguard-system` namespace. For a custom namespace, air-gapped or OCI installs, GitOps, or finer-grained values, install the [Helm chart](/operator/helm-chart) directly.
 
