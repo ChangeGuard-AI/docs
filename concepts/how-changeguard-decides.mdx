@@ -1,0 +1,46 @@
+---
+title: "How ChangeGuard Makes Decisions"
+description: "Where recommendations come from, what the system knows and doesn't, why the Advisor sometimes says nothing — and how to challenge any of it."
+---
+
+This is the page to read before trusting a recommendation. It is not an AI architecture document — it is an account of where judgments come from, what they are allowed to claim, and how you hold them accountable.
+
+## The decision pipeline
+
+Every recommendation flows through the same chain — and each stage is labeled by maturity, so you know what ships today:
+
+| Stage | What it contributes | Maturity |
+| --- | --- | --- |
+| **Evidence** | Cluster state, deployments and their diffs, GitOps sync history, events, scan findings, incident timelines — the raw record. Every claim downstream must cite it. | GA |
+| **Opinion** | An owned position on an incident: belief, confidence, the tradeoff taken, and open unknowns. | Early Access |
+| **Experience** | Institutional memory — what similar past incidents did — woven in only when it changes the decision. | Early Access |
+| **Reason** | Honest ✓ / ⚠ confidence factors and "why not the obvious move." | Early Access |
+| **Engineering Advisor** | The senior-engineer read before a change proceeds, surfaced only when it materially helps. | Early Access |
+| **Verification** | After any applied fix: confirmation against real workload health before success is claimed — and one audited rollback if it fails. | GA (with opt-in remediation) |
+
+What every tenant has today, GA: the deterministic **CSC Score**, the **SHIP / HOLD / BLOCK** pre-flight verdict, and **incident investigation with cited evidence**. The Early Access stages add judgment on top — they never replace the evidence discipline underneath.
+
+## Why the Advisor sometimes says nothing
+
+Silence is a designed outcome, not a gap. If the evidence adds nothing beyond the score and the verdict, no note appears. The bar for speaking is _would this change the decision_ — which means every note you do see was considered worth interrupting you for. A system that always has advice is padding; one that mostly doesn't is exercising judgment.
+
+## What it knows — and what it doesn't
+
+**It knows** what the collector and scanners can observe: workloads and their state, every deployment, config, and GitOps change (including the diff that shipped), cluster events, RBAC posture, scan findings, and your incident history in ChangeGuard.
+
+**It does not know** your business context, your roadmap, dependencies outside the cluster, metrics you haven't exposed, who is on call, or what was said in a meeting. Recommendations are explicit about this boundary — an honest "the score can't see X" is part of the product's contract, and any recommendation that needs unknowable context should say so rather than guess.
+
+## How to challenge a recommendation
+
+You are supposed to push back. The product is built to make that cheap:
+
+1. **Open the citations.** Every investigation claim links to the evidence behind it — events, rollout state, the change diff. If a citation doesn't support the claim, the claim loses.
+2. **Read the activity timeline.** The append-only record shows what was observed and decided, in order. No retroactive edits.
+3. **Re-run the pre-flight.** Verdicts are deterministic on the same inputs — if reality changed, the verdict updates and says why.
+4. **Override it.** A held change you approve ships — and the outcome is recorded. If it ships clean, that's logged as a **false positive** against the verdict; if it causes an incident, that's logged too. Your overrides are evidence, and the system's track record is computed from them — you can hold it to its record.
+
+<Note>
+  That last point is the accountability loop: ChangeGuard keeps score on itself. Prevented incidents, false positives, and missed failures are tracked per tenant from real outcomes — not self-reported.
+</Note>
+
+See it end-to-end on [Your First Recommendation](/get-started/first-30-minutes), or meet the judgment layer on [Engineering Advisor](/get-started/engineering-advisor).

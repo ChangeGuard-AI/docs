@@ -1,0 +1,28 @@
+---
+title: "Known Limitations & Roadmap"
+description: "One consolidated, honest list: what's supported today, what's Early Access, and what isn't supported yet."
+---
+
+Expectations you can plan around, in one place. Anything marked **Supported today** is GA for every tenant (plan gating noted where it applies); **Early Access** is real but off by default and not self-serve; **Not yet supported** means exactly that — don't design around it until it moves.
+
+| Capability | Status | Notes |
+| --- | --- | --- |
+| Change tracking with shipped diffs | **Supported today** | Deployments, config, and GitOps changes, correlated to failing workloads. |
+| CSC Score & pre-flight verdicts (SHIP / HOLD / BLOCK) | **Supported today** | Deterministic; advisory unless you wire the CI gate yourself. |
+| Incident investigation with cited evidence | **Supported today** | Root cause, proposed fix, verify criteria. |
+| Autonomous remediation with verification | **Supported today** (opt-in) | Off until you enable it and grant the namespaced RBAC. |
+| Security scanning (CIS, CVE, runtime, SBOM, deprecated APIs) | **Supported today** (plan-gated) | Includes a privileged Falco DaemonSet — [disclosed here](/get-started/permissions#security-scanners-optional-on-by-default). |
+| Compliance mapping (SOC 2, PCI, HIPAA…) | **Supported today** (plan-gated) | Evidence support — not a certification. |
+| Engineering Advisor / Opinion / Experience / Reasoning factors | **Early Access** | Off by default, per-tenant flags — [the full list](/concepts/overview#early-access). |
+| Multiplayer incident workspace | **Early Access** | Flag `WORKSPACE_ENABLED`. |
+| Code Graph (repo knowledge graphs for investigation) | **Early Access** | Ships in the chart, off by default (`codeGraph.enabled`). |
+| Collector resource tuning | **Not yet supported** | In development. No requests/limits are set today — [measured footprint](/get-started/before-you-install). |
+| HTTP(S) proxy support | **Not yet supported** | Direct outbound HTTPS to `api.changeguard.ai:443` is required. |
+| `kubectl` CSC / push-count status columns | **Not yet supported** | The CR prints blank `CSC`/`PUSHES` columns; the dashboard is the source of truth. |
+| Terraform plan awareness | **Not yet supported** | Change intelligence covers Kubernetes and GitOps changes today. |
+| On-call schedule awareness | **Not yet supported** | Recommendations don't know who is on call. |
+| Self-serve API key rotation API | **Not yet supported** | Rotate in-app; confirm full invalidation via [support](mailto:support@changeguard.ai) for high-assurance cases. |
+
+<Note>
+  This page is maintained with releases. If a capability isn't listed and isn't marked GA in [Product concepts](/concepts/overview), treat it as not-yet-available and ask before depending on it — we would rather tell you "not yet" than let a plan assume otherwise.
+</Note>
