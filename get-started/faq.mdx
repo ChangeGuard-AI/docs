@@ -1,0 +1,71 @@
+---
+title: "FAQ & Troubleshooting"
+description: "Short, honest answers to the questions customers actually hit — with links to the full pages."
+---
+
+Short answers to the questions customers actually hit, each linking to the full page. If your question isn't here, [support](mailto:support@changeguard.ai) would rather you ask than guess.
+
+## Installing
+
+<AccordionGroup>
+  <Accordion title="The install command exits immediately with an error about CG_CLUSTER_NAME">
+    Both `CG_API_KEY` and `CG_CLUSTER_NAME` are **required** — the installer refuses to run without them, and the Helm chart refuses to render without `agent.clusterName`. The correct commands are on [Install ChangeGuard](/get-started/install).
+  </Accordion>
+
+  <Accordion title="How long until I see my first score?">
+    Your cluster connects within about a minute of install (up to ~2 minutes on a first-ever install while images pull), and the first CSC Score follows within ~10 seconds of connecting. If it's been longer, the [fix table](/get-started/connect-first-cluster#if-a-step-didnt-produce-the-result-shown) covers the three causes — it's almost always egress or the API key.
+  </Accordion>
+
+  <Accordion title="We use an HTTP(S) proxy — can the collector go through it?">
+    Not today. The cluster needs **direct outbound HTTPS** to `api.changeguard.ai:443`. This is tracked on [Known Limitations & Roadmap](/concepts/limitations-and-roadmap).
+  </Accordion>
+
+  <Accordion title="Can we install air-gapped or from our own registry?">
+    Yes — mirror the images and repoint every one of them with `--set global.imageRegistry=<your-registry>`. The registry list is on [Before you install](/get-started/before-you-install).
+  </Accordion>
+
+  <Accordion title="Does anything run privileged?">
+    One component: the **Falco DaemonSet** (runtime syscall detection), on by default with security scanning. Everything else runs unprivileged and read-only. What it mounts, why, and how to disable it: [Permissions & RBAC](/get-started/permissions#security-scanners-optional-on-by-default).
+  </Accordion>
+
+  <Accordion title="How do I uninstall completely?">
+    Helm uninstall plus one manual step (deleting the CRD) — exact commands on [Install ChangeGuard](/get-started/install#uninstall--rollback). Removing already-sent data is per-cluster in-app; full-tenant erasure goes through support.
+  </Accordion>
+</AccordionGroup>
+
+## Using ChangeGuard
+
+<AccordionGroup>
+  <Accordion title="What do SHIP / HOLD / BLOCK mean?">
+    The one verdict vocabulary, everywhere: **SHIP** = safe to ship, **HOLD** = caution — review before shipping, **BLOCK** = expected to fail (and, at Approve/Auto autonomy, gated until a human approves). Verdicts are advisory unless you wire the [CI gate](/gate-your-pipeline) yourself.
+  </Accordion>
+
+  <Accordion title="The dashboard says my score is unavailable or shows a red zero">
+    A real score of 0 renders as a red 0/100; “Calculating your first score” means the first snapshot hasn't arrived yet. If it turns into “Score unavailable,” the collector isn't pushing — use Retry and the [connection checks](/get-started/connect-first-cluster).
+  </Accordion>
+
+  <Accordion title="I don't see the Engineering Advisor / Opinion / Experience">
+    Expected — those are **Early Access**, off by default, and not self-serve. What's GA for every tenant and how to join EA: [Engineering Advisor](/get-started/engineering-advisor) and [Product concepts](/concepts/overview#early-access).
+  </Accordion>
+
+  <Accordion title="How do I change the collector's CPU/memory?">
+    Defaults are requests 25m/64Mi, limits 500m/512Mi (chart ≥ 5.3.6). Override any subset: `--set agent.collector.resources.limits.memory=1Gi` — see [Operations](/operations/overview#scaling--footprint).
+  </Accordion>
+
+  <Accordion title="How do I rotate an API key safely?">
+    Create the new key in-app, update the `changeguard-credentials` Secret, restart the collector, then revoke the old key — steps on [Operations](/operations/overview#api-key-handling). There's no self-serve rotation API yet; after a suspected exposure, also confirm invalidation with [support](mailto:support@changeguard.ai).
+  </Accordion>
+
+  <Accordion title="Is ChangeGuard going to block my deploys?">
+    Not unless you tell it to. Verdicts are advisory; the default autonomy level is **Advise**. Blocking only happens where you wire the [CI gate](/gate-your-pipeline) or enable Approve/Auto autonomy with its RBAC — see [How ChangeGuard Makes Decisions](/concepts/how-changeguard-decides).
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+The two canonical fix tables:
+
+- **Install and first connection** — [Connect your first cluster](/get-started/connect-first-cluster#if-a-step-didnt-produce-the-result-shown): repeated `401`s, egress timeouts, cluster never appearing in Fleet, operator `CrashLoopBackOff`.
+- **Day-2 operations** — [Operations handbook](/operations/overview#troubleshooting-quick-reference): collector crash loops, stale clusters, missing features, version skew.
+
+Still stuck? [support@changeguard.ai](mailto:support@changeguard.ai) — include the collector logs (`kubectl logs -n changeguard-agent deploy/changeguard-collector --tail=50`); they contain no secrets.
