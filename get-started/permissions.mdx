@@ -56,6 +56,27 @@ The operator manages ChangeGuard's own components (the collector and optional sc
   </Card>
 </CardGroup>
 
+## Security scanners (optional, on by default)
+
+The default install (`agent.security.enabled=true`) runs a suite of security scanners. Most run as scheduled Jobs, but one runs continuously and **with elevated privilege** — your security review should account for it:
+
+| Scanner | Runs as | Privilege |
+| --- | --- | --- |
+| **Falco** (runtime threat detection) | DaemonSet on **every node** | **Privileged** — `securityContext.privileged: true`; host-mounts `/proc`, `/dev`, `/boot`, `/lib/modules`, `/usr`, `/etc`, `/var/run` |
+| KubeBench, Grype, Pluto, Syft | Scheduled Jobs in `changeguard-agent` | Unprivileged; read images/manifests and report findings |
+
+Falco requires kernel-level access because eBPF syscall monitoring inherently does — the same privilege model Falco uses upstream. It is called out here so it is never a surprise in a security review. If your posture does not allow a privileged DaemonSet, disable it without affecting the collector or the other scanners:
+
+```bash
+# Disable only Falco
+helm upgrade changeguard changeguard/changeguard-operator \
+  -n changeguard-system --reuse-values --set agent.security.falco.enabled=false
+
+# Or install with no scanners at all (collector only)
+helm upgrade --install changeguard changeguard/changeguard-operator \
+  -n changeguard-system --set agent.security.enabled=false
+```
+
 ## Remediation permissions (opt-in only)
 
 If — and only if — you enable [Autonomous Remediation](/autonomy/autonomy-model), ChangeGuard needs permission to act. That permission is deliberately narrow:
@@ -73,15 +94,15 @@ If — and only if — you enable [Autonomous Remediation](/autonomy/autonomy-mo
 Don't take this page's word for it — read the live grants in your own cluster:
 
 ```bash
-# The collector's cluster-wide read role
-kubectl get clusterrole -l app.kubernetes.io/part-of=changeguard
-kubectl describe clusterrole changeguard-collector
+# ChangeGuard's cluster roles (by name — the collector reads under changeguard-agent)
+kubectl get clusterrole | grep changeguard
+kubectl describe clusterrole changeguard-agent
 
-# What the collector's ServiceAccount is bound to
+# What the collector's ServiceAccount (changeguard-agent) is bound to
 kubectl get clusterrolebinding -o wide | grep changeguard
 
 # Any namespaced remediation role (only present if you opted in)
-kubectl get role -A -l app.kubernetes.io/part-of=changeguard
+kubectl get role -A | grep changeguard
 ```
 
 <Check>

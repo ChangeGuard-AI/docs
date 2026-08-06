@@ -23,11 +23,15 @@ Read this once before installing. If you can check every box in **You are ready 
 | Component | Namespace | CPU request / limit | Memory request / limit | Storage |
 | --- | --- | --- | --- | --- |
 | Operator | `changeguard-system` | 50m / 200m | 64Mi / 128Mi | none |
-| Collector | `changeguard-agent` | 50m / 200m | 64Mi / 128Mi | none |
+| Collector | `changeguard-agent` | none set | none set | none |
 | Optional scanners | `changeguard-agent` | per-job | per-job | none |
 
+<Note>
+  The collector Deployment does not currently set CPU/memory requests or limits — it runs as a single lightweight pod (a ~13MB image). If you enforce resource requests by policy (a `LimitRange`, Gatekeeper, etc.), account for that. Configurable collector resources are on the roadmap.
+</Note>
+
 <Check>
-  No PersistentVolumeClaims are created. The collector runs non-root with a read-only root filesystem and all Linux capabilities dropped.
+  No PersistentVolumeClaims are created. The collector runs **non-root**, and its RBAC is strictly read-only (`get`/`list`/`watch`) — see [Permissions & RBAC](/get-started/permissions).
 </Check>
 
 ## Network
@@ -64,5 +68,13 @@ You need rights to create namespaces, a CRD, ClusterRoles/Bindings, and Deployme
 **Does not change:** any of your existing workloads, your RBAC for other principals, your Secrets, or your CI/CD — unless you later opt into remediation and apply its namespaced RBAC.
 
 ## You are ready when…
+
+- [ ] `kubectl` points at the cluster you intend to install into (`kubectl config current-context`).
+- [ ] **Helm 3.8\+** is installed (`helm version --short`).
+- [ ] The cluster runs **Kubernetes 1.24\+**.
+- [ ] You can create cluster-scoped resources (namespaces, a CRD, ClusterRoles) — `cluster-admin` is not required.
+- [ ] The cluster has **outbound HTTPS to `api.changeguard.ai:443`** (no HTTP proxy).
+- [ ] You have a ChangeGuard **API key** (`cg_…`), created at [app.changeguard.ai](https://app.changeguard.ai).
+- [ ] You've decided whether to keep **security scanning on** — it's the default and includes a privileged Falco DaemonSet (see [Permissions & RBAC](/get-started/permissions#security-scanners-optional-on-by-default)).
 
 Next: [**Install →**](/get-started/install)

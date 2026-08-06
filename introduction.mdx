@@ -40,6 +40,18 @@ A lightweight, read-only **collector** runs in your cluster (installed by the Ch
 ## Time to value
 
 <Steps>
+  <Step title="Install — one command">
+    A single `curl` or `helm` command installs the operator and the read-only collector. See [Install ChangeGuard](/get-started/install).
+  </Step>
+  <Step title="Cluster connects — seconds to ~2 minutes">
+    The collector starts and pushes its first snapshot. On a typical cluster this is well under a minute; a first-ever install can take up to ~2 minutes while container images pull.
+  </Step>
+  <Step title="First CSC score — within ~10 seconds of connecting">
+    Your cluster appears in **Fleet** with a deterministic CSC score, computed from that first snapshot.
+  </Step>
+  <Step title="First change and incident correlation">
+    As deploys, config, and GitOps changes flow in, ChangeGuard links each failing workload to the change that caused it.
+  </Step>
 </Steps>
 
 <Tip>

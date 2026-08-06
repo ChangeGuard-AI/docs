@@ -100,7 +100,7 @@ flowchart LR
 
 ## Where the AI runs
 
-All correlation, scoring, and AI reasoning run **in the control plane** — not in your cluster. AI analysis is powered by **Amazon Bedrock** (Claude models). The in-cluster collector does no analysis; it reads state and pushes it out. This keeps the cluster footprint tiny (a ~50m / 64Mi collector with no persistent storage) and means model/analysis changes ship on the control-plane side without touching your cluster.
+All correlation, scoring, and AI reasoning run **in the control plane** — not in your cluster. AI analysis is powered by **Amazon Bedrock** (Claude models). The in-cluster collector does no analysis; it reads state and pushes it out. This keeps the cluster footprint tiny (one small collector pod with no persistent storage) and means model/analysis changes ship on the control-plane side without touching your cluster.
 
 ```mermaid
 flowchart TB
@@ -133,11 +133,11 @@ flowchart TB
 
 <CardGroup cols={3}>
   <Card title="Tiny" icon="feather">
-    Collector requests ~50m CPU / 64Mi memory (limits 200m / 128Mi). No PersistentVolumeClaims.
+    The collector is one lightweight pod (a ~13MB image), with no resource requests/limits set today and no PersistentVolumeClaims.
   </Card>
 
-  <Card title="Hardened" icon="lock">
-    Runs non-root with a read-only root filesystem and dropped Linux capabilities.
+  <Card title="Non-root" icon="lock">
+    The collector runs non-root. Optional security scanners differ — the Falco DaemonSet runs **privileged**; see [Permissions](/get-started/permissions#security-scanners-optional-on-by-default).
   </Card>
 
   <Card title="Read-only" icon="eye">

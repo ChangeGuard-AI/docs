@@ -44,12 +44,16 @@ The agent CR lives in the `changeguard-agent` namespace (the operator itself run
 
 ```text
 NAME          CLUSTER        CSC   PHASE     PUSHES   AGE
-changeguard   my-cluster     87    Running   142      2m
+changeguard   my-cluster           Running            2m
 ```
+
+<Note>
+  The `CSC` and `PUSHES` columns are not populated from the CR status today — a `Running` phase confirms the agent is healthy, and your live score and push activity are in the [dashboard](https://app.changeguard.ai), not in `kubectl` output.
+</Note>
 
 ## Step 4: View Your Dashboard
 
-Go to [app.changeguard.ai](https://app.changeguard.ai) and log in. Your cluster appears in the sidebar within 10 seconds, with its first CSC score. Full scan evidence (CIS, CVE, SBOM) fills in over the first scan cycle.
+Go to [app.changeguard.ai](https://app.changeguard.ai) and log in. Your cluster appears in the sidebar within about a minute of install (up to ~2 minutes on a first-ever install while container images pull), and its first CSC score follows within ~10 seconds of the collector connecting. Full scan evidence (CIS, CVE, SBOM) fills in over the first scan cycle.
 
 ## Step 5: Gate Your Pipeline
 

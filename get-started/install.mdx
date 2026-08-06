@@ -37,7 +37,7 @@ Pick **one** of the two options. Both install the same thing: the operator into 
     The installer validates your API key first, then runs Helm for you.
 
     ```bash
-    curl -sL https://install.changeguard.ai | CG_API_KEY=<YOUR_API_KEY> sh
+    curl -sL https://install.changeguard.ai | CG_API_KEY=<YOUR_API_KEY> CG_CLUSTER_NAME=<YOUR_CLUSTER_NAME> sh
     ```
 
     <Warning>
@@ -53,8 +53,11 @@ Pick **one** of the two options. Both install the same thing: the operator into 
     
     helm upgrade --install changeguard changeguard/changeguard-operator \
       --namespace changeguard-system --create-namespace \
+      --set agent.clusterName=<YOUR_CLUSTER_NAME> \
       --set agent.apiKey=<YOUR_API_KEY>
     ```
+
+    `agent.clusterName` and `agent.apiKey` are both **required** — the chart refuses to render without a cluster name. Optionally add `--set agent.provider=<EKS|GKE|AKS|Kubernetes>` (default `Kubernetes`) and `--set agent.region=<region>` (default `us-east-1`) for dashboard display. Security scanning is **on by default** (`agent.security.enabled=true`), which includes a privileged Falco DaemonSet — see [Permissions & RBAC](/get-started/permissions#security-scanners-optional-on-by-default).
 
     If you prefer to manage the Secret yourself, create `changeguard-credentials` (key `api-key`) in `changeguard-agent` and reference it instead of passing `agent.apiKey`.
   </Tab>
@@ -105,7 +108,7 @@ The collector serves health on port `9090` (`/healthz` liveness, `/readyz` readi
     Sign in at [app.changeguard.ai](https://app.changeguard.ai).
   </Step>
   <Step title="Find your cluster">
-    Within a few minutes your cluster appears in **Fleet**, workload counts populate, and a **CSC Score** is computed.
+    Your cluster appears in **Fleet** within about a minute (up to ~2 minutes on a first-ever install while container images pull), workload counts populate, and a **CSC Score** is computed — typically within ~10 seconds of the collector connecting.
   </Step>
   <Step title="Run a pre-flight check">
     Open **Safe to Ship?** and run a pre-flight check. You get a **SHIP / HOLD / BLOCK** verdict with the score and the reasons behind it. This is **advisory** — it never blocks your pipeline on its own.

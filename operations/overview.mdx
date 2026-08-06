@@ -82,17 +82,7 @@ ChangeGuard can notify your team when it detects a change or an incident. Config
 
 ## Scaling & footprint
 
-The collector is intentionally small (~50m CPU / 64Mi memory requested; 200m / 128Mi limits) and stateless — no PersistentVolumeClaims. On very large clusters, if you see the collector hitting its memory limit, raise the limit via Helm values rather than running multiple collectors:
-
-```bash
-helm upgrade changeguard changeguard/changeguard-operator \
-  -n changeguard-system --reuse-values \
-  --set collector.resources.limits.memory=256Mi
-```
-
-<Check>
-  After any resource change, confirm the collector returns to `Ready` and resumes pushing.
-</Check>
+The collector is intentionally small (a single lightweight pod, a ~13MB image) and stateless — no PersistentVolumeClaims. It currently runs **without** CPU/memory requests or limits set, so there is no Helm-tunable resource knob today (configurable collector resources are on the roadmap). If you need to bound or reserve its footprint on a large cluster, enforce it with a namespace `LimitRange` or your admission policy rather than a Helm value — and if you hit a real resource problem, contact [support](mailto:support@changeguard.ai).
 
 ## Security scanners
 
