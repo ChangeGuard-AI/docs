@@ -3,6 +3,20 @@ title: "Changelog"
 description: "Release history and what shipped when"
 ---
 
+## v5.4.16 — August 2026
+
+**One verdict vocabulary: SHIP / HOLD / BLOCK — everywhere.**
+
+The change-prediction subsystem historically used SHIP / CAUTION / HOLD while the pre-flight surface used SHIP / HOLD / BLOCK — two vocabularies with conflicting tier meanings. As of this release, every surface (pre-flight, change predictions, prediction insights, the approval gate, and the CI validate endpoint) speaks **SHIP / HOLD / BLOCK**: SHIP = safe to ship, HOLD = caution/review, BLOCK = expected to fail (and, at Approve/Auto autonomy, gated until a human approves).
+
+### Changes
+
+- **Prediction verdicts unified** — new predictions emit SHIP / HOLD / BLOCK; historical rows were migrated in place exactly once (legacy worst-tier `HOLD` → `BLOCK`, legacy `CAUTION` → `HOLD`), so insight metrics and history remain correct.
+- **`/api/validate` gate decision fixed** — a change gated by an unapproved failure prediction now returns `decision: "BLOCK"`. Previously this path returned an undocumented `HOLD`, which the documented "fail the job on `BLOCK`" CI pattern did not catch. If your pipeline matched on `HOLD` for this case, update it to `BLOCK`.
+- **CLI score bands** — the mid-range score label is now `REVIEW` (matching the documented "Review Recommended" range); score bands are not verdicts.
+
+---
+
 ## v3.9.19 — June 2026
 
 **Cross-cluster GitOps, a signed supply chain, and a single-artifact enterprise install.**
