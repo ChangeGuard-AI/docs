@@ -67,6 +67,44 @@ You need rights to create namespaces, a CRD, ClusterRoles/Bindings, and Deployme
 
 **Does not change:** any of your existing workloads, your RBAC for other principals, your Secrets, or your CI/CD — unless you later opt into remediation and apply its namespaced RBAC.
 
+## Supported platforms
+
+Kubernetes **1.24\+** on **EKS, GKE, AKS, or any CNCF-conformant distribution**, with **Helm 3.8\+** and `kubectl`. Analysis and scoring run in the control plane, so in-cluster requirements stay minimal.
+
+## Container images & registries
+
+The cluster pulls images from these registries — allow them in egress policy, or mirror them for air-gapped installs:
+
+| Registry | Images |
+| --- | --- |
+| `public.ecr.aws` | operator, collector, SBOM/CVE scanner (Grype, Syft) |
+| `docker.io` | `aquasec/kube-bench`, `falcosecurity/falco-no-driver`, `falcosecurity/falcosidekick` |
+| `us-docker.pkg.dev` | `fairwinds-ops/oss/pluto` |
+
+Air-gapped or mirrored-registry installs can repoint **every** image at one registry with `--set global.imageRegistry=<your-registry>`.
+
+## AI investigation & model access
+
+The default install includes an operator-managed AI investigator (HolmesGPT) that calls **your model provider**. On EKS with Amazon Bedrock, grant it access via IRSA:
+
+```bash
+--set-string agent.ai.holmes.serviceAccountAnnotations."eks\.amazonaws\.com/role-arn"=arn:aws:iam::<ACCOUNT_ID>:role/<BEDROCK_INVOKE_ROLE>
+```
+
+Without model access, AI investigation analyses won't run — data collection, the CSC Score, and pre-flight checks are unaffected.
+
+## Upgrades & uninstall — plan for both before you start
+
+Upgrades are standard Helm upgrades, and most improvements ship control-plane-side with no cluster change — see the [Operations handbook](/operations/overview#upgrades). Uninstall removes the in-cluster footprint cleanly, with one manual step (deleting the CRD) — the exact commands are on the [install page](/get-started/install#uninstall--rollback).
+
+## Known limitations — read before your security review
+
+- **No HTTP(S) proxy support** — the cluster needs direct outbound HTTPS to `api.changeguard.ai:443`.
+- **Collector resources are not yet configurable** via Helm — see the footprint note above.
+- **`kubectl get changeguardagent` shows blank `CSC`/`PUSHES` columns** — the dashboard is the source of truth for score and push activity.
+- **Key rotation** has no self-serve rotation API today; for high-assurance invalidation after a suspected exposure, rotate and confirm with [support](mailto:support@changeguard.ai).
+- **Data removal** is per-cluster in-app; full-tenant erasure goes through [support](mailto:support@changeguard.ai).
+
 ## You are ready when…
 
 - [ ] `kubectl` points at the cluster you intend to install into (`kubectl config current-context`).
@@ -76,5 +114,6 @@ You need rights to create namespaces, a CRD, ClusterRoles/Bindings, and Deployme
 - [ ] The cluster has **outbound HTTPS to `api.changeguard.ai:443`** (no HTTP proxy).
 - [ ] You have a ChangeGuard **API key** (`cg_…`), created at [app.changeguard.ai](https://app.changeguard.ai).
 - [ ] You've decided whether to keep **security scanning on** — it's the default and includes a privileged Falco DaemonSet (see [Permissions & RBAC](/get-started/permissions#security-scanners-optional-on-by-default)).
+- [ ] (EKS \+ Bedrock) You know which IAM role the AI investigator will use for model access — see [AI investigation & model access](#ai-investigation--model-access).
 
 Next: [**Install →**](/get-started/install)

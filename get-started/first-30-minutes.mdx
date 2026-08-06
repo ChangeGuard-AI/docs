@@ -1,107 +1,67 @@
 ---
-title: "Your first 30 minutes"
-description: "From an installed collector to real value: see what changed, run a pre-flight check, and read an incident with cited evidence."
+title: "First 30 Minutes with ChangeGuard"
+description: "One successful journey, start to finish: install, connect, first score, first verdict, a safe sample incident, and the investigation that explains it."
+sidebarTitle: "Your first 30 minutes"
 ---
 
-You've [installed](/get-started/install) ChangeGuard. This guide takes you from "it's installed" to "I've seen what it does" — in about half an hour, on your own cluster, with a sample incident you can trigger safely and clean up completely.
+This page is one path with no branching. Follow the eight steps in order and in about half an hour you will have installed ChangeGuard, seen your first score and verdict, triggered a safe sample incident, and read an evidence-cited investigation of it — on your own cluster.
 
 <Note>
   Everything here is **advisory and read-only**. Nothing in this guide changes your workloads (the sample incident happens in a scratch namespace you create and delete). ChangeGuard does not act on your cluster until you explicitly opt into [remediation](/autonomy/autonomy-model).
 </Note>
 
-## Minute 0–5 — Verify the install
-
-Three checks and you know everything is healthy:
-
-```bash
-kubectl rollout status deploy/changeguard-operator -n changeguard-system --timeout=60s
-kubectl rollout status deploy/changeguard-collector -n changeguard-agent --timeout=60s
-```
-
-<Check>
-  Both roll out successfully, and in [app.changeguard.ai](https://app.changeguard.ai) your cluster appears in **Fleet** with the connection indicators green ("Agent connected", "Workloads detected").
-</Check>
-
-If any check fails, the [install guide's troubleshooting table](/get-started/install#if-a-step-didnt-produce-the-result-shown) has the fix — it's almost always egress or the API key.
-
-## Minute 5–10 — Read your score, run a pre-flight — and meet the Advisor
-
 <Steps>
-  <Step title="Open Safe to Ship?">
-    Your cluster already has a **CSC Score** — a deterministic 0–100 read of deploy readiness. Every point ties to a concrete signal you can inspect.
+  <Step title="Install ChangeGuard">
+    One command installs the operator and the read-only collector — the [install page](/get-started/install) walks it through. Already installed? Carry straight on.
   </Step>
-  <Step title="Run a pre-flight check">
-    You get **SHIP / HOLD / BLOCK** with the score and reasons. It's advisory — a recommendation, never an enforced block.
+  <Step title="Connect your cluster">
+    Confirm the operator and collector are healthy and your cluster appears in **Fleet** with green connection indicators ("Agent connected", "Workloads detected") — the checks are on [Connect your first cluster](/get-started/connect-first-cluster). If anything doesn't match, [the fix table there](/get-started/connect-first-cluster#if-a-step-didnt-produce-the-result-shown) covers it — it's almost always egress or the API key.
   </Step>
-  <Step title="Look for the Advisor's read">
-    Where the **Engineering Advisor** is enabled <Tooltip tip="Early Access — available to design partners and on request">Early Access</Tooltip>, its note appears with the verdict: the read a senior engineer would give, led by what's true in your cluster right now, honest about what it can't see.
+  <Step title="See your first score">
+    Your cluster's **CSC Score** appears in Fleet within ~10 seconds of connecting — a deterministic 0–100 read of deploy readiness. Every point ties to a concrete signal you can inspect: [Understanding your score](/how-it-works).
+  </Step>
+  <Step title="Run a pre-flight check — and meet the Advisor">
+    Open **Safe to Ship?** and run a pre-flight check. You get **SHIP / HOLD / BLOCK** with the score and reasons — advisory, never an enforced block. Where the [Engineering Advisor](/get-started/engineering-advisor) is enabled (Early Access), its note appears alongside the verdict: the read a senior engineer would give.
+
+    <Info>
+      Two things that are correct, not broken: if the Advisor has nothing material to add it stays **silent** — restraint is the feature. And if you don't see the Advisor at all, that's expected — it's Early Access, off by default.
+    </Info>
+  </Step>
+  <Step title="Trigger a sample incident, safely">
+    Watch a failure get correlated to the change that caused it — in a scratch namespace that touches nothing real:
+
+    ```bash
+    # 1. A healthy sample service
+    kubectl create namespace cg-sample
+    kubectl -n cg-sample create deployment sample-api --image=nginx:1.27-alpine --replicas=2
+    kubectl -n cg-sample rollout status deployment/sample-api --timeout=120s
+    
+    # 2. Ship a bad change — a typo'd image tag, the classic bad deploy
+    kubectl -n cg-sample set image deployment/sample-api nginx=nginx:1.27-alpine-nonexistent
+    ```
+
+    The new pods can't pull the image, the rollout starts failing, and ChangeGuard sees both the change and the failure. Within a few minutes, an incident appears for `sample-api` — **linked to the image change you just made**. Cause, not just symptom.
+  </Step>
+  <Step title="Understand the recommendation">
+    Open the incident. The root cause comes with **cited evidence** — the events, the failing rollout, and the change that shipped it. ChangeGuard proposes the fix and states the criteria to verify it worked. At the default autonomy level it applies nothing — this is advice you act on. Where the **Engineering Opinion** is enabled (Early Access), you'll also see an owned position: belief, confidence, tradeoffs, and what would change its mind.
+  </Step>
+  <Step title="View the Current Understanding">
+    Where incident context is enabled, the incident opens with the **Current Understanding** — the maintained read of what's happening right now: what changed, what it broke, and where things stand. It's what a teammate joining mid-incident needs, without scrolling the history. Every incident also carries an append-only **activity timeline** — your audit trail of what was observed and decided.
+  </Step>
+  <Step title="See the loop close">
+    Ship the fix and watch ChangeGuard observe the recovery:
+
+    ```bash
+    # 3. Revert — the "rollback" a real team would do
+    kubectl -n cg-sample set image deployment/sample-api nginx=nginx:1.27-alpine
+    
+    # 4. When you're done exploring, remove every trace
+    kubectl delete namespace cg-sample
+    ```
+
+    The rollout recovers, the incident reflects it, and the timeline records the whole arc — change, failure, fix, recovery. You applied this fix yourself; if you later opt into [Autonomous Remediation](/autonomy/autonomy-model), ChangeGuard can execute fixes within the policy you set, **verify** them against real workload health, and roll back once if verification fails.
   </Step>
 </Steps>
-
-<Info>
-  **Two things that are correct, not broken:** if the Advisor has nothing material to add, it stays **silent** — restraint is the feature. And if you don't see the Advisor at all, that's expected — it's Early Access; [contact us](mailto:support@changeguard.ai) to join.
-</Info>
-
-## Minute 10–15 — See your first change
-
-Deploy something, tweak a config, or let a GitOps sync flow in — ChangeGuard is already recording every deployment, config, and GitOps change across the fleet.
-
-<Check>
-  The change appears in ChangeGuard with **what actually changed** — the commit and diff, not just "a deploy happened."
-</Check>
-
-## Minute 15–25 — Trigger a sample incident, safely
-
-Now the part worth the price of admission: watch a failure get correlated to the change that caused it. Do this in a scratch namespace so it touches nothing real:
-
-```bash
-# 1. A healthy sample service
-kubectl create namespace cg-sample
-kubectl -n cg-sample create deployment sample-api --image=nginx:1.27-alpine --replicas=2
-kubectl -n cg-sample rollout status deployment/sample-api --timeout=120s
-
-# 2. Ship a bad change — a typo'd image tag, the classic bad deploy
-kubectl -n cg-sample set image deployment/sample-api nginx=nginx:1.27-alpine-nonexistent
-```
-
-The new pods can't pull the image, the rollout starts failing, and ChangeGuard sees both the change and the failure.
-
-<Check>
-  Within a few minutes, an incident appears for `sample-api` — **linked to the image change you just made**. Cause, not just symptom.
-</Check>
-
-Then ship the fix and watch recovery:
-
-```bash
-# 3. Revert — the "rollback" a real team would do
-kubectl -n cg-sample set image deployment/sample-api nginx=nginx:1.27-alpine
-
-# 4. When you're done exploring, remove every trace
-kubectl delete namespace cg-sample
-```
-
-## Minute 25–30 — Open the investigation: understanding, evidence, opinion
-
-Open the incident before you clean up.
-
-<Steps>
-  <Step title="Read the Current Understanding">
-    Where incident context is enabled, the incident opens with the **Current Understanding** — the shared, maintained read of what's happening right now: what changed, what it broke, and where things stand. What a teammate joining mid-incident needs, without scrolling the history.
-  </Step>
-  <Step title="Check the evidence">
-    The root cause comes with **cited evidence** — the events, the failing rollout, and the change that shipped it. Claims trace to records, not vibes.
-  </Step>
-  <Step title="Read the proposed fix — and how to verify it">
-    ChangeGuard proposes the fix and states the verify criteria. It applies nothing at the default autonomy level — this is advice you act on.
-  </Step>
-  <Step title="Look for the Opinion">
-    Where the **Engineering Opinion** is enabled (Early Access), you'll also see ChangeGuard's owned position: belief, confidence, tradeoffs, and what would change its mind.
-  </Step>
-</Steps>
-
-<Check>
-  Every incident also carries an append-only **activity timeline** — your audit trail of what was observed and decided.
-</Check>
 
 ## Set your comfort level
 
@@ -120,7 +80,7 @@ ChangeGuard's autonomy is a dial, not a switch: **Observe → Advise → Approve
 
 ## You've now seen the loop
 
-In 30 minutes: a verified install, a scored cluster, a pre-flight verdict, a real change with its diff, a failure correlated to its cause, an evidence-cited investigation — and, where enabled, the Understanding, Opinion, and Advisor that turn it into a teammate.
+In 30 minutes: a verified install, a scored cluster, a pre-flight verdict, a failure correlated to its cause, an evidence-cited investigation, and the recovery on the timeline — plus, where enabled, the Understanding, Opinion, and Advisor that turn it into a teammate.
 
 <CardGroup cols={2}>
   <Card title="Understand the concepts" icon="book" href="/concepts/overview">

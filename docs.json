@@ -23,11 +23,12 @@
             "pages": [
               "introduction",
               "get-started/before-you-install",
-              "get-started/first-30-minutes",
               "get-started/install",
-              "quickstart",
-              "gate-your-pipeline",
-              "how-it-works"
+              "get-started/connect-first-cluster",
+              "get-started/first-30-minutes",
+              "get-started/engineering-advisor",
+              "how-it-works",
+              "gate-your-pipeline"
             ]
           },
           {
@@ -54,7 +55,7 @@
             ]
           },
           {
-            "group": "Operator",
+            "group": "Advanced configuration",
             "pages": [
               "operator/installation",
               "operator/crd-reference",
@@ -185,5 +186,12 @@
       "website": "https://changeguard.ai",
       "linkedin": "https://linkedin.com/company/changeguard"
     }
-  }
+  },
+  "redirects": [
+    {
+      "source": "/quickstart",
+      "destination": "/get-started/install",
+      "permanent": true
+    }
+  ]
 }

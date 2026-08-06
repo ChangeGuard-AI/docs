@@ -1,0 +1,73 @@
+---
+title: "Connect your first cluster"
+description: "Confirm the operator and collector are healthy, watch your cluster appear in Fleet, and see your first CSC Score — with fixes for anything that doesn't match."
+---
+
+You've run the [install command](/get-started/install). Now confirm each piece is healthy and watch your cluster show up in the product. Each step shows the result you should see.
+
+## Step 1 — Confirm the operator is running
+
+```bash
+kubectl rollout status deploy/changeguard-operator -n changeguard-system --timeout=120s
+kubectl get pods -n changeguard-system
+```
+
+<Check>
+  `deployment "changeguard-operator" successfully rolled out` and the operator pod shows `Running` / `1/1`.
+</Check>
+
+The operator creates a `ChangeGuardAgent` custom resource, which is what tells it to deploy the collector:
+
+```bash
+kubectl get changeguardagent -A
+```
+
+<Check>
+  One `ChangeGuardAgent` resource is listed, with phase `Running`.
+</Check>
+
+<Note>
+  The `CSC` and `PUSHES` columns in that output are not populated from the CR status today — a `Running` phase confirms the agent is healthy, and your live score and push activity are in the [dashboard](https://app.changeguard.ai), not in `kubectl` output.
+</Note>
+
+## Step 2 — Confirm the collector is connected
+
+```bash
+kubectl rollout status deploy/changeguard-collector -n changeguard-agent --timeout=180s
+kubectl logs -n changeguard-agent deploy/changeguard-collector --tail=20
+```
+
+<Check>
+  The collector pod is `Running` / `1/1`, and the logs show a **successful push** to `api.changeguard.ai` with no repeated `401` (bad key) or connection-refused (egress) errors.
+</Check>
+
+The collector serves health on port `9090` (`/healthz` liveness, `/readyz` readiness). If Kubernetes reports it `Ready`, those probes are already passing.
+
+## Step 3 — See your cluster in the product
+
+<Steps>
+  <Step title="Open the app">
+    Sign in at [app.changeguard.ai](https://app.changeguard.ai).
+  </Step>
+  <Step title="Find your cluster">
+    Your cluster appears in **Fleet** within about a minute (up to ~2 minutes on a first-ever install while container images pull), workload counts populate, and a **CSC Score** is computed — typically within ~10 seconds of the collector connecting.
+  </Step>
+  <Step title="Run a pre-flight check">
+    Open **Safe to Ship?** and run a pre-flight check. You get a **SHIP / HOLD / BLOCK** verdict with the score and the reasons behind it. This is **advisory** — it never blocks your pipeline on its own.
+  </Step>
+</Steps>
+
+<Check>
+  Cluster visible in Fleet, CSC Score populated, and a pre-flight check returns a verdict. **That is a successful install.**
+</Check>
+
+## If a step didn't produce the result shown
+
+| Symptom | Most likely cause | What to check |
+| --- | --- | --- |
+| Collector logs show repeated `401` | Wrong or revoked API key | Re-check the key; re-run the [install](/get-started/install) with a valid key. |
+| Collector logs show connection timeouts | No egress to `api.changeguard.ai:443` | Confirm outbound HTTPS and DNS. **There is no HTTP-proxy support today** — the cluster needs direct egress. |
+| Cluster never appears in Fleet | Collector not `Ready` | Confirm Step 2 is green; give it a few minutes; check the logs for pushes. |
+| Operator `CrashLoopBackOff` | RBAC or CRD not applied | `kubectl describe`/`logs` in `changeguard-system`; confirm the CRD installed. |
+
+Next: [**First 30 Minutes with ChangeGuard →**](/get-started/first-30-minutes)
