@@ -36,8 +36,10 @@
             "icon": "book-open",
             "pages": [
               "concepts/overview",
+              "concepts/how-changeguard-decides",
               "get-started/architecture",
-              "get-started/permissions"
+              "get-started/permissions",
+              "concepts/limitations-and-roadmap"
             ]
           },
           {
