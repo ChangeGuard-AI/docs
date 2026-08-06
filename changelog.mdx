@@ -3,6 +3,14 @@ title: "Changelog"
 description: "Release history and what shipped when"
 ---
 
+## Chart 5.3.6 / Operator v5.3.5 — August 2026
+
+**Configurable collector resources, with safe defaults.**
+
+The collector now runs with default resource settings — **requests 25m CPU / 64Mi memory, limits 500m CPU / 512Mi memory** — grounded in measured usage with headroom, and configurable per-field via `agent.collector.resources` (standard Kubernetes requests/limits shape). Previously the collector ran with no requests or limits and the Helm value was unwired. An unparseable value falls back to that field's default, so a typo can never make the collector unschedulable. Existing installs pick up the defaults on their next operator upgrade.
+
+---
+
 ## v5.4.16 — August 2026
 
 **One verdict vocabulary: SHIP / HOLD / BLOCK — everywhere.**

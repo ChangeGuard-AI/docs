@@ -23,11 +23,11 @@ Read this once before installing. If you can check every box in **You are ready 
 | Component | Namespace | CPU request / limit | Memory request / limit | Storage |
 | --- | --- | --- | --- | --- |
 | Operator | `changeguard-system` | 50m / 200m | 64Mi / 128Mi | none |
-| Collector | `changeguard-agent` | not set by default | not set by default | none |
+| Collector | `changeguard-agent` | 25m / 500m | 64Mi / 512Mi | none |
 | Optional scanners | `changeguard-agent` | per-job | per-job | none |
 
 <Note>
-  ChangeGuard does not currently configure resource requests or limits for the collector by default. Resource usage depends on cluster size — the observed footprint on a small cluster (1 node, ~30 pods) is about **9m CPU / 21Mi memory**, and the image is ~13MB. If your organization enforces `LimitRange`s or quotas, account for the collector when defining them. Configurable resource settings are planned.
+  Collector defaults (chart ≥ 5.3.6 / operator ≥ v5.3.5): **requests 25m CPU / 64Mi memory, limits 500m CPU / 512Mi memory** — grounded in measured usage on a small cluster (~9m CPU / 21Mi for 1 node, ~30 pods) with headroom, since usage scales with cluster size. Override any subset in standard Kubernetes shape, e.g. `--set agent.collector.resources.limits.memory=1Gi`. **Sizing starting points:** up to a few hundred pods, the defaults are comfortable; around a thousand pods, watch collector memory in your normal tooling; well beyond that, raise the memory limit to `1Gi` and adjust from observation. Installs on older operator versions have no requests/limits set until upgraded.
 </Note>
 
 <Check>
@@ -100,7 +100,6 @@ Upgrades are standard Helm upgrades, and most improvements ship control-plane-si
 ## Known limitations — read before your security review
 
 - **No HTTP(S) proxy support** — the cluster needs direct outbound HTTPS to `api.changeguard.ai:443`.
-- **Collector resources are not yet configurable** via Helm — see the footprint note above.
 - **`kubectl get changeguardagent` shows blank `CSC`/`PUSHES` columns** — the dashboard is the source of truth for score and push activity.
 - **Key rotation** has no self-serve rotation API today; for high-assurance invalidation after a suspected exposure, rotate and confirm with [support](mailto:support@changeguard.ai).
 - **Data removal** is per-cluster in-app; full-tenant erasure goes through [support](mailto:support@changeguard.ai).
