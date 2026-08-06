@@ -27,7 +27,7 @@ Read this once before installing. If you can check every box in **You are ready 
 | Optional scanners | `changeguard-agent` | per-job | per-job | none |
 
 <Note>
-  Collector defaults (chart ≥ 5.3.6 / operator ≥ v5.3.5): **requests 25m CPU / 64Mi memory, limits 500m CPU / 512Mi memory** — grounded in measured usage on a small cluster (~9m CPU / 21Mi for 1 node, ~30 pods) with headroom, since usage scales with cluster size. Override any subset in standard Kubernetes shape, e.g. `--set agent.collector.resources.limits.memory=1Gi`. **Sizing starting points:** up to a few hundred pods, the defaults are comfortable; around a thousand pods, watch collector memory in your normal tooling; well beyond that, raise the memory limit to `1Gi` and adjust from observation. Installs on older operator versions have no requests/limits set until upgraded.
+  Collector defaults (chart ≥ 5.3.6 / operator ≥ v5.3.5): **requests 25m CPU / 64Mi memory, limits 500m CPU / 512Mi memory** — grounded in measured usage on a small cluster (~9m CPU / 21Mi for 1 node, ~30 pods) with headroom, since usage scales with cluster size. These are the **current** defaults, validated on small clusters so far — recommended sizing will firm up as operational experience accumulates across medium, busy, and stress-scale fleets. Override any subset in standard Kubernetes shape, e.g. `--set agent.collector.resources.limits.memory=1Gi`. **Sizing starting points:** up to a few hundred pods, the defaults are comfortable; around a thousand pods, watch collector memory in your normal tooling; well beyond that, raise the memory limit to `1Gi` and adjust from observation. Installs on older operator versions have no requests/limits set until upgraded.
 </Note>
 
 <Check>
