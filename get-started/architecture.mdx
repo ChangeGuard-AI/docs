@@ -133,7 +133,7 @@ flowchart TB
 
 <CardGroup cols={3}>
   <Card title="Tiny" icon="feather">
-    One lightweight pod (~13MB image; observed ~9m CPU / 21Mi memory on a small cluster). Requests/limits are not configured by default. No PersistentVolumeClaims.
+    One lightweight pod (~13MB image; observed ~9m CPU / 21Mi memory on a small cluster). Current defaults (chart ≥ 5.3.6): requests 25m/64Mi, limits 500m/512Mi — overridable via `agent.collector.resources`. No PersistentVolumeClaims.
   </Card>
 
   <Card title="Non-root" icon="lock">
