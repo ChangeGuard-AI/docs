@@ -133,7 +133,7 @@ flowchart TB
 
 <CardGroup cols={3}>
   <Card title="Tiny" icon="feather">
-    The collector is one lightweight pod (a ~13MB image), with no resource requests/limits set today and no PersistentVolumeClaims.
+    One lightweight pod (~13MB image; observed ~9m CPU / 21Mi memory on a small cluster). Requests/limits are not configured by default. No PersistentVolumeClaims.
   </Card>
 
   <Card title="Non-root" icon="lock">

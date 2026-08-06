@@ -23,11 +23,11 @@ Read this once before installing. If you can check every box in **You are ready 
 | Component | Namespace | CPU request / limit | Memory request / limit | Storage |
 | --- | --- | --- | --- | --- |
 | Operator | `changeguard-system` | 50m / 200m | 64Mi / 128Mi | none |
-| Collector | `changeguard-agent` | none set | none set | none |
+| Collector | `changeguard-agent` | not set by default | not set by default | none |
 | Optional scanners | `changeguard-agent` | per-job | per-job | none |
 
 <Note>
-  The collector Deployment does not currently set CPU/memory requests or limits — it runs as a single lightweight pod (a ~13MB image). If you enforce resource requests by policy (a `LimitRange`, Gatekeeper, etc.), account for that. Configurable collector resources are on the roadmap.
+  ChangeGuard does not currently configure resource requests or limits for the collector by default. Resource usage depends on cluster size — the observed footprint on a small cluster (1 node, ~30 pods) is about **9m CPU / 21Mi memory**, and the image is ~13MB. If your organization enforces `LimitRange`s or quotas, account for the collector when defining them. Configurable resource settings are planned.
 </Note>
 
 <Check>
