@@ -16,7 +16,7 @@ Expectations you can plan around, in one place. Anything marked **Supported toda
 | Engineering Advisor / Opinion / Experience / Reasoning factors | **Early Access** | Off by default, per-tenant flags — [the full list](/concepts/overview#early-access). |
 | Multiplayer incident workspace | **Early Access** | Flag `WORKSPACE_ENABLED`. |
 | Code Graph (repo knowledge graphs for investigation) | **Early Access** | Ships in the chart, off by default (`codeGraph.enabled`). |
-| Collector resource tuning | **Not yet supported** | In development. No requests/limits are set today — [measured footprint](/get-started/before-you-install). |
+| Collector resource tuning | **Supported today** (chart ≥ 5.3.6) | Defaults 25m/64Mi requests, 500m/512Mi limits; override via `agent.collector.resources` — [sizing](/get-started/before-you-install). |
 | HTTP(S) proxy support | **Not yet supported** | Direct outbound HTTPS to `api.changeguard.ai:443` is required. |
 | `kubectl` CSC / push-count status columns | **Not yet supported** | The CR prints blank `CSC`/`PUSHES` columns; the dashboard is the source of truth. |
 | Terraform plan awareness | **Not yet supported** | Change intelligence covers Kubernetes and GitOps changes today. |
