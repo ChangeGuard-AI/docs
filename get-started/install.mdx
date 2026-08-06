@@ -43,6 +43,8 @@ Pick **one** of the two options. Both install the same thing: the operator into 
     <Warning>
       Replace `<YOUR_API_KEY>` with your real key. Never paste a real key into a shared terminal, a ticket, or a screenshot.
     </Warning>
+
+    Optional environment variables: `CG_PROVIDER` (`EKS`, `GKE`, `AKS`, or `Kubernetes`; default `Kubernetes`) and `CG_REGION` (default `us-east-1`) — both are display metadata for the dashboard.
   </Tab>
   <Tab title="Helm directly (most control)">
     Use this in CI, GitOps, or when you want to see every flag.
