@@ -1,0 +1,32 @@
+---
+title: "Engineering Advisor"
+description: "The read a senior engineer would give before a change proceeds — surfaced only when it materially helps."
+tag: "Early Access"
+---
+
+The **Engineering Advisor** is the judgment layer on top of the pre-flight check: alongside the **SHIP / HOLD / BLOCK** verdict and the CSC Score, it gives the read a senior engineer would — grounded in what's actually live in your cluster right now (active incidents, recent failures, what this change touches), and honest about what it can't see.
+
+An illustrative example of the Advisor's note on a pre-flight check:
+
+> **I'd wait.** `payments-api` has an active incident, and this change touches the same service. Nothing here contradicts the score — but the score can't see the incident timeline. Ship after the incident closes.
+
+## Silence is deliberate
+
+If the Advisor has nothing material to add beyond the score and the verdict, it stays **silent**. Restraint is the feature — you should never see filler advice, and when a note does appear it's because something changed the decision.
+
+## Availability — Early Access
+
+<Warning>
+  The Engineering Advisor is **Early Access**: real and running, but **off by default** (feature flag `AI_ENGINEERING_ADVISOR_ENABLED`) and offered to design partners or on request. If you don't see it in your tenant, that's expected — it is not self-serve today. [Contact us](mailto:support@changeguard.ai) to join the Early Access program.
+</Warning>
+
+Don't plan production dependencies on Early Access capabilities. What every tenant has **today, GA**:
+
+- The **pre-flight check** — an on-demand SHIP / HOLD / BLOCK verdict with the score and reasons. See [Connect your first cluster](/get-started/connect-first-cluster#step-3--see-your-cluster-in-the-product).
+- **Incident investigation** — root cause with **cited evidence**, a proposed fix, and how to verify it. See [First 30 Minutes](/get-started/first-30-minutes).
+
+## Related Early Access capabilities
+
+The Advisor is one of a set of judgment capabilities in Early Access — **Engineering Opinion** (an owned, evidence-tied position on an incident), **Engineering Experience** (institutional memory from similar past incidents), and **reasoning / confidence factors**. The full list, with flags, is in [Product concepts](/concepts/overview#early-access).
+
+Next: [**Understanding your score →**](/how-it-works)
