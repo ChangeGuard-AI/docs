@@ -1,5 +1,5 @@
 ---
-title: API Keys
+title: "API Keys"
 description: "Managing API key authentication for agents and CI/CD"
 ---
 
@@ -29,7 +29,7 @@ curl -X POST https://api.changeguard.ai/api/keys \
 ## Scopes
 
 | Scope | Permissions | Use For |
-|-------|------------|---------|
+| --- | --- | --- |
 | `agent` | Push snapshots, push logs, ArgoCD discovery | Cluster agents |
 | `cicd` | Deployment validation (`/api/validate`) | GitHub Actions, GitLab CI, Jenkins |
 | `full` | All API access | Administrative scripts |
@@ -48,9 +48,16 @@ curl -X POST https://api.changeguard.ai/api/keys \
 
 ## Revoking Keys
 
-Go to **Settings → API Keys** and click **Revoke** next to the key.
+Go to **Settings → API Keys** and click **Revoke** next to the key. You can also revoke a key by its ID (from the keys list) via the API:
 
-Revoked keys are rejected immediately on the next request — there is no grace period or cache delay.
+```bash
+curl -X DELETE https://api.changeguard.ai/api/keys \
+  -H "Authorization: Bearer YOUR_SESSION_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"key_id": "KEY_ID"}'
+```
+
+Revocation takes effect across the ChangeGuard AI control plane once the revoke request succeeds. The request returns success only after the revocation is durably recorded; from that moment every backend replica rejects the key on its next request — with no grace period, cache delay, restart, or propagation wait.
 
 ## Key Rotation
 
@@ -67,5 +74,5 @@ Rotate keys without downtime:
 - Keys are hashed with **bcrypt** (cost factor 10) before storage
 - Only the key prefix (`cg_xxxxxxxx`) is visible in the dashboard — never the full key
 - Keys are scoped per tenant — a key from one tenant cannot authenticate against another
-- Revocation is immediate and enforced at the authentication middleware layer
+- Revocation is durable and takes effect control-plane-wide the instant the revoke request succeeds — every replica re-checks revocation against the database on every request, so a revoked key cannot survive on a warm replica, a restart, or a second node
 - Failed API key attempts are logged with source IP for monitoring
