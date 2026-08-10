@@ -1,6 +1,6 @@
 ---
 title: "Compensating Actions"
-description: "When a fix fails verification, ChangeGuard performs exactly one audited rollback - and always hands the incident to a human"
+description: "When a fix fails verification, ChangeGuard AI performs exactly one audited rollback - and always hands the incident to a human"
 ---
 
 When an applied fix fails [verification](/autonomy/verification), ChangeGuard does not retry, tweak, or experiment. It performs exactly one **compensating action**: a rollback that restores the fields it changed to their pre-remediation values, runs through the same pipeline as any other remediation, is itself verified, and ends with the incident **escalated** to a human.

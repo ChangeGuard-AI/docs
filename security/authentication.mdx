@@ -1,5 +1,5 @@
 ---
-title: Authentication & Access Control
+title: "Authentication & Access Control"
 description: "Sessions, passwords, roles, and rate limiting"
 ---
 
@@ -27,10 +27,10 @@ All passwords — whether set during signup, password change, or team member cre
 
 ## Role-Based Access Control
 
-ChangeGuard enforces three role levels on the backend:
+ChangeGuard AI enforces three role levels on the backend:
 
 | Role | Dashboard | Manage Policies | Manage Team & Keys | Manage Integrations |
-|------|-----------|----------------|--------------------|--------------------|
+| --- | --- | --- | --- | --- |
 | **Admin** | Full access | Yes | Yes | Yes |
 | **Operator** | Full access | Yes | No | Yes |
 | **Member** | Read-only | No | No | No |
@@ -52,7 +52,7 @@ Agent API keys are independent from dashboard sessions — revoking a user's das
 The backend enforces rate limits to protect against brute force attacks:
 
 | Endpoint | Limit | Window |
-|----------|-------|--------|
+| --- | --- | --- |
 | Login (`/api/auth/login`) | 5 attempts | 5 minutes per IP |
 | Signup (`/api/auth/signup`) | 3 attempts | 10 minutes per IP |
 

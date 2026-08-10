@@ -1,5 +1,5 @@
 ---
-title: Authentication
+title: "Authentication"
 description: "Login, signup, and token management"
 ---
 
@@ -17,6 +17,7 @@ POST /api/auth/login
 ```
 
 **Response:**
+
 ```json
 {
   "token": "tok_abc123...",
@@ -41,6 +42,7 @@ POST /api/auth/signup
 ```
 
 **Response:**
+
 ```json
 {
   "status": "created",
@@ -49,11 +51,13 @@ POST /api/auth/signup
   "plan": "trial",
   "apiKey": "cg_abc123...",
   "token": "tok_xyz789...",
-  "message": "Welcome to ChangeGuard! Save your API key — it cannot be retrieved again."
+  "message": "Welcome to ChangeGuard AI! Save your API key — it cannot be retrieved again."
 }
 ```
 
-<Warning>The `apiKey` is returned only once. Save it immediately.</Warning>
+<Warning>
+  The `apiKey` is returned only once. Save it immediately.
+</Warning>
 
 ## Verify Token
 

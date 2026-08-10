@@ -1,11 +1,11 @@
 ---
-title: Compliance & Audit
+title: "Compliance & Audit"
 description: "Audit trail, security headers, and compliance readiness"
 ---
 
 ## Audit Trail
 
-Every significant action in ChangeGuard is recorded in an immutable audit trail. The application backend can append new entries but does not have the privilege to modify or delete existing ones — audit history is append-only at the database grant level, not just by application convention. Even an elevated session inside the backend cannot rewrite history.
+Every significant action in ChangeGuard AI is recorded in an immutable audit trail. The application backend can append new entries but does not have the privilege to modify or delete existing ones — audit history is append-only at the database grant level, not just by application convention. Even an elevated session inside the backend cannot rewrite history.
 
 Recorded actions include:
 
@@ -19,7 +19,7 @@ Recorded actions include:
 Each audit entry includes:
 
 | Field | Description |
-|-------|-------------|
+| --- | --- |
 | Timestamp | UTC time of the event |
 | User | Email of the user or `agent` for automated events |
 | Source IP | Originating IP address (from `X-Forwarded-For`) |
@@ -45,9 +45,9 @@ The CSV includes all fields above, plus GitHub/GitLab context (PR number, approv
 The ChangeGuard dashboard enforces modern security headers on every response:
 
 | Header | Value | Purpose |
-|--------|-------|---------|
+| --- | --- | --- |
 | `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` | Forces HTTPS for 1 year, prevents downgrade attacks |
-| `Content-Security-Policy` | Restricts scripts, styles, and connections to self + API | Prevents XSS and data exfiltration |
+| `Content-Security-Policy` | Restricts scripts, styles, and connections to self \+ API | Prevents XSS and data exfiltration |
 | `X-Frame-Options` | `SAMEORIGIN` | Prevents clickjacking via iframes |
 | `X-Content-Type-Options` | `nosniff` | Prevents MIME type sniffing |
 | `X-XSS-Protection` | `1; mode=block` | Legacy XSS filter (defense in depth) |
@@ -78,7 +78,7 @@ These logs are available via Kubernetes log aggregation on the backend deploymen
 ChangeGuard implements controls aligned with SOC 2 Trust Service Criteria:
 
 | Category | Controls |
-|----------|----------|
+| --- | --- |
 | **Security** | TLS everywhere, bcrypt hashing, RBAC, rate limiting, WAF, CORS, CSP, HSTS |
 | **Availability** | AWS EKS with multi-AZ, RDS with automated backups, health monitoring |
 | **Confidentiality** | AES-256 at rest, tenant isolation, no secret collection, token masking |
@@ -86,9 +86,9 @@ ChangeGuard implements controls aligned with SOC 2 Trust Service Criteria:
 | **Privacy** | Data minimization, no PII collection beyond login email, cascading deletion |
 
 <Info>
-  SOC 2 Type II preparation is underway, with controls already implemented across all five Trust Service Criteria. Contact security@changeguard.ai if your organization requires a formal attestation, the current pre-audit security questionnaire, or has specific compliance questions.
+  SOC 2 Type II preparation is underway, with controls already implemented across all five Trust Service Criteria. Contact [security@changeguard.ai](mailto:security@changeguard.ai) if your organization requires a formal attestation, the current pre-audit security questionnaire, or has specific compliance questions.
 </Info>
 
 ## Responsible Disclosure
 
-If you discover a security vulnerability in ChangeGuard, please report it to **security@changeguard.ai**. We commit to acknowledging reports within 24 hours and providing a remediation timeline within 72 hours.
+If you discover a security vulnerability in ChangeGuard, please report it to [**security@changeguard.ai**](mailto:security@changeguard.ai). We commit to acknowledging reports within 24 hours and providing a remediation timeline within 72 hours.
