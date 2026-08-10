@@ -13,7 +13,7 @@ The score becomes useful the day it can say no. One API call before deploy retur
 ## GitHub Actions
 
 ```yaml
-- name: ChangeGuard Safety Check
+- name: ChangeGuard AI Safety Check
   run: |
     RESULT=$(curl -s -X POST https://api.changeguard.ai/api/validate \
       -H "X-API-Key: ${{ secrets.CHANGEGUARD_KEY }}" \

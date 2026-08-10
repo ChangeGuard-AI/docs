@@ -1,5 +1,5 @@
 ---
-title: Validate
+title: "Validate"
 description: "Pre-deployment safety checks for CI/CD"
 ---
 
@@ -10,7 +10,7 @@ Add a safety gate to your pipeline. Before deploying, call the validate endpoint
 ### GitHub Actions
 
 ```yaml
-- name: ChangeGuard Safety Check
+- name: ChangeGuard AI Safety Check
   run: |
     RESULT=$(curl -s -X POST https://api.changeguard.ai/api/validate \
       -H "X-API-Key: ${{ secrets.CHANGEGUARD_KEY }}" \

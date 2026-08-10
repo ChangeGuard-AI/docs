@@ -31,7 +31,7 @@ spec:
       scanOnDeploy: true
 ```
 
-## Verifying ChangeGuard's own artifacts
+## Verifying ChangeGuard AI's own artifacts
 
 ChangeGuard ships its software the same way it asks you to scan yours. The Helm chart, the operator and agent images, and a CycloneDX SBOM attestation for each are signed with [cosign](https://github.com/sigstore/cosign), backed by keys held in AWS KMS. Verify any artifact against the published key before it runs:
 

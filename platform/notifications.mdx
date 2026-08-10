@@ -1,5 +1,5 @@
 ---
-title: Notifications
+title: "Notifications"
 description: "Slack, Teams, and webhook alerts"
 ---
 
@@ -10,12 +10,12 @@ Go to **Notification Channels** in the dashboard sidebar to add a webhook.
 ### Slack
 
 1. Create a Slack webhook at [api.slack.com/messaging/webhooks](https://api.slack.com/messaging/webhooks)
-2. In ChangeGuard, click **Add Channel** → type: `slack`, paste the webhook URL
+2. In ChangeGuard AI, click **Add Channel** → type: `slack`, paste the webhook URL
 
 ### Microsoft Teams
 
 1. Create an Incoming Webhook connector in your Teams channel
-2. In ChangeGuard, click **Add Channel** → type: `teams`, paste the webhook URL
+2. In ChangeGuard AI, click **Add Channel** → type: `teams`, paste the webhook URL
 
 ### Generic Webhook
 
@@ -36,7 +36,7 @@ Any endpoint that accepts JSON POST requests. ChangeGuard sends:
 Create rules that trigger notifications on specific conditions:
 
 | Condition | Description |
-|-----------|-------------|
+| --- | --- |
 | `score_drop` | CSC score falls below a threshold |
 | `degraded_app` | Deployments with zero available replicas |
 
