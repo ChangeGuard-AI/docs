@@ -5,7 +5,7 @@ description: "How the ChangeGuard AI agent operates safely inside your cluster"
 
 ## Read-Only by Design
 
-The ChangeGuard agent uses a Kubernetes `ClusterRole` with strictly read-only permissions. It can only `get`, `list`, and `watch` resources — it cannot create, modify, or delete anything in your cluster.
+The ChangeGuard AI agent uses a Kubernetes `ClusterRole` with strictly read-only permissions. It can only `get`, `list`, and `watch` resources — it cannot create, modify, or delete anything in your cluster.
 
 ```yaml
 rules:
@@ -35,7 +35,7 @@ rules:
 The agent pod enforces strict security constraints:
 
 | Setting | Value | Purpose |
-|---------|-------|---------|
+| --- | --- | --- |
 | `runAsNonRoot` | `true` | Never runs as root |
 | `runAsUser` | `1000` | Dedicated non-root UID |
 | `readOnlyRootFilesystem` | `true` | Cannot write to container filesystem |
@@ -83,7 +83,7 @@ The agent is **outbound-only**. It initiates HTTPS connections to `api.changegua
 
 If your cluster restricts egress, allow:
 
-```
+```text
 Destination: api.changeguard.ai
 Port: 443 (HTTPS)
 Protocol: TCP
@@ -101,7 +101,7 @@ The agent installs into its own `changeguard-agent` namespace with a dedicated S
 Default resource requests and limits:
 
 | Resource | Request | Limit |
-|----------|---------|-------|
+| --- | --- | --- |
 | CPU | 50m | 200m |
 | Memory | 64Mi | 128Mi |
 

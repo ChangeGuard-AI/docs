@@ -50,7 +50,7 @@ You need rights to create namespaces, a CRD, ClusterRoles/Bindings, and Deployme
 
 ## Credentials & secrets
 
-- A ChangeGuard **API key** (create one at [app.changeguard.ai](https://app.changeguard.ai) → API keys). Treat it like a password.
+- A ChangeGuard AI **API key** (create one at [app.changeguard.ai](https://app.changeguard.ai) → API keys). Treat it like a password.
 - The chart creates **one** Kubernetes Secret, `changeguard-credentials` (key `api-key`), in `changeguard-agent`. You can also create it yourself and reference it.
 
 ## Data collected vs. not collected
@@ -113,7 +113,7 @@ The consolidated, always-current list — including Early Access status per capa
 - [ ] The cluster runs **Kubernetes 1.24\+**.
 - [ ] You can create cluster-scoped resources (namespaces, a CRD, ClusterRoles) — `cluster-admin` is not required.
 - [ ] The cluster has **outbound HTTPS to `api.changeguard.ai:443`** (no HTTP proxy).
-- [ ] You have a ChangeGuard **API key** (`cg_…`), created at [app.changeguard.ai](https://app.changeguard.ai).
+- [ ] You have a ChangeGuard AI **API key** (`cg_…`), created at [app.changeguard.ai](https://app.changeguard.ai).
 - [ ] You've decided whether to keep **security scanning on** — it's the default and includes a privileged Falco DaemonSet (see [Permissions & RBAC](/get-started/permissions#security-scanners-optional-on-by-default)).
 - [ ] (EKS \+ Bedrock) You know which IAM role the AI investigator will use for model access — see [AI investigation & model access](#ai-investigation--model-access).
 

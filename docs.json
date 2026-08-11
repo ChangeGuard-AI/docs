@@ -1,17 +1,17 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "ChangeGuard",
-  "description": "Kubernetes change-safety platform. Know what changed, understand incidents with cited evidence, score deploys before they ship, and remediate within the autonomy you grant.",
+  "name": "ChangeGuard AI",
+  "description": "ChangeGuard AI — the Kubernetes change-safety platform. Know what changed, understand incidents with cited evidence, score deploys before they ship, and remediate within the autonomy you grant.",
   "colors": {
     "primary": "#4f46e5",
     "light": "#6366f1",
     "dark": "#4338ca"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "https://changeguard.ai/favicon.svg",
   "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "light": "https://changeguard.ai/brand/docs-logo-light.svg",
+    "dark": "https://changeguard.ai/brand/docs-logo-dark.svg"
   },
   "navigation": {
     "tabs": [
@@ -174,13 +174,17 @@
   "navbar": {
     "links": [
       {
-        "label": "Dashboard",
+        "href": "https://demo.changeguard.ai",
+        "label": "Watch the demo"
+      },
+      {
+        "label": "Sign in",
         "href": "https://app.changeguard.ai"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Start Free Trial",
+      "label": "Start free",
       "href": "https://app.changeguard.ai"
     }
   },

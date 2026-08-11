@@ -11,7 +11,7 @@ This is the vocabulary the product, the docs, and the website all use. Each conc
 
 ## The idea
 
-ChangeGuard is built on one observation: most production incidents trace back to a change. So instead of treating alerts as isolated events, ChangeGuard makes **change** the primary object — tracking it, correlating it to impact, and helping you decide what's safe to ship.
+ChangeGuard AI is built on one observation: most production incidents trace back to a change. So instead of treating alerts as isolated events, ChangeGuard AI makes **change** the primary object — tracking it, correlating it to impact, and helping you decide what's safe to ship.
 
 <Note>
   **Change Safety Control Plane** is our term for that long-term direction: one system for making safer production decisions before, during, and after change. It's a **Vision** that organizes the roadmap — not a single feature. Everything below labeled **GA** is what delivers on it today.
@@ -41,11 +41,11 @@ The maintained, change-centric read of an incident — what someone joining righ
 
 ### Autonomy model — **GA**
 
-Four levels — **Observe → Advise → Approve → Auto** — with **Advise** as the default. You decide how much ChangeGuard may do on its own. See [Autonomous Remediation](/autonomy/autonomy-model).
+Four levels — **Observe → Advise → Approve → Auto** — with **Advise** as the default. You decide how much ChangeGuard AI may do on its own. See [Autonomous Remediation](/autonomy/autonomy-model).
 
 ### Autonomous Remediation (Self-Healing) — **GA, opt-in**
 
-Policy-governed detection → diagnosis → gated execution → **verification** → rollback. Off until you enable it and grant a narrow, namespaced RBAC Role. ChangeGuard never claims a fix succeeded it hasn't verified against real workload health, and on failed verification it performs exactly one audited rollback, then hands off to a human.
+Policy-governed detection → diagnosis → gated execution → **verification** → rollback. Off until you enable it and grant a narrow, namespaced RBAC Role. ChangeGuard AI never claims a fix succeeded it hasn't verified against real workload health, and on failed verification it performs exactly one audited rollback, then hands off to a human.
 
 ### Security scanning — **GA, plan-gated**
 
@@ -53,7 +53,7 @@ CIS benchmarks (KubeBench), CVEs (Grype), deprecated APIs (Pluto), SBOM (Syft), 
 
 ### Compliance mapping — **GA, plan-gated**
 
-Maps scan, RBAC, and SBOM evidence to framework controls (SOC 2, PCI, HIPAA, and others). This is **support for evidencing** controls — it helps you show your work. It is **not** a certification, and ChangeGuard does not certify you as compliant.
+Maps scan, RBAC, and SBOM evidence to framework controls (SOC 2, PCI, HIPAA, and others). This is **support for evidencing** controls — it helps you show your work. It is **not** a certification, and ChangeGuard AI does not certify you as compliant.
 
 ## Early Access
 
@@ -77,11 +77,11 @@ These are real and running, but **off by default** and offered to design partner
 | --- | --- |
 | **Collector** (the agent) | The small, read-only in-cluster component that reads state and pushes it to the control plane. |
 | **Operator** | The in-cluster controller that installs and manages the collector and scanners via a CRD. |
-| **Control plane** | ChangeGuard's hosted side (`api.changeguard.ai`) where correlation, scoring, and analysis happen. |
+| **Control plane** | ChangeGuard AI's hosted side (`api.changeguard.ai`) where correlation, scoring, and analysis happen. |
 | **Approval** | A human authorizing an action before it runs, at the `Approve` / `Auto` boundaries. |
 | **Verification** | Confirming a fix worked against real workload health before calling it done. |
 | **Activity timeline** | The append-only, per-incident audit record of what was observed and decided. |
 
 ## A note on honesty
 
-If a capability isn't listed as **GA** above, treat it as not-yet-generally-available and check with your ChangeGuard contact before depending on it. The [website](https://changeguard.ai) uses these exact same labels — so what you evaluate is what you can turn on.
+If a capability isn't listed as **GA** above, treat it as not-yet-generally-available and check with your ChangeGuard AI contact before depending on it. The [website](https://changeguard.ai) uses these exact same labels — so what you evaluate is what you can turn on.

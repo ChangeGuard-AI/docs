@@ -21,7 +21,7 @@ Deployed as a DaemonSet (one pod per node) using the `modern_ebpf` driver. Falco
 
 ## Privileges and host access
 
-Unlike the rest of ChangeGuard — which is read-only and runs unprivileged — runtime syscall monitoring requires kernel-level access. When security scanning is enabled (the default), the Falco DaemonSet therefore runs **privileged** on every node and mounts host paths for eBPF and kernel introspection:
+Unlike the rest of ChangeGuard AI — which is read-only and runs unprivileged — runtime syscall monitoring requires kernel-level access. When security scanning is enabled (the default), the Falco DaemonSet therefore runs **privileged** on every node and mounts host paths for eBPF and kernel introspection:
 
 - Runs as a **privileged** container (`securityContext.privileged: true`) on **every node**.
 - Mounts host paths: `/proc`, `/dev`, `/boot`, `/lib/modules`, `/usr`, `/etc`, `/var/run`.

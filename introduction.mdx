@@ -6,7 +6,7 @@ description: "Every Kubernetes deploy scored before it ships"
 ChangeGuard AI is **change intelligence for Kubernetes**. It continuously tracks every deployment, config, and GitOps change across your fleet, correlates each failing workload to the change that caused it, explains the root cause with cited evidence, and helps your team decide what's safe to ship — before, during, and after production changes.
 
 <Note>
-  **Who these docs are for.** Platform/Kubernetes operators (install & operate) and developers / on-call engineers (day-to-day use). If you're evaluating ChangeGuard for your organization, start at [changeguard.ai](https://changeguard.ai).
+  **Who these docs are for.** Platform/Kubernetes operators (install & operate) and developers / on-call engineers (day-to-day use). If you're evaluating ChangeGuard AI for your organization, start at [changeguard.ai](https://changeguard.ai).
 </Note>
 
 ## What you get today
@@ -35,13 +35,13 @@ ChangeGuard AI is **change intelligence for Kubernetes**. It continuously tracks
 
 ## How it works, in one line
 
-A lightweight, read-only **collector** runs in your cluster (installed by the ChangeGuard **operator**) and pushes cluster state and your changes over HTTPS to the ChangeGuard control plane, which does the correlation, scoring, and analysis. Your source code, secret values, and workload data stay in your cluster. See [Architecture & data flow](/get-started/architecture).
+A lightweight, read-only **collector** runs in your cluster (installed by the ChangeGuard AI **operator**) and pushes cluster state and your changes over HTTPS to the ChangeGuard AI control plane, which does the correlation, scoring, and analysis. Your source code, secret values, and workload data stay in your cluster. See [Architecture & data flow](/get-started/architecture).
 
 ## Time to value
 
 <Steps>
   <Step title="Install — one command">
-    A single `curl` or `helm` command installs the operator and the read-only collector. See [Install ChangeGuard](/get-started/install).
+    A single `curl` or `helm` command installs the operator and the read-only collector. See [Install ChangeGuard AI](/get-started/install).
   </Step>
   <Step title="Cluster connects — seconds to ~2 minutes">
     The collector starts and pushes its first snapshot. On a typical cluster this is well under a minute; a first-ever install can take up to ~2 minutes while container images pull.
@@ -50,10 +50,10 @@ A lightweight, read-only **collector** runs in your cluster (installed by the Ch
     Your cluster appears in **Fleet** with a deterministic CSC score, computed from that first snapshot.
   </Step>
   <Step title="First change and incident correlation">
-    As deploys, config, and GitOps changes flow in, ChangeGuard links each failing workload to the change that caused it.
+    As deploys, config, and GitOps changes flow in, ChangeGuard AI links each failing workload to the change that caused it.
   </Step>
 </Steps>
 
 <Tip>
-  ChangeGuard is **advisory by default** (autonomy level _Advise_). It changes none of your workloads until you explicitly opt into remediation and grant the RBAC.
+  ChangeGuard AI is **advisory by default** (autonomy level _Advise_). It changes none of your workloads until you explicitly opt into remediation and grant the RBAC.
 </Tip>

@@ -29,11 +29,11 @@ Short answers to the questions customers actually hit, each linking to the full 
   </Accordion>
 
   <Accordion title="How do I uninstall completely?">
-    Helm uninstall plus one manual step (deleting the CRD) — exact commands on [Install ChangeGuard](/get-started/install#uninstall--rollback). Removing already-sent data is per-cluster in-app; full-tenant erasure goes through support.
+    Helm uninstall plus one manual step (deleting the CRD) — exact commands on [Install ChangeGuard AI](/get-started/install#uninstall--rollback). Removing already-sent data is per-cluster in-app; full-tenant erasure goes through support.
   </Accordion>
 </AccordionGroup>
 
-## Using ChangeGuard
+## Using ChangeGuard AI
 
 <AccordionGroup>
   <Accordion title="What do SHIP / HOLD / BLOCK mean?">
@@ -56,8 +56,8 @@ Short answers to the questions customers actually hit, each linking to the full 
     Create the new key in-app, update the `changeguard-credentials` Secret, restart the collector, then revoke the old key — steps on [Operations](/operations/overview#api-key-handling). There's no self-serve rotation API yet; after a suspected exposure, also confirm invalidation with [support](mailto:support@changeguard.ai).
   </Accordion>
 
-  <Accordion title="Is ChangeGuard going to block my deploys?">
-    Not unless you tell it to. Verdicts are advisory; the default autonomy level is **Advise**. Blocking only happens where you wire the [CI gate](/gate-your-pipeline) or enable Approve/Auto autonomy with its RBAC — see [How ChangeGuard Makes Decisions](/concepts/how-changeguard-decides).
+  <Accordion title="Is ChangeGuard AI going to block my deploys?">
+    Not unless you tell it to. Verdicts are advisory; the default autonomy level is **Advise**. Blocking only happens where you wire the [CI gate](/gate-your-pipeline) or enable Approve/Auto autonomy with its RBAC — see [How ChangeGuard AI Makes Decisions](/concepts/how-changeguard-decides).
   </Accordion>
 </AccordionGroup>
 

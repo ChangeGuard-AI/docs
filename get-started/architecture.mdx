@@ -33,7 +33,7 @@ flowchart TB
 
   col ==>|"outbound HTTPS 443 (TLS 1.2+)"| cp
 
-  subgraph external["ChangeGuard control plane (api.changeguard.ai)"]
+  subgraph external["ChangeGuard AI control plane (api.changeguard.ai)"]
     cp["Ingest &amp; correlation"]
     score["CSC scoring &amp; pre-flight"]
     ai["Analysis &amp; AI reasoning"]
@@ -80,7 +80,7 @@ flowchart LR
     b4["Logs you choose to ingest"]
   end
   inside -.->|"never transmitted"| x["🛑"]
-  boundary ==>|"transmitted"| cp["ChangeGuard control plane"]
+  boundary ==>|"transmitted"| cp["ChangeGuard AI control plane"]
 ```
 
 | Sent to the control plane | Never leaves your cluster |
@@ -91,7 +91,7 @@ flowchart LR
 | Logs you explicitly ingest | — |
 
 <Note>
-  **Optional code graph.** If you enable the code-graph feature, ChangeGuard reads your repositories **in-cluster** and ships **only the derived knowledge graph** — never your raw source. Your source code still does not leave the cluster.
+  **Optional code graph.** If you enable the code-graph feature, ChangeGuard AI reads your repositories **in-cluster** and ships **only the derived knowledge graph** — never your raw source. Your source code still does not leave the cluster.
 </Note>
 
 <Info>
@@ -125,7 +125,7 @@ flowchart TB
 | Data | Location | Notes |
 | --- | --- | --- |
 | Secret values, source, images | Your cluster only | Never transmitted. |
-| Cluster snapshots, change history, findings | ChangeGuard control plane | Powers dashboards, scoring, and audit trails. |
+| Cluster snapshots, change history, findings | ChangeGuard AI control plane | Powers dashboards, scoring, and audit trails. |
 | Your API key | A single in-cluster Secret (`changeguard-credentials`) \+ the control plane | Treat like a password; see [Operations](/operations/overview) for rotation. |
 | Audit / activity timeline | Control plane | Append-only record per incident. |
 
