@@ -17,7 +17,7 @@ All data is encrypted in transit using TLS 1.2 or higher:
 
 - **Database:** AWS RDS with AES-256 encryption using AWS-managed keys. All tables — including scores, audit entries, API key hashes, and integration configs — are encrypted on disk.
 - **API Keys:** Stored as bcrypt hashes, not reversible. The plaintext key exists only in memory during the initial creation response.
-- **Integration Tokens:** GitHub and GitLab tokens stored encrypted in the database. GET responses mask tokens (first 4 + last 4 characters visible).
+- **Integration Tokens:** GitHub and GitLab tokens stored encrypted in the database. GET responses mask tokens (first 4 \+ last 4 characters visible).
 
 ## Data Retention
 
@@ -29,7 +29,7 @@ Audit trail entries are retained indefinitely and can be exported for compliance
 
 ## Data Minimization
 
-ChangeGuard follows a principle of data minimization — it collects only what's needed to calculate the CSC score and surface risks:
+ChangeGuard AI follows a principle of data minimization — it collects only what's needed to calculate the CSC score and surface risks:
 
 - **Metadata only:** Resource names, status, counts, and configurations — not data contents
 - **No secrets:** Secret values, environment variables, and ConfigMap data are never read
@@ -37,7 +37,7 @@ ChangeGuard follows a principle of data minimization — it collects only what's
 - **Configurable logging:** Pod log collection is off by default and only enabled when you choose to turn it on
 
 <Tip>
-  If your security policy requires a detailed list of every Kubernetes field the agent reads, contact us at security@changeguard.ai and we'll provide a complete field-level data dictionary.
+  If your security policy requires a detailed list of every Kubernetes field the agent reads, contact us at [security@changeguard.ai](mailto:security@changeguard.ai) and we'll provide a complete field-level data dictionary.
 </Tip>
 
 ## Data Deletion

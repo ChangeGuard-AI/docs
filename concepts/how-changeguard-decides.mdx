@@ -26,7 +26,7 @@ Silence is a designed outcome, not a gap. If the evidence adds nothing beyond th
 
 ## What it knows — and what it doesn't
 
-**It knows** what the collector and scanners can observe: workloads and their state, every deployment, config, and GitOps change (including the diff that shipped), cluster events, RBAC posture, scan findings, and your incident history in ChangeGuard.
+**It knows** what the collector and scanners can observe: workloads and their state, every deployment, config, and GitOps change (including the diff that shipped), cluster events, RBAC posture, scan findings, and your incident history in ChangeGuard AI.
 
 **It does not know** your business context, your roadmap, dependencies outside the cluster, metrics you haven't exposed, who is on call, or what was said in a meeting. Recommendations are explicit about this boundary — an honest "the score can't see X" is part of the product's contract, and any recommendation that needs unknowable context should say so rather than guess.
 
@@ -40,7 +40,7 @@ You are supposed to push back. The product is built to make that cheap:
 4. **Override it.** A held change you approve ships — and the outcome is recorded. If it ships clean, that's logged as a **false positive** against the verdict; if it causes an incident, that's logged too. Your overrides are evidence, and the system's track record is computed from them — you can hold it to its record.
 
 <Note>
-  That last point is the accountability loop: ChangeGuard keeps score on itself. Prevented incidents, false positives, and missed failures are tracked per tenant from real outcomes — not self-reported.
+  That last point is the accountability loop: ChangeGuard AI keeps score on itself. Prevented incidents, false positives, and missed failures are tracked per tenant from real outcomes — not self-reported.
 </Note>
 
 See it end-to-end on [Your First Recommendation](/get-started/first-30-minutes), or meet the judgment layer on [Engineering Advisor](/get-started/engineering-advisor).

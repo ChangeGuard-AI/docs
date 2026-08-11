@@ -5,18 +5,18 @@ description: "How ChangeGuard AI protects your clusters and data"
 
 ## Overview
 
-ChangeGuard is designed with a zero-trust, outbound-only architecture. The agent runs inside your cluster with read-only access and pushes encrypted metadata to our backend. There is never any inbound access to your infrastructure.
+ChangeGuard AI is designed with a zero-trust, outbound-only architecture. The agent runs inside your cluster with read-only access and pushes encrypted metadata to our backend. There is never any inbound access to your infrastructure.
 
 ## Architecture
 
-<Frame caption="Outbound-only by design: a read-only agent and the five scanners in your cluster push findings out over TLS 1.2+ to the ChangeGuard platform on AWS. No inbound connection is ever opened to your infrastructure.">
-  ![ChangeGuard security architecture: a read-only, non-root agent and the KubeBench, Grype, Falco, Pluto, and Syft scanners in your Kubernetes cluster connect outbound over TLS to AWS WAF, load balancing, the backend on Amazon EKS, Amazon RDS (AES-256 at rest), and Amazon Bedrock for AI analysis.](https://install.changeguard.ai/assets/architecture.svg)
+<Frame caption="Outbound-only by design: a read-only agent and the five scanners in your cluster push findings out over TLS 1.2+ to the ChangeGuard AI platform on AWS. No inbound connection is ever opened to your infrastructure.">
+  ![ChangeGuard AI security architecture: a read-only, non-root agent and the KubeBench, Grype, Falco, Pluto, and Syft scanners in your Kubernetes cluster connect outbound over TLS to AWS WAF, load balancing, the backend on Amazon EKS, Amazon RDS (AES-256 at rest), and Amazon Bedrock for AI analysis.](https://install.changeguard.ai/assets/architecture.svg)
 </Frame>
 
 ## Data Flow
 
 <Frame caption="The agent connects outbound only — telemetry is encrypted in transit (TLS 1.2+) and at rest (AES-256), with no inbound path into your cluster.">
-  ![ChangeGuard data flow: the in-cluster agent pushes snapshots outbound over HTTPS (TLS 1.2\+, gzip, API key) through AWS WAF and the load balancer to the backend on Amazon EKS, which writes to Amazon RDS PostgreSQL with sslmode=require and AES-256 encryption at rest.](https://install.changeguard.ai/assets/dataflow.svg)
+  ![ChangeGuard AI data flow: the in-cluster agent pushes snapshots outbound over HTTPS (TLS 1.2\+, gzip, API key) through AWS WAF and the load balancer to the backend on Amazon EKS, which writes to Amazon RDS PostgreSQL with sslmode=require and AES-256 encryption at rest.](https://install.changeguard.ai/assets/dataflow.svg)
 </Frame>
 
 Every component in this chain enforces encryption:
@@ -50,7 +50,7 @@ No inbound connectivity is required. No LoadBalancer, Ingress, or NodePort is cr
 
 ## Multi-Tenant Isolation
 
-ChangeGuard enforces tenant isolation in two independent layers:
+ChangeGuard AI enforces tenant isolation in two independent layers:
 
 **Application layer.** Every API request is scoped to a tenant through the authenticated API key or session token. The backend validates tenant ownership at the middleware layer — before any handler logic runs — on every data path: clusters, snapshots, score history, ArgoCD instances, audit logs, notifications, policies, suppressions, integration configs, API keys, and team members.
 

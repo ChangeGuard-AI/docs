@@ -10,16 +10,16 @@ All configuration is via environment variables in the `changeguard-agent-config`
 ### Required
 
 | Variable | Description |
-|----------|-------------|
-| `API_KEY` | Your ChangeGuard API key (starts with `cg_`) |
+| --- | --- |
+| `API_KEY` | Your ChangeGuard AI API key (starts with `cg_`) |
 | `CLUSTER_ID` | Unique identifier for this cluster |
 
 ### Optional
 
 | Variable | Default | Description |
-|----------|---------|-------------|
+| --- | --- | --- |
 | `BACKEND_URL` | `https://api.changeguard.ai` | Backend endpoint |
-| `CLUSTER_NAME` | Same as CLUSTER_ID | Display name in dashboard |
+| `CLUSTER_NAME` | Same as CLUSTER\_ID | Display name in dashboard |
 | `CLUSTER_PROVIDER` | `Kubernetes` | `EKS`, `GKE`, `AKS`, or `Kubernetes` |
 | `CLUSTER_REGION` | (empty) | Cluster region |
 | `PUSH_INTERVAL` | `10s` | How often to push snapshots |
@@ -50,7 +50,7 @@ LOG_INCLUDE_SYSTEM: "true"
 The agent exposes health at `:9090`:
 
 | Path | Purpose |
-|------|---------|
+| --- | --- |
 | `/health` | Full status JSON (push count, errors, payload size) |
 | `/healthz` | Liveness probe (returns 200) |
 | `/readyz` | Readiness probe (fails if no successful push in 2 minutes) |

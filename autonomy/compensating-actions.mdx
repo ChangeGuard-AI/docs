@@ -3,7 +3,7 @@ title: "Compensating Actions"
 description: "When a fix fails verification, ChangeGuard AI performs exactly one audited rollback - and always hands the incident to a human"
 ---
 
-When an applied fix fails [verification](/autonomy/verification), ChangeGuard does not retry, tweak, or experiment. It performs exactly one **compensating action**: a rollback that restores the fields it changed to their pre-remediation values, runs through the same pipeline as any other remediation, is itself verified, and ends with the incident **escalated** to a human.
+When an applied fix fails [verification](/autonomy/verification), ChangeGuard AI does not retry, tweak, or experiment. It performs exactly one **compensating action**: a rollback that restores the fields it changed to their pre-remediation values, runs through the same pipeline as any other remediation, is itself verified, and ends with the incident **escalated** to a human.
 
 ```mermaid
 flowchart LR
@@ -17,7 +17,7 @@ flowchart LR
 
 ## Pre-state is captured before anything is written
 
-Before the executor applies the **original** fix, it reads and records the current values of every field the patch will touch. This read-before-write capture is mandatory: if the executor cannot record pre-state (for example, the control plane is unreachable at that moment), it **refuses to execute the fix at all**. ChangeGuard never makes a change it does not know how to undo.
+Before the executor applies the **original** fix, it reads and records the current values of every field the patch will touch. This read-before-write capture is mandatory: if the executor cannot record pre-state (for example, the control plane is unreachable at that moment), it **refuses to execute the fix at all**. ChangeGuard AI never makes a change it does not know how to undo.
 
 ## Only what was touched is restored
 
@@ -25,7 +25,7 @@ The rollback is a minimal patch built from the captured pre-state - it restores 
 
 ## Drift means stop, not force
 
-Before writing, the executor compares the live values of the touched fields against what the original remediation left behind. If they differ - a human or another system changed one of those fields since - the rollback **refuses** and terminates as `failed` with `human intervention required`. ChangeGuard will not overwrite a human's change to win an argument with the cluster; the incident is escalated with both states visible in the audit trail.
+Before writing, the executor compares the live values of the touched fields against what the original remediation left behind. If they differ - a human or another system changed one of those fields since - the rollback **refuses** and terminates as `failed` with `human intervention required`. ChangeGuard AI will not overwrite a human's change to win an argument with the cluster; the incident is escalated with both states visible in the audit trail.
 
 ## Same-or-stronger authorization
 

@@ -9,7 +9,7 @@ The most important security property of autonomous remediation is architectural,
 
 ```mermaid
 flowchart LR
-    subgraph saas [ChangeGuard control plane]
+    subgraph saas [ChangeGuard AI control plane]
         Q[Validated remediation queue]
     end
     subgraph cluster [Your cluster]
@@ -18,7 +18,7 @@ flowchart LR
     X -->|outbound HTTPS poll, API key| Q
 ```
 
-- The **executor** runs in your cluster and polls the control plane outbound over HTTPS, authenticating with a scoped API key. There is no inbound path: ChangeGuard cannot connect into your cluster, and there is no kubeconfig, token, or cloud credential for your cluster stored on our side.
+- The **executor** runs in your cluster and polls the control plane outbound over HTTPS, authenticating with a scoped API key. There is no inbound path: ChangeGuard AI cannot connect into your cluster, and there is no kubeconfig, token, or cloud credential for your cluster stored on our side.
 - The control plane's only lever is what it **serves to the executor from the validated queue** - work that has already passed the [field allowlist and execution-policy checks](/autonomy/safety-guarantees).
 - The executor applies patches using **its own ServiceAccount**, so every write is subject to Kubernetes RBAC evaluation in your cluster, attributable in your audit logs, and revocable by you at any moment.
 
@@ -33,7 +33,7 @@ A control-plane bug, a compromised policy, or a malicious patch cannot cross the
 
 ## You hold the off switches
 
-Every one of these is under your control, effective immediately, with no ChangeGuard involvement:
+Every one of these is under your control, effective immediately, with no ChangeGuard AI involvement:
 
 - **Scale the executor to zero** (or uninstall it) - queued work simply holds in `approved` and executes nothing; the platform was validated to hold and resume cleanly across executor outages.
 - **Revoke the executor's API key** - the poll loop stops being served.

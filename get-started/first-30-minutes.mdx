@@ -7,11 +7,11 @@ sidebarTitle: "Your first recommendation"
 This page is one path with no branching, and it ends at the moment the product has to prove itself: the first recommendation you can check against evidence. Follow the eight steps in order — about half an hour — and you will have installed ChangeGuard AI, seen your first score and verdict, triggered a safe sample incident, and read an evidence-cited investigation of it on your own cluster.
 
 <Note>
-  Everything here is **advisory and read-only**. Nothing in this guide changes your workloads (the sample incident happens in a scratch namespace you create and delete). ChangeGuard does not act on your cluster until you explicitly opt into [remediation](/autonomy/autonomy-model).
+  Everything here is **advisory and read-only**. Nothing in this guide changes your workloads (the sample incident happens in a scratch namespace you create and delete). ChangeGuard AI does not act on your cluster until you explicitly opt into [remediation](/autonomy/autonomy-model).
 </Note>
 
 <Steps>
-  <Step title="Install ChangeGuard">
+  <Step title="Install ChangeGuard AI">
     One command installs the operator and the read-only collector — the [install page](/get-started/install) walks it through. Already installed? Carry straight on.
   </Step>
   <Step title="Connect your cluster">
@@ -40,16 +40,16 @@ This page is one path with no branching, and it ends at the moment the product h
     kubectl -n cg-sample set image deployment/sample-api nginx=nginx:1.27-alpine-nonexistent
     ```
 
-    The new pods can't pull the image, the rollout starts failing, and ChangeGuard sees both the change and the failure. Within a few minutes, an incident appears for `sample-api` — **linked to the image change you just made**. Cause, not just symptom.
+    The new pods can't pull the image, the rollout starts failing, and ChangeGuard AI sees both the change and the failure. Within a few minutes, an incident appears for `sample-api` — **linked to the image change you just made**. Cause, not just symptom.
   </Step>
   <Step title="Understand the recommendation">
-    Open the incident. The root cause comes with **cited evidence** — the events, the failing rollout, and the change that shipped it. ChangeGuard proposes the fix and states the criteria to verify it worked. At the default autonomy level it applies nothing — this is advice you act on. Where the **Engineering Opinion** is enabled (Early Access), you'll also see an owned position: belief, confidence, tradeoffs, and what would change its mind.
+    Open the incident. The root cause comes with **cited evidence** — the events, the failing rollout, and the change that shipped it. ChangeGuard AI proposes the fix and states the criteria to verify it worked. At the default autonomy level it applies nothing — this is advice you act on. Where the **Engineering Opinion** is enabled (Early Access), you'll also see an owned position: belief, confidence, tradeoffs, and what would change its mind.
   </Step>
   <Step title="View the Current Understanding">
     Where incident context is enabled, the incident opens with the **Current Understanding** — the maintained read of what's happening right now: what changed, what it broke, and where things stand. It's what a teammate joining mid-incident needs, without scrolling the history. Every incident also carries an append-only **activity timeline** — your audit trail of what was observed and decided.
   </Step>
   <Step title="See the loop close">
-    Ship the fix and watch ChangeGuard observe the recovery:
+    Ship the fix and watch ChangeGuard AI observe the recovery:
 
     ```bash
     # 3. Revert — the "rollback" a real team would do
@@ -59,15 +59,15 @@ This page is one path with no branching, and it ends at the moment the product h
     kubectl delete namespace cg-sample
     ```
 
-    The rollout recovers, the incident reflects it, and the timeline records the whole arc — change, failure, fix, recovery. You applied this fix yourself; if you later opt into [Autonomous Remediation](/autonomy/autonomy-model), ChangeGuard can execute fixes within the policy you set, **verify** them against real workload health, and roll back once if verification fails.
+    The rollout recovers, the incident reflects it, and the timeline records the whole arc — change, failure, fix, recovery. You applied this fix yourself; if you later opt into [Autonomous Remediation](/autonomy/autonomy-model), ChangeGuard AI can execute fixes within the policy you set, **verify** them against real workload health, and roll back once if verification fails.
   </Step>
 </Steps>
 
 ## Set your comfort level
 
-ChangeGuard's autonomy is a dial, not a switch: **Observe → Advise → Approve → Auto**, default **Advise**.
+ChangeGuard AI's autonomy is a dial, not a switch: **Observe → Advise → Approve → Auto**, default **Advise**.
 
-| Level | What ChangeGuard does |
+| Level | What ChangeGuard AI does |
 | --- | --- |
 | **Observe** | Watches and records only. |
 | **Advise** _(default)_ | Recommends actions; a human does everything. |
@@ -75,7 +75,7 @@ ChangeGuard's autonomy is a dial, not a switch: **Observe → Advise → Approve
 | **Auto** | Executes within policy, then verifies — and rolls back once if verification fails. |
 
 <Warning>
-  `Approve` and `Auto` only do anything after you opt into [Autonomous Remediation](/autonomy/autonomy-model) and grant its RBAC. Until then, ChangeGuard stays at advice.
+  `Approve` and `Auto` only do anything after you opt into [Autonomous Remediation](/autonomy/autonomy-model) and grant its RBAC. Until then, ChangeGuard AI stays at advice.
 </Warning>
 
 ## You've now seen the loop
@@ -96,6 +96,6 @@ In 30 minutes: a verified install, a scored cluster, a pre-flight verdict, a fai
   </Card>
 
   <Card title="Review permissions" icon="shield" href="/get-started/permissions">
-    Exactly what ChangeGuard can and cannot see or do in your cluster.
+    Exactly what ChangeGuard AI can and cannot see or do in your cluster.
   </Card>
 </CardGroup>

@@ -6,7 +6,7 @@ description: "One Helm command installs the operator and a read-only collector. 
 This page is written so that if you run each step in order and see the result shown under it, you are done — with no guesswork about whether it worked.
 
 <Note>
-  You should have finished [Before you install](/get-started/before-you-install). You need a cluster on **Kubernetes 1.24\+** reachable with `kubectl`, **Helm 3.8\+**, cluster-scoped install rights (no `cluster-admin` required), outbound HTTPS to `api.changeguard.ai:443` (no proxy), and a ChangeGuard **API key**.
+  You should have finished [Before you install](/get-started/before-you-install). You need a cluster on **Kubernetes 1.24\+** reachable with `kubectl`, **Helm 3.8\+**, cluster-scoped install rights (no `cluster-admin` required), outbound HTTPS to `api.changeguard.ai:443` (no proxy), and a ChangeGuard AI **API key**.
 </Note>
 
 ## Step 1 — Point kubectl at the right cluster
@@ -83,7 +83,7 @@ So you can review — or fully remove — everything:
 | Secret | `changeguard-credentials` (key `api-key`) | `changeguard-agent` |
 | CronJob / DaemonSet | security scanners (optional) | `changeguard-agent` |
 
-No PersistentVolumeClaims are created, and **none of your existing workloads are modified**. ChangeGuard is read-only until you explicitly opt into [remediation](/autonomy/autonomy-model) and grant its namespaced RBAC.
+No PersistentVolumeClaims are created, and **none of your existing workloads are modified**. ChangeGuard AI is read-only until you explicitly opt into [remediation](/autonomy/autonomy-model) and grant its namespaced RBAC.
 
 ## Uninstall / rollback
 
@@ -97,7 +97,7 @@ kubectl delete crd changeguardagents.changeguard.ai
 ```
 
 <Note>
-  This removes ChangeGuard from your cluster. To remove data already sent to the control plane, remove the cluster in-app (per-cluster removal). Full-tenant data erasure is handled through [support](mailto:support@changeguard.ai).
+  This removes ChangeGuard AI from your cluster. To remove data already sent to the control plane, remove the cluster in-app (per-cluster removal). Full-tenant data erasure is handled through [support](mailto:support@changeguard.ai).
 </Note>
 
 Next: [**Connect your first cluster →**](/get-started/connect-first-cluster)

@@ -16,13 +16,13 @@ helm upgrade --install changeguard changeguard/changeguard-operator \
   --set agent.security.enabled=true
 ```
 
-ChangeGuard is operator-managed, and the Helm chart is the single install artifact — it deploys the operator, the read-only data collector, and all five scanners. There is no standalone agent.
+ChangeGuard AI is operator-managed, and the Helm chart is the single install artifact — it deploys the operator, the read-only data collector, and all five scanners. There is no standalone agent.
 
 ## Key Values
 
 | Key | Default | Description |
 | --- | --- | --- |
-| `agent.apiKey` | _required_ | ChangeGuard API key |
+| `agent.apiKey` | _required_ | ChangeGuard AI API key |
 | `agent.clusterName` | _required_ | Cluster display name |
 | `agent.provider` | `Kubernetes` | EKS, GKE, AKS, Kubernetes |
 | `agent.security.enabled` | `true` | Enable all security scanning |
@@ -34,7 +34,7 @@ ChangeGuard is operator-managed, and the Helm chart is the single install artifa
 
 ## GitOps, OCI, and air-gapped installs
 
-ChangeGuard discovers GitOps state by reading it directly from the Kubernetes API inside the cluster — no ArgoCD or Flux API token is required. Turn discovery on with:
+ChangeGuard AI discovers GitOps state by reading it directly from the Kubernetes API inside the cluster — no ArgoCD or Flux API token is required. Turn discovery on with:
 
 ```bash
   --set gitops.argoCD.enabled=true \

@@ -34,7 +34,7 @@ The control plane is deliberately crash-tolerant: controller restarts were injec
 
 ## Validated, not asserted
 
-These guarantees are backed by an end-to-end validation matrix run against ChangeGuard's own production stack - successful rollback, drift refusal, executor restart mid-rollback, concurrent contention, rollback-verification failure, policy denial after the fact, preservation of unrelated human edits, and controller-crash convergence at each step. The matrix is re-run when the remediation pipeline changes.
+These guarantees are backed by an end-to-end validation matrix run against ChangeGuard AI's own production stack - successful rollback, drift refusal, executor restart mid-rollback, concurrent contention, rollback-verification failure, policy denial after the fact, preservation of unrelated human edits, and controller-crash convergence at each step. The matrix is re-run when the remediation pipeline changes.
 
 <Note>
   Two of the guarantees above exist because the validation matrix caught real bugs before customers could: the field allowlist once correctly rejected benign-but-unlisted identity fields in a model-generated patch, and a result-classification bug was found and fixed the same day. The point of publishing invariants is that they are tested adversarially, not assumed.
