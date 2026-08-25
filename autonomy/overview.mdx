@@ -1,12 +1,14 @@
 ---
-title: "Autonomous Remediation"
+title: "Policy-Governed Remediation"
 sidebarTitle: "Overview"
-description: "A closed-loop control system for deployment safety - detection, diagnosis, gated execution, verification, and rollback"
+description: "A closed-loop control system for deployment safety - detection, diagnosis, policy-gated execution, verification, and rollback"
 ---
 
-ChangeGuard AI is an autonomous deployment safety platform. Beyond scoring and gating deploys, it can detect a failing workload, diagnose the root cause, propose a concrete fix, execute that fix inside your cluster under an explicit policy, verify that the fix actually worked, and roll it back if it didn't. Every step is recorded, attributable, and visible in the dashboard.
+ChangeGuard AI can close the loop on a failure: detect a failing workload, diagnose the root cause, propose a concrete fix, execute that fix inside your cluster under an explicit policy, verify that the fix actually worked, and roll it back if it didn't. Every step is recorded, attributable, and visible in the dashboard.
 
-This is a **closed-loop control system**, not an observability tool with a chatbot attached. The loop is only ever closed under controls you configure: nothing executes automatically until you set the [autonomy level](/autonomy/autonomy-model) to Auto **and** define a complete [execution policy](/autonomy/execution-policy). Out of the box, ChangeGuard AI only observes and advises.
+**It does none of that by default.** ChangeGuard AI ships at autonomy level **Advise**, where it recommends and nothing executes.
+
+This is a **closed-loop control system**, not an observability tool with a chatbot attached — but the loop is bounded by your policy, not by the system's own judgment. Nothing executes automatically until you set the [autonomy level](/autonomy/autonomy-model) to Auto **and** define a complete [execution policy](/autonomy/execution-policy). Below Auto, every action waits for a human to approve it.
 
 ## The loop
 
