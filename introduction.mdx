@@ -1,9 +1,9 @@
 ---
 title: "Introduction"
-description: "Every Kubernetes deploy scored before it ships"
+description: "Know whether a Kubernetes change is safe before it ships"
 ---
 
-ChangeGuard AI is **change intelligence for Kubernetes**. It continuously tracks every deployment, config, and GitOps change across your fleet, correlates each failing workload to the change that caused it, explains the root cause with cited evidence, and helps your team decide what's safe to ship — before, during, and after production changes.
+ChangeGuard AI evaluates a proposed Kubernetes change against what is actually happening in the cluster it will land in, and tells you what is risky and why — before it executes. It also records every deployment, config and GitOps change across your fleet, links each failing workload back to the change that caused it, and explains the root cause with cited evidence.
 
 <Note>
   **Who these docs are for.** Platform/Kubernetes operators (install & operate) and developers / on-call engineers (day-to-day use). If you're evaluating ChangeGuard AI for your organization, start at [changeguard.ai](https://changeguard.ai).
@@ -12,7 +12,7 @@ ChangeGuard AI is **change intelligence for Kubernetes**. It continuously tracks
 ## What you get today
 
 <CardGroup cols={2}>
-  <Card title="Change Intelligence" icon="timeline">
+  <Card title="Change history & attribution" icon="timeline">
     Every failing workload linked to the change — and the diff — that shipped it. **GA**
   </Card>
 
@@ -20,12 +20,12 @@ ChangeGuard AI is **change intelligence for Kubernetes**. It continuously tracks
     Root cause with cited evidence, a proposed fix, and how to verify it. **GA**
   </Card>
 
-  <Card title="CSC Score & pre-flight" icon="gauge">
+  <Card title="Readiness score & pre-flight" icon="gauge">
     A deterministic deploy-readiness score and a SHIP / HOLD / BLOCK verdict — advisory. **GA**
   </Card>
 
-  <Card title="Autonomous Remediation" icon="arrows-rotate">
-    Policy-governed detect → fix → verify → rollback, at the autonomy level you choose. **GA · opt-in**
+  <Card title="Policy-governed remediation" icon="arrows-rotate">
+    Detect → fix → verify → rollback, at the autonomy level you set. Default is Advise, where nothing executes. **GA · opt-in**
   </Card>
 </CardGroup>
 
@@ -46,8 +46,8 @@ A lightweight, read-only **collector** runs in your cluster (installed by the Ch
   <Step title="Cluster connects — seconds to ~2 minutes">
     The collector starts and pushes its first snapshot. On a typical cluster this is well under a minute; a first-ever install can take up to ~2 minutes while container images pull.
   </Step>
-  <Step title="First CSC score — within ~10 seconds of connecting">
-    Your cluster appears in **Fleet** with a deterministic CSC score, computed from that first snapshot.
+  <Step title="First readiness score — within ~10 seconds of connecting">
+    Your cluster appears in **Fleet** with a deterministic readiness score, computed from that first snapshot.
   </Step>
   <Step title="First change and incident correlation">
     As deploys, config, and GitOps changes flow in, ChangeGuard AI links each failing workload to the change that caused it.

@@ -1,10 +1,10 @@
 ---
-title: "Gate Your Pipeline"
-description: "Fail the job on a bad score — in any CI"
+title: "Use the Verdict in CI"
+description: "ChangeGuard AI returns the judgment - your pipeline decides whether to enforce it"
 icon: "traffic-light"
 ---
 
-The score becomes useful the day it can say no. One API call before deploy returns the cluster's current CSC score and a decision; fail the job on `BLOCK` and risky changes stop shipping.
+ChangeGuard AI returns a judgment; your pipeline decides what to do with it. One API call before deploy returns the cluster's current readiness score and a decision. Whether a `BLOCK` fails the job is your policy, not ours — the examples below show how to wire it up if that is what you want.
 
 <Info>
   Everything on this page uses the [validate endpoint](/api-reference/validate). You need an API key with CI scope — create one in **Settings → API Keys**.
@@ -29,9 +29,9 @@ The score becomes useful the day it can say no. One API call before deploy retur
       }')
     DECISION=$(echo $RESULT | jq -r '.decision')
     SCORE=$(echo $RESULT | jq -r '.csc_score')
-    echo "CSC Score: $SCORE — Decision: $DECISION"
+    echo "Readiness score: $SCORE — Decision: $DECISION"
     if [ "$DECISION" = "BLOCK" ]; then
-      echo "::error::Deployment blocked — CSC score too low ($SCORE)"
+      echo "::error::Deployment blocked by your pipeline policy — readiness score $SCORE"
       exit 1
     fi
 ```
@@ -41,7 +41,7 @@ The score becomes useful the day it can say no. One API call before deploy retur
 The same call as a job — add it as the last stage before your deploy job and make the deploy job depend on it:
 
 ```yaml
-changeguard-gate:
+changeguard-check:
   stage: pre-deploy
   image: curlimages/curl:latest
   script:
@@ -52,13 +52,13 @@ changeguard-gate:
         -d "{\"cluster_id\":\"production\",\"resource\":\"${CI_PROJECT_NAME}\",\"source\":\"gitlab-ci\"}")
       DECISION=$(echo $RESULT | grep -o '"decision":"[^"]*"' | cut -d'"' -f4)
       SCORE=$(echo $RESULT | grep -o '"csc_score":[0-9]*' | cut -d':' -f2)
-      echo "CSC Score: $SCORE — Decision: $DECISION"
+      echo "Readiness score: $SCORE — Decision: $DECISION"
       test "$DECISION" != "BLOCK"
 ```
 
 ## ArgoCD PreSync Hook
 
-Validate before every sync — the sync fails if the cluster isn't safe to absorb it:
+If you want the sync itself to stop on a `BLOCK`, validate before every sync:
 
 ```yaml
 apiVersion: batch/v1
@@ -87,8 +87,12 @@ spec:
 
 ## Any other CI
 
-The gate is one `curl` — it runs anywhere a shell does. POST to `/api/validate` with your cluster and resource, read `.decision` and `.csc_score` from the response, and fail the job on `BLOCK`. See the [validate reference](/api-reference/validate) for the full request schema.
+The check is one `curl` — it runs anywhere a shell does. POST to `/api/validate` with your cluster and resource, read `.decision` and `.csc_score` from the response, and decide what your pipeline does with them. See the [validate reference](/api-reference/validate) for the full request schema.
+
+<Note>
+  **ChangeGuard AI is advisory.** It returns a verdict and the reasons behind it; it has no ability to stop your pipeline on its own. Enforcement is a choice you make in your own CI configuration, and you can change it at any time without changing anything in ChangeGuard AI.
+</Note>
 
 ## What your team sees
 
-A held deploy isn't a mystery. The dashboard shows the score at the moment of the gate and the exact checks that drove it down — the failing CIS rule, the crash-looping pod, the deploy history that went badly. Fix the finding, re-run the job, ship.
+A held deploy isn't a mystery. The dashboard shows the score at the moment of the check and the exact factors that drove it down — the failing CIS rule, the crash-looping pod, the deploy history that went badly. Fix the finding, re-run the job, ship.

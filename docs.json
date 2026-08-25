@@ -2,7 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "ChangeGuard AI",
-  "description": "ChangeGuard AI — the Kubernetes change-safety platform. Know what changed, understand incidents with cited evidence, score deploys before they ship, and remediate within the autonomy you grant.",
+  "description": "ChangeGuard AI — the intelligence and control layer for infrastructure change. Evaluate a Kubernetes change against live cluster state before it executes, and see what followed after.",
   "colors": {
     "primary": "#4f46e5",
     "light": "#6366f1",
@@ -92,7 +92,7 @@
             ]
           },
           {
-            "group": "Autonomous Remediation",
+            "group": "Policy-Governed Remediation",
             "icon": "arrows-rotate",
             "pages": [
               "autonomy/overview",

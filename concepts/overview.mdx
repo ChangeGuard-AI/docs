@@ -6,26 +6,28 @@ description: "The core ideas behind ChangeGuard AI — clearly labeled by maturi
 This is the vocabulary the product, the docs, and the website all use. Each concept is labeled by maturity so there's never ambiguity about what's available to you today.
 
 <Info>
-  **How we label maturity.** **GA** = generally available. **Early Access** = real, but off by default and offered to design partners / on request. **Vision** = direction, not a feature you can turn on. We never describe an Early Access or Vision capability as if it ships today.
+  **How we label maturity.** **GA** = generally available. **Early Access** = real, but off by default and offered to design partners / on request. **Direction** = where we're headed, not a feature you can turn on. We never describe an Early Access or Direction capability as if it ships today.
 </Info>
 
 ## The idea
 
-ChangeGuard AI is built on one observation: most production incidents trace back to a change. So instead of treating alerts as isolated events, ChangeGuard AI makes **change** the primary object — tracking it, correlating it to impact, and helping you decide what's safe to ship.
+A change can be authorized and still be dangerous. Your pipeline confirms the actor is allowed to make a change; it cannot tell you the service being changed is mid-incident, or that the cluster is carrying standing risk right now.
+
+ChangeGuard AI makes **change** the primary object: it evaluates a proposed change against the live state of the environment it will land in, returns a risk decision before the change executes, and — after execution — records what actually followed against the change that caused it.
 
 <Note>
-  **Change Safety Control Plane** is our term for that long-term direction: one system for making safer production decisions before, during, and after change. It's a **Vision** that organizes the roadmap — not a single feature. Everything below labeled **GA** is what delivers on it today.
+  **The decision layer for infrastructure change** is our term for the long-term direction: the same judgment applied to production change wherever it originates, not only in Kubernetes. That is **direction**, not a feature you can turn on. Kubernetes is the wedge and the proving ground, and everything below labeled **GA** is what ships today.
 </Note>
 
 ## Generally available today
 
-### Change Intelligence — **GA**
+### Change history & attribution — **GA**
 
 Continuous tracking of every deployment, config, and GitOps change across your fleet, with each failing workload correlated to the change that caused it — including the diff that shipped. This is the foundation the rest builds on.
 
-### CSC Score (Change Safety Confidence) — **GA**
+### Readiness score (`CSC`) — **GA**
 
-A deterministic, explainable 0–100 readiness score. Same inputs, same score — which is what lets you rely on it as a signal. Every point ties to a concrete factor you can inspect.
+A deterministic, explainable 0–100 readiness score. Same inputs, same score — which is what lets you rely on it as a signal. Every point ties to a concrete factor you can inspect. `CSC` is the stable identifier used in the API and the dashboard; in prose we call it the readiness score.
 
 ### Pre-flight check — **GA**
 
@@ -41,11 +43,11 @@ The maintained, change-centric read of an incident — what someone joining righ
 
 ### Autonomy model — **GA**
 
-Four levels — **Observe → Advise → Approve → Auto** — with **Advise** as the default. You decide how much ChangeGuard AI may do on its own. See [Autonomous Remediation](/autonomy/autonomy-model).
+Four levels — **Observe → Advise → Approve → Auto** — with **Advise** as the default. You decide how much ChangeGuard AI may do on its own. See [Policy-governed remediation](/autonomy/autonomy-model).
 
-### Autonomous Remediation (Self-Healing) — **GA, opt-in**
+### Policy-governed remediation — **GA, opt-in**
 
-Policy-governed detection → diagnosis → gated execution → **verification** → rollback. Off until you enable it and grant a narrow, namespaced RBAC Role. ChangeGuard AI never claims a fix succeeded it hasn't verified against real workload health, and on failed verification it performs exactly one audited rollback, then hands off to a human.
+Detection → diagnosis → policy-gated execution → **verification** → rollback. Off until you enable it and grant a narrow, namespaced RBAC Role. Below **Auto**, every action waits for a human to approve it. ChangeGuard AI never claims a fix succeeded it hasn't verified against real workload health, and on failed verification it performs exactly one audited rollback, then hands off to a human.
 
 ### Security scanning — **GA, plan-gated**
 
@@ -54,6 +56,14 @@ CIS benchmarks (KubeBench), CVEs (Grype), deprecated APIs (Pluto), SBOM (Syft), 
 ### Compliance mapping — **GA, plan-gated**
 
 Maps scan, RBAC, and SBOM evidence to framework controls (SOC 2, PCI, HIPAA, and others). This is **support for evidencing** controls — it helps you show your work. It is **not** a certification, and ChangeGuard AI does not certify you as compliant.
+
+## What ChangeGuard AI does not do today
+
+Worth stating plainly, because the labels above only tell you what exists.
+
+- **It does not learn from outcomes.** The outcome loop is instrumented — a verdict is recorded before a change, and what followed is recorded after — but no model, threshold, policy or prompt is modified by an outcome. Recall of similar past incidents (Early Access) is retrieval, not retraining.
+- **It does not act on its own by default.** Autonomy ships at Advise. Execution requires you to raise the level and define a policy.
+- **It does not cover infrastructure beyond Kubernetes.** Terraform, IAM, cloud resources, networking and databases are direction, not shipping capability.
 
 ## Early Access
 
