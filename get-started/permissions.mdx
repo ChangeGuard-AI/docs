@@ -5,7 +5,11 @@ description: "Exactly what ChangeGuard AI can read, what it cannot do, and how t
 
 This page states ChangeGuard AI's cluster permissions plainly, including the parts security teams most want to scrutinize. Nothing here is softened.
 
-## The short version
+<Info>
+  **Fleet's grant is smaller.** This page describes the optional **ChangeGuard Edge** in-cluster footprint. The default path — [Connect your EKS fleet](/get-started/connect-your-fleet) — grants the customer-authorized Fleet identity **`get`/`list` only**: no `watch`, no write verbs, no wildcards, and **no Secret access is requested at all**. The Secrets caveat below applies only to an Edge install.
+</Info>
+
+## The short version (Edge)
 
 - ChangeGuard AI does **not** request `cluster-admin`.
 - ChangeGuard AI does **not** use wildcard (`*`) RBAC rules.

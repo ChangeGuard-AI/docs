@@ -5,7 +5,23 @@ description: "Short, honest answers to the questions customers actually hit — 
 
 Short answers to the questions customers actually hit, each linking to the full page. If your question isn't here, [support](mailto:support@changeguard.ai) would rather you ask than guess.
 
-## Installing
+## Connecting
+
+<AccordionGroup>
+  <Accordion title="What do I need to install in my Kubernetes clusters to use ChangeGuard AI?">
+    For standard Kubernetes API-state evidence, **nothing**. ChangeGuard Fleet connects centrally using customer-authorized, read-only access — see [Connect your EKS fleet](/get-started/connect-your-fleet). ChangeGuard Edge is an optional in-cluster install for signals that genuinely require local presence (runtime detection, node benchmarks) or environments Fleet cannot reach centrally.
+  </Accordion>
+
+  <Accordion title="Does connecting AWS give ChangeGuard AI access to all my clusters?">
+    No. The AWS connection authorizes **discovery** — listing and describing your EKS clusters with a role you create. Kubernetes read access is a separate, per-cluster grant you make explicitly through the generated authorization workflow, and you can revoke it per cluster at any time. See [Connect your EKS fleet](/get-started/connect-your-fleet).
+  </Accordion>
+
+  <Accordion title="Our clusters sit behind an egress proxy — does Fleet still work?">
+    Fleet reverses the direction: ChangeGuard AI connects _to_ your Kubernetes API endpoint centrally, so the cluster itself needs no outbound path to ChangeGuard AI for standard evidence. The direct-egress requirement below applies only to the optional Edge install.
+  </Accordion>
+</AccordionGroup>
+
+## Installing ChangeGuard Edge (optional)
 
 <AccordionGroup>
   <Accordion title="The install command exits immediately with an error about CG_CLUSTER_NAME">
@@ -37,7 +53,7 @@ Short answers to the questions customers actually hit, each linking to the full 
 
 <AccordionGroup>
   <Accordion title="What do SHIP / HOLD / BLOCK mean?">
-    The one verdict vocabulary, everywhere: **SHIP** = safe to ship, **HOLD** = caution — review before shipping, **BLOCK** = expected to fail (and, at Approve/Auto autonomy, gated until a human approves). Verdicts are advisory unless you wire the [CI gate](/gate-your-pipeline) yourself.
+    The one verdict vocabulary, everywhere: **SHIP** = sufficient evidence supports proceeding. **HOLD** = ChangeGuard AI cannot establish that proceeding is safe enough — including when important evidence is missing or too stale to trust (it says so rather than pretending the evidence is available). **BLOCK** = affirmative evidence indicates the change should not proceed. Verdicts are advisory unless you wire the [CI gate](/gate-your-pipeline) yourself.
   </Accordion>
 
   <Accordion title="The dashboard says my score is unavailable or shows a red zero">

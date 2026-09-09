@@ -1,0 +1,60 @@
+---
+title: "Connect your EKS fleet"
+description: "Connect AWS once, discover your EKS clusters centrally, authorize read-only access, and get your first live-evidence judgments — no ChangeGuard agent required."
+---
+
+ChangeGuard Fleet collects Kubernetes API state **centrally**, over access you authorize. There is nothing to install, upgrade, or rotate inside your clusters for standard Kubernetes API-state evidence — whether you connect one cluster or a large fleet.
+
+<Note>
+  **Two authorizations, one workflow.** Connecting AWS lets ChangeGuard AI *discover* your EKS fleet. It does **not** automatically grant Kubernetes access to any cluster — each cluster's read access is a separate, explicit grant you make in step 4. ChangeGuard AI presents both as one centralized onboarding flow, and never grants itself access.
+</Note>
+
+## 1. Connect your AWS account
+
+In **Fleet → Connect an environment**, register your account and create one IAM role from the trust policy shown. Two properties make this safe:
+
+- The role's only permissions are `eks:ListClusters` and `eks:DescribeCluster` — discovery, nothing else.
+- Its trust policy requires ChangeGuard AI's principal **and** a unique external ID issued by ChangeGuard AI, so no one else can ever have your role assumed — and ChangeGuard AI never accepts an external ID from a caller.
+
+## 2. Discover your fleet
+
+ChangeGuard AI assumes your role with a short-lived (15-minute) session and lists the EKS clusters it can see, per region. Discovery registers nothing — you choose scope before anything is observed.
+
+## 3. Select clusters
+
+Pick the clusters ChangeGuard AI may observe. Registering them creates observation targets; no access exists yet.
+
+## 4. Authorize read-only access
+
+ChangeGuard AI generates the exact authorization for your selection: one EKS access entry per cluster mapping ChangeGuard AI's assumed role to a Kubernetes group, plus one read-only role granting that group `get`/`list` on the resources judgment needs. **You run it with your own credentials** — and the same script pattern covers one cluster or a hundred.
+
+The grant is read-only by construction: `get`/`list` only, no `watch`, no write verbs, no wildcards, and **no Secret access is requested**. Removing the access entry or the role binding revokes ChangeGuard AI within about a minute.
+
+## 5. Verify
+
+Each target shows **connected** under **Access &amp; Trust** once its first evidence arrives — typically within a minute of authorization.
+
+## 6. Your first live-evidence judgment
+
+From the first collection on, judgments against these clusters carry live environment context. For example, ChangeGuard AI can catch a proposed workload change that would exceed the namespace's available Kubernetes **ResourceQuota** — before the change executes — and return a BLOCK with the exact arithmetic.
+
+Wire the verdict into your pipeline with [Use the Verdict in CI](/gate-your-pipeline).
+
+## How Fleet handles credentials
+
+- Every AWS session is minted per operation via **STS AssumeRole** and expires on its own (15 minutes).
+- Kubernetes authentication uses a **short-lived bearer minted per collection cycle**, held only in memory — never written to disk, never logged.
+- No long-lived customer keys are ever accepted or stored. The stored record is non-secret configuration (role ARN, external ID, regions).
+- Revoking the trust policy, the access entry, or the role binding takes effect within the next collection cycle.
+
+## Evidence freshness
+
+ChangeGuard AI does not treat stale environment state as current evidence. If it cannot establish that the environment evidence is recent enough to support a clean judgment, the verdict says so — missing or stale evidence surfaces as an honest HOLD, never a silent pass.
+
+## One cluster or a hundred
+
+Observation is managed centrally: discover the fleet, select the clusters, authorize them through the generated bulk workflow, and ChangeGuard AI handles ongoing collection — with no ChangeGuard installation in any cluster, and a broken or unreachable cluster never stopping collection from the healthy ones.
+
+<Info>
+  **Need node-local evidence?** Runtime signals (Falco) and node benchmarks (kube-bench) require local presence, and some environments can't be reached centrally. That's what the optional **ChangeGuard Edge** in-cluster install is for — see [ChangeGuard Edge](/get-started/install). Fleet by default; Edge when the evidence has to stay local.
+</Info>

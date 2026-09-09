@@ -1,7 +1,12 @@
 ---
-title: "Install ChangeGuard AI"
-description: "One Helm command installs the operator and a read-only collector. Follow these steps exactly and the install will succeed."
+title: "Install ChangeGuard Edge"
+description: "The optional in-cluster install for node-local evidence: one Helm command installs the operator and a read-only collector."
+sidebarTitle: "Install ChangeGuard Edge"
 ---
+
+<Info>
+  **ChangeGuard Edge is optional.** For standard Kubernetes API-state evidence you don't need to install anything — [Connect your EKS fleet](/get-started/connect-your-fleet) collects it centrally over read-only access you authorize. Install Edge when you want evidence that requires local presence — runtime signals (Falco), node benchmarks (kube-bench) — or when Fleet can't reach the environment centrally.
+</Info>
 
 This page is written so that if you run each step in order and see the result shown under it, you are done — with no guesswork about whether it worked.
 

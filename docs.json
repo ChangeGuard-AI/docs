@@ -22,10 +22,7 @@
             "group": "Getting Started",
             "pages": [
               "introduction",
-              "get-started/before-you-install",
-              "get-started/install",
-              "get-started/connect-first-cluster",
-              "get-started/first-30-minutes",
+              "get-started/connect-your-fleet",
               "get-started/engineering-advisor",
               "how-it-works",
               "gate-your-pipeline",
@@ -55,6 +52,16 @@
             "icon": "gear",
             "pages": [
               "operations/overview"
+            ]
+          },
+          {
+            "group": "ChangeGuard Edge (in-cluster)",
+            "icon": "server",
+            "pages": [
+              "get-started/before-you-install",
+              "get-started/install",
+              "get-started/connect-first-cluster",
+              "get-started/first-30-minutes"
             ]
           },
           {
@@ -197,7 +204,7 @@
   "redirects": [
     {
       "source": "/quickstart",
-      "destination": "/get-started/install",
+      "destination": "/get-started/connect-your-fleet",
       "permanent": true
     }
   ]
