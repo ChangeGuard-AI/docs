@@ -35,22 +35,24 @@ ChangeGuard AI evaluates a proposed Kubernetes change against what is actually h
 
 ## How it works, in one line
 
-A lightweight, read-only **collector** runs in your cluster (installed by the ChangeGuard AI **operator**) and pushes cluster state and your changes over HTTPS to the ChangeGuard AI control plane, which does the correlation, scoring, and analysis. Your source code, secret values, and workload data stay in your cluster. See [Architecture & data flow](/get-started/architecture).
+**ChangeGuard Fleet** connects centrally to your Kubernetes API using customer-authorized, read-only access — for EKS, with short-lived AWS and Kubernetes credentials — and collects the environment evidence needed to judge proposed changes. **No ChangeGuard agent is required in the cluster for standard Kubernetes API-state evidence.** Your source code, Secret values, and workload data stay in your cluster. See [Connect your EKS fleet](/get-started/connect-your-fleet).
+
+**ChangeGuard Edge** is optional, for evidence that requires local presence — runtime signals (Falco) and node-level benchmarks (kube-bench) — or for environments the Fleet service cannot reach centrally. See [ChangeGuard Edge](/get-started/install).
 
 ## Time to value
 
 <Steps>
-  <Step title="Install — one command">
-    A single `curl` or `helm` command installs the operator and the read-only collector. See [Install ChangeGuard AI](/get-started/install).
+  <Step title="Connect — your AWS account, once">
+    Create one IAM role from the trust policy ChangeGuard AI shows you. It grants discovery only — listing and describing your EKS clusters — and only ChangeGuard AI's principal with your unique external ID can assume it.
   </Step>
-  <Step title="Cluster connects — seconds to ~2 minutes">
-    The collector starts and pushes its first snapshot. On a typical cluster this is well under a minute; a first-ever install can take up to ~2 minutes while container images pull.
+  <Step title="Discover and select">
+    ChangeGuard AI discovers your EKS fleet centrally. You choose which clusters it may observe.
   </Step>
-  <Step title="First readiness score — within ~10 seconds of connecting">
-    Your cluster appears in **Fleet** with a deterministic readiness score, computed from that first snapshot.
+  <Step title="Authorize — a generated script you run">
+    ChangeGuard AI generates the exact read-only authorization for your selected clusters. You run it with your own credentials — cluster access is always a grant you make, never one we take.
   </Step>
-  <Step title="First change and incident correlation">
-    As deploys, config, and GitOps changes flow in, ChangeGuard AI links each failing workload to the change that caused it.
+  <Step title="First evidence and readiness score — about a minute">
+    Fleet begins collecting; your clusters appear in the dashboard with a deterministic readiness score, and judgments carry live environment context.
   </Step>
 </Steps>
 

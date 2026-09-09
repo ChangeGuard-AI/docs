@@ -5,7 +5,10 @@ description: "How ChangeGuard AI protects your clusters and data"
 
 ## Overview
 
-ChangeGuard AI is designed with a zero-trust, outbound-only architecture. The agent runs inside your cluster with read-only access and pushes encrypted metadata to our backend. There is never any inbound access to your infrastructure.
+ChangeGuard AI is designed with a zero-trust, least-privilege architecture, and evidence reaches it two ways:
+
+- **ChangeGuard Fleet (default).** The Fleet service reads your Kubernetes API centrally over access you authorize. Every AWS session is minted per operation via STS AssumeRole with a ChangeGuard-issued external ID and expires in 15 minutes; Kubernetes authentication uses a short-lived bearer minted per collection cycle and held only in memory. The Kubernetes grant is explicit and read-only — `get`/`list` only, no `watch`, no writes, no wildcards, and **no Secret access is requested**. Removing the access entry or role binding you created revokes ChangeGuard AI within about a minute. Nothing runs in your cluster.
+- **ChangeGuard Edge (optional).** For node-local evidence, a read-only agent runs inside your cluster and pushes encrypted metadata outbound. There is never any inbound access to your infrastructure. The rest of this page describes the Edge data path and the shared control-plane protections.
 
 ## Architecture
 

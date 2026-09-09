@@ -3,9 +3,14 @@ title: "Architecture & data flow"
 description: "Where each component runs, how they communicate, what data leaves your cluster, and what never does."
 ---
 
-ChangeGuard AI has two halves: a small, read-only footprint **in your cluster**, and the **control plane** that does correlation, scoring, and analysis. This page shows exactly how they fit together and where your data lives.
+ChangeGuard AI acquires environment evidence two ways, and both feed the **same** control plane and the same decision plane:
 
-## Deployment topology
+- **ChangeGuard Fleet (default).** The Fleet service connects centrally to your Kubernetes API over customer-authorized, read-only access — for EKS, with short-lived AWS and Kubernetes credentials minted per collection cycle. Nothing is installed in the cluster for standard Kubernetes API-state evidence. See [Connect your EKS fleet](/get-started/connect-your-fleet).
+- **ChangeGuard Edge (optional).** A small, read-only in-cluster footprint for evidence that requires local presence — runtime signals (Falco), node benchmarks (kube-bench) — or for environments Fleet cannot reach centrally.
+
+The rest of this page describes the **Edge** in-cluster half and the control plane, and where your data lives. Fleet collects the same Kubernetes API state with a smaller grant (`get`/`list` only, no `watch`, no Secret access) and the same boundary guarantees — your source code, Secret values, and workload data stay in your cluster either way.
+
+## Edge deployment topology
 
 The operator runs in `changeguard-system` and manages the collector (and optional scanners) in `changeguard-agent` through a CRD. Only the collector talks to the outside world.
 
