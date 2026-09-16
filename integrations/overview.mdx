@@ -22,21 +22,33 @@ ChangeGuard AI ingests changes from GitOps controllers so that "what changed" re
 | **Support level** | **GA.** |
 | **Value** | Change Intelligence attributes incidents to the actual synced change and its diff. |
 
-## CI / CD — pre-flight gate via API
+## GitHub — a verdict on every pull request
 
-The same **pre-flight check** you run in the UI is available to your pipeline, so you can ask "is it safe to ship right now?" as a step in CI.
+The primary integration. A GitHub App plus one short workflow file judges the manifests each pull request changes against the environment bound to the repository, and — when you enable deploys — reports the outcome back to the same Change record. Setup is guided in the product: [Start here → 5. Connect GitHub](/start-here/connect-github).
 
 | Aspect | Detail |
 | --- | --- |
-| **Reads** | Your cluster's current posture and change context to compute the verdict. |
-| **Writes** | Returns a **SHIP / HOLD / BLOCK** verdict and CSC Score to your pipeline. It does not modify your cluster. |
-| **Permissions** | A ChangeGuard AI API key with access to the target cluster. |
+| **Reads** | The manifests a pull request changed (read by the workflow, in your repository). |
+| **Writes** | The verdict as a pull-request check and run summary; the outcome after each deploy, if enabled. ChangeGuard AI never commits to your repository. |
+| **Permissions** | The ChangeGuard GitHub App (contents and pull requests). The workflow authenticates with a short-lived identity token GitHub issues to it — **no API key, no secret to paste, nothing to rotate**. The environment is bound to the repository's connection in ChangeGuard AI, never written into the repository. |
+| **Effort** | Low. Authorize the App, pick the repository and its environment, add the 14-line workflow file. |
+| **Support level** | **GA.** |
+| **Enforcement** | **BLOCK fails the check; HOLD never does.** `enforce_block: false` runs it purely advisory; whether a failed check stops a merge is your branch rule. |
+
+## Any other CI / CD — the same judgment via API
+
+GitLab, Jenkins, Argo, a script: the same `POST /api/cicd/preflight` call, authenticated with an API key of scope `cicd`. See [Use the verdict in CI](/gate-your-pipeline).
+
+| Aspect | Detail |
+| --- | --- |
+| **Reads** | The manifest your pipeline sends and the target environment's live state. |
+| **Writes** | Returns a **SHIP / HOLD / BLOCK** verdict, the reasons and the CSC score to your pipeline. It does not modify your cluster. Report the outcome afterwards with `POST /api/cicd/outcome`. |
+| **Permissions** | A ChangeGuard AI API key with scope `cicd` (**Settings → API Keys**). |
 | **Effort** | Low–medium. Start by **reading** verdicts (log them, don't fail the build); once you trust the signal, promote it to a gate you enforce. |
 | **Support level** | **GA.** |
-| **Value** | Turns the CSC Score into an automated go/no-go signal at the moment you deploy. |
 
 <Tip>
-  Roll this out in two phases: first log the verdict without acting on it so your team sees it match reality, then make `BLOCK` fail the build. The score is deterministic, so a gate built on it is stable.
+  Roll either out in two phases: first log the verdict without acting on it so your team sees it match reality, then make `BLOCK` fail the build. The judgment is deterministic for the same change and the same evidence, so a gate built on it is stable.
 </Tip>
 
 ## Notifications
