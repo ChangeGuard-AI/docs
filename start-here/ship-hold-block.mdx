@@ -1,0 +1,38 @@
+---
+title: "3. Understand SHIP / HOLD / BLOCK"
+sidebarTitle: "3. Understand SHIP / HOLD / BLOCK"
+description: "What each verdict means, what earns it, and why absent evidence is never counted as safe."
+icon: "scale-balanced"
+---
+
+Three answers. Each comes with its reasons and with the list of evidence the judgment had and did not have.
+
+| Verdict | The product's own words | What earns it |
+| --- | --- | --- |
+| **SHIP** | *ChangeGuard sees no reason to hold this change.* | The evidence it had supports the change: live environment state present and fresh, no critical findings, nothing infeasible. |
+| **HOLD** | *ChangeGuard advises reviewing this change first.* | Something is missing or worth a look — most often evidence it did not have: no environment named, the environment has not reported recently (stale), or the proposed artifact has not been independently evaluated. |
+| **BLOCK** | *ChangeGuard advises against this change.* | Judged against live state it would fail or break something: it exceeds a namespace's resource quota, requests more than its own limits allow, contradicts what is actually running, or carries critical findings. |
+
+## Missing evidence is never safe
+
+A verdict is only as good as what it could see, so every judgment lists its evidence classes and their status. A proposed artifact that has not been independently evaluated is **HOLD, never SHIP** — ChangeGuard AI will not say "ship" on evidence it does not have. When an environment has not reported recently, the judgment says so and is made on the change alone. The **Evidence** card's header — *absent evidence is never counted as safe* — is the rule, and the record keeps the evidence list forever.
+
+## The reasons are in plain terms
+
+A BLOCK says what would break and by how much. From a real pull request against a live environment:
+
+<Frame caption="[CRITICAL] Kubernetes-infeasible against namespace quota: requests.memory used 256Mi + proposed delta 768Mi exceeds hard 512Mi. Valid manifest; wrong in context.">
+  <img src="https://changeguard.ai/img/change-record-block.jpg" alt="A change record with verdict BLOCK and the quota reason spelled out in numbers" />
+</Frame>
+
+Findings that are not blocking (a missing probe, a workload running as root, a single replica) are listed with their severity so the reasons are complete, not just the headline.
+
+## The CSC score
+
+When live environment evidence is present, the judgment also shows a **CSC** number from 0 to 100 — the Change Safety Confidence score, a deterministic readiness measure of the environment the change is entering. You do not need it to read a verdict; it is there for trend and comparison, and it is explained in [Understanding your score](/how-it-works).
+
+## Advisory by default, enforceable where you choose
+
+ChangeGuard AI states a verdict; it does not deploy and does not prevent a deploy by itself. In GitHub, a **BLOCK fails the pull-request check and a HOLD never does** — whether a failed check stops a merge is your branch rule. The Action can be set to purely advisory with `enforce_block: false`; the verdict is recorded either way. Other pipelines read the verdict and decide for themselves ([Use the verdict in CI](/gate-your-pipeline)).
+
+Next: [4. Connect an environment](/start-here/connect-an-environment).
