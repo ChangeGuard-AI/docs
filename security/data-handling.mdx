@@ -17,7 +17,7 @@ All data is encrypted in transit using TLS 1.2 or higher:
 
 - **Database:** AWS RDS with AES-256 encryption using AWS-managed keys. All tables — including scores, audit entries, API key hashes, and integration configs — are encrypted on disk.
 - **API Keys:** Stored as bcrypt hashes, not reversible. The plaintext key exists only in memory during the initial creation response.
-- **Integration Tokens:** GitHub and GitLab tokens stored encrypted in the database. GET responses mask tokens (first 4 \+ last 4 characters visible).
+- **Integration Tokens:** GitLab tokens are stored encrypted in the database; GET responses mask tokens (first 4 + last 4 characters visible). GitHub stores no customer token at all — the integration is a GitHub App installation, and each workflow run authenticates with a short-lived identity token GitHub issues to it.
 
 ## Data Retention
 

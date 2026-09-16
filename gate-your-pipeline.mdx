@@ -4,55 +4,52 @@ description: "ChangeGuard AI returns the judgment - your pipeline decides whethe
 icon: "traffic-light"
 ---
 
-ChangeGuard AI returns a judgment; your pipeline decides what to do with it. One API call before deploy sends the change you are about to apply and returns a verdict — `SHIP`, `HOLD`, or `BLOCK` — with the readiness score and the reasons, judged against live evidence from the cluster it lands on. Whether a verdict fails the job is your policy, not ours — the examples below show how to wire it up if that is what you want.
+ChangeGuard AI judges the change your pipeline is about to apply against the environment it will land in and returns **SHIP**, **HOLD** or **BLOCK** with the reasons. Whether a verdict fails the job is your policy: GitHub enforces BLOCK by default and can be set to advisory; every other pipeline reads the verdict and decides.
 
-<Info>
-  Everything on this page uses `POST /api/cicd/preflight`. You need an API key with CI scope — create one in **Settings → API Keys**. (The key issued at signup is agent-scoped and will not work here.)
-</Info>
+## GitHub — the Action (no API key)
 
-## The verdicts
-
-- **SHIP** — the change was verified against current evidence and nothing critical stands in its way.
-- **HOLD** — ChangeGuard cannot verify this change: the target cluster has no current evidence (not connected, or evidence has gone stale). Missing evidence is never treated as safe.
-- **BLOCK** — the change was verified and something critical is affirmatively wrong: it exceeds the namespace quota, contradicts the workload's live state, or carries critical findings.
-
-The strictest gate is `verdict == "SHIP"`; teams that only want hard stops can test for `BLOCK` instead. Both are shown below.
-
-## The request
-
-Send the manifest you are about to apply, the cluster it targets, and your own change identifier (a commit SHA works well). The response carries `verdict`, `csc` (readiness score), `reasons` (why, in plain language), `environment_evidence` (`present` or `absent`), and a `verdict_id` you can use to report the outcome later. The full schema is in the [OpenAPI spec](https://api.changeguard.ai/api/openapi-judgment.yaml).
-
-## GitHub Actions
+For GitHub the integration is a GitHub App plus one short workflow file. The workflow proves which repository it is with a short-lived identity token GitHub issues to it, so there is **no key to create, no secret to paste, and nothing to rotate**. Connect the repository in the product and add the file — the guided setup is [Start here → 5. Connect GitHub](/start-here/connect-github).
 
 ```yaml
-- name: ChangeGuard AI Safety Check
-  run: |
-    RESULT=$(jq -n \
-      --arg cluster "production" \
-      --arg change  "${{ github.sha }}" \
-      --rawfile manifest k8s/deploy.yaml \
-      '{cluster_id:$cluster, change_id:$change, change:{manifest:$manifest}}' |
-      curl -s -X POST https://api.changeguard.ai/api/cicd/preflight \
-        -H "X-API-Key: ${{ secrets.CHANGEGUARD_KEY }}" \
-        -H "Content-Type: application/json" \
-        --data @-)
-    VERDICT=$(echo "$RESULT" | jq -r '.verdict')
-    SCORE=$(echo "$RESULT" | jq -r '.csc')
-    echo "Verdict: $VERDICT — readiness $SCORE/100"
-    echo "$RESULT" | jq -r '.reasons[]'
-    if [ "$VERDICT" != "SHIP" ]; then
-      echo "::error::$VERDICT — stopped by your pipeline policy (readiness $SCORE/100)"
-      exit 1
-    fi
+# .github/workflows/changeguard.yml
+name: ChangeGuard
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  id-token: write   # only permits asking GitHub for the identity token
+
+jobs:
+  changeguard:
+    uses: ChangeGuard-AI/action/.github/workflows/judge.yml@v1
 ```
 
-To stop only on `BLOCK` and let `HOLD` pass as advisory, change the test to `[ "$VERDICT" = "BLOCK" ]`.
+What the Action does on every pull request:
 
-## GitLab CI
+1. Reads the manifests the pull request changed.
+2. Sends them to ChangeGuard AI with GitHub's identity token. ChangeGuard AI verifies the token, looks the repository up among the connections _you_ created, and judges the change against the environment bound to that connection — never one the workflow could name.
+3. Writes the verdict and reasons to the run summary and the pull-request check. **BLOCK fails the check; HOLD never does.**
 
-The same call as a job — add it as the last stage before your deploy job and make the deploy job depend on it:
+To run purely advisory while you build confidence:
 
 ```yaml
+jobs:
+  changeguard:
+    uses: ChangeGuard-AI/action/.github/workflows/judge.yml@v1
+    with:
+      enforce_block: false   # the verdict is still recorded
+```
+
+If you turned on _…and what happened after each deploy_ when connecting the repository, the workflow also runs your deploy after a non-blocking verdict and reports the outcome back to the same Change record — nothing to add to the file. Whether a failed check stops a merge is your branch-protection rule.
+
+## Any other pipeline — one API call
+
+GitLab, Jenkins, Argo, a script: `POST /api/cicd/preflight` with an API key of scope **cicd** (create one under **Settings → API Keys**; the key issued at signup is agent-scoped and will not work here). Send the manifest you are about to apply, the environment it targets, and your own change identifier (a commit SHA works well).
+
+```yaml
+# GitLab CI — add as the last stage before deploy; make the deploy job depend on it
 changeguard-check:
   stage: pre-deploy
   image: alpine:3
@@ -70,18 +67,22 @@ changeguard-check:
           -H "Content-Type: application/json" \
           --data @-)
       VERDICT=$(echo "$RESULT" | jq -r '.verdict')
-      echo "Verdict: $VERDICT — readiness $(echo "$RESULT" | jq -r '.csc')/100"
+      echo "Verdict: $VERDICT — CSC $(echo "$RESULT" | jq -r '.csc')/100"
       echo "$RESULT" | jq -r '.reasons[]'
-      test "$VERDICT" = "SHIP"
+      test "$VERDICT" != "BLOCK"        # stop only on BLOCK; use = "SHIP" for the strictest gate
 ```
 
-## GitOps (ArgoCD, Flux)
+The response carries `verdict`, `csc`, `reasons` (plain language), `environment_evidence` (`present` or `absent`), `environment_state` (`fresh`, `stale`, `unknown`, `unnamed`), and `verdict_id` / `change_id` — the identity you use to report the outcome. The full schema is in the [OpenAPI spec](https://api.changeguard.ai/api/openapi-judgment.yaml).
 
-Run the gate where the manifest lives: in the pipeline that produces the commit ArgoCD or Flux will sync. The judged change and the applied change are then the same file, and a `BLOCK` stops the merge before the desired state ever changes. The GitHub Actions and GitLab examples above drop into that pipeline unchanged.
+## The verdicts
+
+- **SHIP** — verified against current evidence; nothing critical stands in its way.
+- **HOLD** — review first. Most often ChangeGuard AI is missing evidence and says which: no environment named, the environment has not reported recently (stale), or the proposed artifact has not been independently evaluated. Missing evidence is never treated as safe.
+- **BLOCK** — verified, and something critical is affirmatively wrong: it exceeds a namespace quota, requests more than its own limits allow, contradicts the workload's live state, or carries critical findings.
 
 ## Close the loop
 
-After the deploy, tell ChangeGuard what actually happened. The verdict's record then ends in truth — and readiness learns from real outcomes instead of assumptions:
+GitHub reports outcomes automatically when deploys are enabled. From any other pipeline, report what happened with the `verdict_id` the judgment returned, and the record ends in truth rather than a green checkmark:
 
 ```bash
 curl -s -X POST https://api.changeguard.ai/api/cicd/outcome \
@@ -90,20 +91,20 @@ curl -s -X POST https://api.changeguard.ai/api/cicd/outcome \
   -d "{\"verdict_id\":\"$VERDICT_ID\",\"cluster_id\":\"production\",\"outcome\":\"success\"}"
 ```
 
-`outcome` is one of `success`, `incident`, `rollback`, or `degraded`.
+`outcome` is one of `success`, `incident`, `rollback`, or `degraded`. Outcomes are attached by the verdict they name — never by recency.
 
-## Any other CI
+## GitOps (ArgoCD, Flux)
 
-The check is one `curl` — it runs anywhere a shell does. POST the manifest to `/api/cicd/preflight`, read `.verdict` and `.csc` from the response, and decide what your pipeline does with them.
+Run the judgment where the manifest lives: in the pipeline that produces the commit ArgoCD or Flux will sync. The judged change and the applied change are then the same file, and a BLOCK stops the merge before the desired state ever changes. The GitHub Action and the GitLab job above drop into that pipeline unchanged.
 
 <Note>
-  **ChangeGuard AI is advisory.** It returns a verdict and the reasons behind it; it has no ability to stop your pipeline on its own. Enforcement is a choice you make in your own CI configuration, and you can change it at any time without changing anything in ChangeGuard AI.
+  **Advisory by default.** ChangeGuard AI states a verdict; it does not deploy and does not prevent a deploy by itself. In GitHub a BLOCK fails the check unless you set `enforce_block: false`; elsewhere enforcement is whatever your job does with the verdict. You can change either at any time without changing anything in ChangeGuard AI.
 </Note>
 
 <Note>
-  Existing integrations built on the older `/api/validate` endpoint keep working — see the [validate reference](/api-reference/validate). That endpoint is advisory-shaped (`SAFE`/`WARN`) and never returns `BLOCK`; new pipelines should gate on `/api/cicd/preflight` as shown here.
+  Existing integrations built on the older `/api/validate` endpoint keep working — see the [validate reference](/api-reference/validate). That endpoint is advisory-shaped (`SAFE`/`WARN`) and never returns `BLOCK`; new pipelines should use `/api/cicd/preflight` as shown here, and GitHub repositories should use the Action.
 </Note>
 
 ## What your team sees
 
-A held deploy isn't a mystery. The dashboard shows the verdict, the score at the moment of the check, and the exact factors that drove it — the quota the change would exceed, the live state it contradicts, the evidence that was missing. Fix the finding, re-run the job, ship.
+A held or blocked change isn't a mystery. **Changes → All changes** shows the record: the verdict, the CSC score at the moment of the check, and the exact reasons — the quota the change would exceed, the live state it contradicts, the evidence that was missing. Fix the finding, push again, ship.

@@ -1,0 +1,43 @@
+---
+title: "8. Understand the Change record"
+sidebarTitle: "8. Understand the Change record"
+description: "One change, one permanent address: what was proposed, what ChangeGuard AI decided, what happened, and what was done about it."
+icon: "file-lines"
+---
+
+Every change ChangeGuard AI has judged has a record, and every record has an address. **Changes → All changes** lists them newest first with the verdict, the change, the target environment, and when. Filter with **SHIP**, **HOLD** or **BLOCK**; open any linked row for its record. *The address bar then holds a link you can send to anyone who can see this tenant.*
+
+<Frame caption="All changes: every judged change with its verdict, and a permanent link for each.">
+  <img src="https://changeguard.ai/img/changes-history.jpg" alt="The Changes list with SHIP, HOLD and BLOCK rows" />
+</Frame>
+
+## What a record holds
+
+| Section | What it tells you |
+| --- | --- |
+| **Proposed** | The change as it was described or as the manifest summarized it. |
+| **Origin** | Where it came from — the repository and commit for a pull request; *not collected* for a judgment by hand. |
+| **Target environment** | The environment it was judged against, or *no environment*. |
+| **Evidence** | The collection sources that were live for that environment when it was judged. |
+| **Source** | `ci` for a pipeline or GitHub, `human` for Preflight by hand. |
+| **Judgment before execution** | The verdict, the CSC score, findings by severity, whether the artifact was independently evaluated, and every reason. Marked *Immutable — verdicts are append-only; nothing observed later rewrites this.* |
+| **What actually happened** | The reported outcome — *Deployed successfully*, *Incident after deploy*, *Rolled back*, *Degraded after deploy* — with the attribution basis and the artifact that executed. *Not reported* when nothing reported back. |
+| **Measured afterwards** | The prediction-versus-outcome measurement, present only for changes that carried a prospective prediction. |
+
+<Frame caption="A complete record: the judgment before execution and what actually happened afterwards, on one page.">
+  <img src="https://changeguard.ai/img/change-record-outcome.jpg" alt="A change record showing judgment and outcome" />
+</Frame>
+
+## Three rules the record keeps
+
+1. **Append-only.** A verdict is never edited after the fact. New evidence produces a new judgment, never a rewritten old one.
+2. **Attribution by identity.** An outcome belongs to a change because the report named that change's verdict — never because it arrived next.
+3. **Absence is absence.** Missing evidence, a missing outcome, a missing measurement each read as *not reported* or *not collected* — never as "fine".
+
+## Where else the history shows up
+
+- **Changes → Incidents** — every failing workload, correlated to the change that shipped it, with status (open or resolved).
+- **Changes → Remediations** — every fix that was proposed, who approved it, and whether it was verified.
+- **Changes → Outcomes** — what the model predicted versus what actually happened, once your pipeline reports outcomes.
+
+Next (optional): [9. Enable remediation](/start-here/enable-remediation).

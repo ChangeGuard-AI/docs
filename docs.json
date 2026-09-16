@@ -19,14 +19,73 @@
         "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting Started",
+            "group": "Start here",
+            "icon": "flag-checkered",
             "pages": [
               "introduction",
+              "start-here/what-changeguard-does",
+              "start-here/first-preflight",
+              "start-here/ship-hold-block",
+              "start-here/connect-an-environment",
+              "start-here/connect-github",
+              "start-here/judge-a-real-change",
+              "start-here/observe-the-outcome",
+              "start-here/the-change-record",
+              "start-here/enable-remediation",
+              "start-here/advise-or-auto"
+            ]
+          },
+          {
+            "group": "Going deeper",
+            "icon": "layer-group",
+            "pages": [
               "get-started/connect-your-fleet",
               "get-started/engineering-advisor",
               "how-it-works",
               "gate-your-pipeline",
               "get-started/faq"
+            ]
+          },
+          {
+            "group": "ChangeGuard Edge (in-cluster)",
+            "icon": "server",
+            "pages": [
+              "get-started/before-you-install",
+              "get-started/install",
+              "get-started/connect-first-cluster",
+              "get-started/first-30-minutes"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "icon": "plug",
+            "pages": [
+              "integrations/overview"
+            ]
+          },
+          {
+            "group": "Policy-Governed Remediation",
+            "icon": "arrows-rotate",
+            "pages": [
+              "autonomy/overview",
+              "autonomy/autonomy-model",
+              "autonomy/execution-policy",
+              "autonomy/verification",
+              "autonomy/compensating-actions",
+              "autonomy/safety-guarantees",
+              "autonomy/rbac-boundaries",
+              "autonomy/audit-trail"
+            ]
+          },
+          {
+            "group": "Security",
+            "pages": [
+              "security/architecture",
+              "security/agent-security",
+              "security/data-handling",
+              "security/authentication",
+              "security/api-keys",
+              "security/compliance"
             ]
           },
           {
@@ -41,46 +100,10 @@
             ]
           },
           {
-            "group": "Integrations",
-            "icon": "plug",
-            "pages": [
-              "integrations/overview"
-            ]
-          },
-          {
             "group": "Operations",
             "icon": "gear",
             "pages": [
               "operations/overview"
-            ]
-          },
-          {
-            "group": "ChangeGuard Edge (in-cluster)",
-            "icon": "server",
-            "pages": [
-              "get-started/before-you-install",
-              "get-started/install",
-              "get-started/connect-first-cluster",
-              "get-started/first-30-minutes"
-            ]
-          },
-          {
-            "group": "Advanced configuration",
-            "pages": [
-              "operator/installation",
-              "operator/crd-reference",
-              "operator/helm-chart"
-            ]
-          },
-          {
-            "group": "Security Scanning",
-            "pages": [
-              "scanning/overview",
-              "scanning/kubebench",
-              "scanning/grype",
-              "scanning/falco",
-              "scanning/pluto",
-              "scanning/sbom"
             ]
           },
           {
@@ -99,17 +122,14 @@
             ]
           },
           {
-            "group": "Policy-Governed Remediation",
-            "icon": "arrows-rotate",
+            "group": "Security Scanning",
             "pages": [
-              "autonomy/overview",
-              "autonomy/autonomy-model",
-              "autonomy/execution-policy",
-              "autonomy/verification",
-              "autonomy/compensating-actions",
-              "autonomy/safety-guarantees",
-              "autonomy/rbac-boundaries",
-              "autonomy/audit-trail"
+              "scanning/overview",
+              "scanning/kubebench",
+              "scanning/grype",
+              "scanning/falco",
+              "scanning/pluto",
+              "scanning/sbom"
             ]
           },
           {
@@ -120,22 +140,19 @@
             ]
           },
           {
+            "group": "Advanced configuration",
+            "pages": [
+              "operator/installation",
+              "operator/crd-reference",
+              "operator/helm-chart"
+            ]
+          },
+          {
             "group": "Agent (Legacy)",
             "pages": [
               "agent/installation",
               "agent/configuration",
               "agent/troubleshooting"
-            ]
-          },
-          {
-            "group": "Security",
-            "pages": [
-              "security/architecture",
-              "security/agent-security",
-              "security/data-handling",
-              "security/authentication",
-              "security/api-keys",
-              "security/compliance"
             ]
           },
           {

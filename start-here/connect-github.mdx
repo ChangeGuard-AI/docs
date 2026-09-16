@@ -1,0 +1,71 @@
+---
+title: "5. Connect GitHub"
+sidebarTitle: "5. Connect GitHub"
+description: "A verdict on every pull request and the outcome after every deploy — with no API key to create, nothing to paste, and no GitHub Settings page to visit."
+icon: "github"
+---
+
+The GitHub integration gives you the same judgment you ran by hand, on every pull request — and the outcome afterwards, joined back to it. One workflow file, one Change record per pull request. The repository proves who it is with a short-lived identity token GitHub issues to the workflow, so there is **no ChangeGuard key to create, no secret to paste, and nothing to rotate**. You never open GitHub's Settings.
+
+The guided setup lives in two places, and they are the same card: at the bottom of **Preflight**, and under **Settings → Integrations** as *GitHub Actions — every pull request*.
+
+<Steps>
+  <Step title="Connect GitHub">
+    Press **Connect GitHub**. GitHub asks you to authorize the ChangeGuard app for your organization or account and to choose which repositories it may see. This is the one place a human has to click — GitHub requires it. Nothing is copied.
+  </Step>
+  <Step title="Which repository?">
+    Pick the repository from the list. *Everything below points here.*
+  </Step>
+  <Step title="Which environment does this repository deploy to?">
+    Choose the environment you connected in [step 4](/start-here/connect-an-environment) (or *I'll connect one later*). The choice is **saved on the repository's connection in ChangeGuard AI. It is never written into your repository**, so a workflow cannot point judgments somewhere else.
+  </Step>
+  <Step title="What should ChangeGuard record?">
+    *A verdict on every pull request* is always on. Turn on *…and what happened after each deploy* to have the workflow run your deploy after a non-blocking verdict and report the outcome back ([step 7](/start-here/observe-the-outcome)). Nothing in the file changes either way.
+  </Step>
+  <Step title="Add the workflow file">
+    Add it as `.github/workflows/changeguard.yml` — use **Copy this file**, or **Open it on GitHub, already filled in** and press *Commit changes*. ChangeGuard AI never commits to your repository itself. The file is short and does not change as ChangeGuard AI improves, because the logic lives in the `ChangeGuard-AI/action` repository:
+
+    ```yaml
+    # Judged by ChangeGuard. The logic lives in ChangeGuard-AI/action, so this
+    # file does not need to change as ChangeGuard improves.
+    name: ChangeGuard
+
+    on:
+      pull_request:
+
+    # ChangeGuard signs in with a short-lived identity token that GitHub issues
+    # to this workflow. There is no API key and no secret to manage.
+    # id-token: write only allows requesting that token — it grants no access
+    # to this repository.
+    permissions:
+      contents: read
+      id-token: write
+
+    jobs:
+      changeguard:
+        uses: ChangeGuard-AI/action/.github/workflows/judge.yml@v1
+    ```
+
+    The two `permissions` lines are what let GitHub issue the identity token: `id-token: write` only permits *asking* for that token; it grants no access to your code.
+  </Step>
+  <Step title="Open a pull request">
+    The verdict appears in the pull request's checks and in the run summary — SHIP, HOLD or BLOCK with the reasons. **BLOCK fails the check; HOLD never does.** To start in advisory mode while you build confidence, add `enforce_block: false` under `with:` — the verdict is still recorded either way.
+  </Step>
+  <Step title="Verify">
+    ChangeGuard AI cannot see inside your repository, so it cannot tell whether the file was committed. Once a pull request has run, press **Verify integration**: it confirms that a real verdict from the workflow reached ChangeGuard AI. A workflow file that exists but never ran is not an integration.
+  </Step>
+</Steps>
+
+<Tip>
+  Don't want to wait for a pull request? **Run your first Preflight** on the same card judges the connected repository against its environment right now — same engine, same Change record.
+</Tip>
+
+## How the repository is trusted
+
+The workflow sends GitHub's identity token to ChangeGuard AI. ChangeGuard AI verifies the token with GitHub and looks the repository up among the connections *you* created; nothing in the request can name a tenant. If the repository is not connected, or is connected by more than one account, the judgment is refused rather than guessed. The environment is bound to the connection, so the judgment names the environment you chose — never one the workflow could invent.
+
+## Other pipelines
+
+GitLab, Jenkins, Argo, a script: any pipeline can call the same judgment with an API key you create under **Settings → API Keys** (scope `cicd`). See [Use the verdict in CI](/gate-your-pipeline). GitHub is the only integration that needs no key.
+
+Next: [6. Judge a real proposed change](/start-here/judge-a-real-change).

@@ -5,7 +5,11 @@ description: "Managing API key authentication for agents and CI/CD"
 
 ## Overview
 
-API keys authenticate agents and CI/CD integrations with the ChangeGuard AI backend. Keys start with `cg_` and are bcrypt-hashed before storage — ChangeGuard AI never stores or logs plaintext keys.
+API keys authenticate agents (the Edge collector, the remediation executor) and non-GitHub CI/CD integrations with the ChangeGuard AI backend. Keys start with `cg_` and are bcrypt-hashed before storage — ChangeGuard AI never stores or logs plaintext keys.
+
+<Note>
+  **GitHub needs no API key.** The GitHub Action authenticates with a short-lived identity token GitHub issues to the workflow, verified by ChangeGuard AI against the repository connection you created. See [Connect GitHub](/start-here/connect-github).
+</Note>
 
 ## Creating Keys
 
@@ -31,7 +35,7 @@ curl -X POST https://api.changeguard.ai/api/keys \
 | Scope | Permissions | Use For |
 | --- | --- | --- |
 | `agent` | Push snapshots, push logs, ArgoCD discovery | Cluster agents |
-| `cicd` | Deployment validation (`/api/validate`) | GitHub Actions, GitLab CI, Jenkins |
+| `cicd` | Judgment and outcome reporting (`/api/cicd/preflight`, `/api/cicd/outcome`, legacy `/api/validate`) | GitLab CI, Jenkins, Argo, scripts — **not needed for GitHub**, which authenticates the [Action](/start-here/connect-github) with a short-lived identity token |
 | `full` | All API access | Administrative scripts |
 
 <Tip>
