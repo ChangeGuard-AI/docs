@@ -1,0 +1,47 @@
+---
+title: "4. Connect an environment"
+sidebarTitle: "4. Connect an environment"
+description: "Give every judgment live context. Read-only, nothing installed for standard evidence, and Preflight keeps working whether or not you do this."
+icon: "plug"
+---
+
+An **environment** is a place changes land that ChangeGuard AI can see — read-only. Once one is connected, Preflight preselects it as the **Target** and every judgment is made *against this environment's live state*: what is running, what it can afford, how healthy it is right now.
+
+<Note>
+  Connecting an environment is a **Professional** capability; the trial marks the Fleet surfaces with a **Pro** tag and explains the gate when you open them. Preflight and GitHub pull-request verdicts do not require it.
+</Note>
+
+## The default: connect centrally (Fleet)
+
+Open **Fleet → Connections**. The page is titled *Connect an environment* and walks four numbered steps:
+
+<Steps>
+  <Step title="Authorize AWS">
+    Give the account a label, create the IAM role from the trust policy the page shows you, and paste its ARN — *the role ChangeGuard will assume*. The role can only list and describe EKS clusters, and only ChangeGuard AI's principal with your unique external ID can assume it. Choose the regions to search and press **Continue**.
+  </Step>
+  <Step title="Discover your estate">
+    ChangeGuard AI lists the EKS clusters it can see in those regions.
+  </Step>
+  <Step title="Select scope">
+    Choose which clusters it may observe. Nothing is read until you say so.
+  </Step>
+  <Step title="Authorize cluster read access">
+    ChangeGuard AI generates the exact read-only authorization for the clusters you selected; you run it with your own credentials. Cluster access is a grant you make and can revoke — removing it cuts ChangeGuard AI off within about a minute.
+  </Step>
+</Steps>
+
+Within about a minute the environment appears in the header switcher and in **Fleet → Overview** with its live counts and score. Back in Preflight, the **Target** now reads *judged against this environment's live state*.
+
+## Where evidence must stay local: Edge
+
+Most environments do not need anything installed: Fleet reads Kubernetes API state (workloads, pods, nodes, events, RBAC), GitOps state, and executed image digests centrally. **Edge** is a small read-only collector you install only where a capability genuinely depends on local presence — runtime activity (Falco), node benchmark checks (kube-bench), or an API endpoint ChangeGuard AI has no network path to. The **Edge → Local evidence** page lists exactly which evidence classes need it, so you can decide per environment. Install steps: [Install ChangeGuard Edge](/get-started/install).
+
+## Check it worked
+
+- Preflight's **Target** shows the environment and *judged against this environment's live state*.
+- A judgment's **Evidence** card shows *Kubernetes API state — AVAILABLE — Live read of the target: N pods, N nodes*.
+- **Changes → Remediations** shows the environment panel: *Evidence — read-only: Fleet Connected* (or *Edge Connected*).
+
+Deeper: [Connect your EKS fleet](/get-started/connect-your-fleet) · [Permissions & RBAC](/get-started/permissions) · [Architecture & data flow](/get-started/architecture).
+
+Next: [5. Connect GitHub](/start-here/connect-github).
