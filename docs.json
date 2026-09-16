@@ -2,7 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "ChangeGuard AI",
-  "description": "ChangeGuard AI — the intelligence and control layer for infrastructure change. Evaluate a Kubernetes change against live cluster state before it executes, and see what followed after.",
+  "description": "ChangeGuard AI — the independent judgment layer for production changes. Before a change ships, it judges the proposed change against the environment it will actually enter — SHIP, HOLD or BLOCK, with the reasons — and after deployment it records what actually happened.",
   "colors": {
     "primary": "#4f46e5",
     "light": "#6366f1",
@@ -198,7 +198,7 @@
   "navbar": {
     "links": [
       {
-        "href": "https://demo.changeguard.ai",
+        "href": "https://changeguard.ai/#watch",
         "label": "Watch the demo"
       },
       {
