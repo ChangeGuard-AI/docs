@@ -20,7 +20,7 @@ The guided setup lives in two places, and they are the same card: at the bottom 
     Choose the environment you connected in [step 4](/start-here/connect-an-environment) (or *I'll connect one later*). The choice is **saved on the repository's connection in ChangeGuard AI. It is never written into your repository**, so a workflow cannot point judgments somewhere else.
   </Step>
   <Step title="What should ChangeGuard record?">
-    *A verdict on every pull request* is always on. Turn on *…and what happened after each deploy* to have the workflow run your deploy after a non-blocking verdict and report the outcome back ([step 7](/start-here/observe-the-outcome)). Nothing in the file changes either way.
+    *A verdict on every pull request* is always on. Turn on *…and what happened after each deploy* to have the workflow run your deploy on a SHIP — and only on a SHIP — and report the outcome back ([step 7](/start-here/observe-the-outcome)). Nothing in the file changes either way.
   </Step>
   <Step title="Add the workflow file">
     Add it as `.github/workflows/changeguard.yml` — use **Copy this file**, or **Open it on GitHub, already filled in** and press *Commit changes*. ChangeGuard AI never commits to your repository itself. The file is short and does not change as ChangeGuard AI improves, because the logic lives in the `ChangeGuard-AI/action` repository:
@@ -50,6 +50,8 @@ The guided setup lives in two places, and they are the same card: at the bottom 
   </Step>
   <Step title="Open a pull request">
     The verdict appears in the pull request's checks and in the run summary — SHIP, HOLD or BLOCK with the reasons. **BLOCK fails the check; HOLD never does.** To start in advisory mode while you build confidence, add `enforce_block: false` under `with:` — the verdict is still recorded either way.
+
+    That is the _check_, which is a question about your pipeline. Whether a change _reaches production_ is a different question: if you also turned on the deploy step, it runs on a SHIP and only a SHIP. A HOLD leaves the check green and still does not deploy.
   </Step>
   <Step title="Verify">
     ChangeGuard AI cannot see inside your repository, so it cannot tell whether the file was committed. Once a pull request has run, press **Verify integration**: it confirms that a real verdict from the workflow reached ChangeGuard AI. A workflow file that exists but never ran is not an integration.
