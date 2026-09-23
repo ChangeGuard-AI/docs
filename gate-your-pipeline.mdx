@@ -42,7 +42,7 @@ jobs:
       enforce_block: false   # the verdict is still recorded
 ```
 
-If you turned on _…and what happened after each deploy_ when connecting the repository, the workflow also runs your deploy after a non-blocking verdict and reports the outcome back to the same Change record — nothing to add to the file. Whether a failed check stops a merge is your branch-protection rule.
+If you turned on _…and what happened after each deploy_ when connecting the repository, the workflow also runs your deploy — **on a SHIP and only a SHIP** — and reports the outcome back to the same Change record, with nothing to add to the file. HOLD does not deploy: it means ChangeGuard could not establish that the change is safe, and treating "not forbidden" as "permitted" is the wrong default for the one step that touches production. Whether a failed check stops a merge is your branch-protection rule.
 
 ## Any other pipeline — one API call
 
@@ -69,7 +69,7 @@ changeguard-check:
       VERDICT=$(echo "$RESULT" | jq -r '.verdict')
       echo "Verdict: $VERDICT — CSC $(echo "$RESULT" | jq -r '.csc')/100"
       echo "$RESULT" | jq -r '.reasons[]'
-      test "$VERDICT" != "BLOCK"        # stop only on BLOCK; use = "SHIP" for the strictest gate
+      test "$VERDICT" = "SHIP"          # only a SHIP deploys — see below for why HOLD does not
 ```
 
 The response carries `verdict`, `csc`, `reasons` (plain language), `environment_evidence` (`present` or `absent`), `environment_state` (`fresh`, `stale`, `unknown`, `unnamed`), and `verdict_id` / `change_id` — the identity you use to report the outcome. The full schema is in the [OpenAPI spec](https://api.changeguard.ai/api/openapi-judgment.yaml).
@@ -77,7 +77,7 @@ The response carries `verdict`, `csc`, `reasons` (plain language), `environment_
 ## The verdicts
 
 - **SHIP** — verified against current evidence; nothing critical stands in its way.
-- **HOLD** — review first. Most often ChangeGuard AI is missing evidence and says which: no environment named, the environment has not reported recently (stale), or the proposed artifact has not been independently evaluated. Missing evidence is never treated as safe.
+- **HOLD** — review first, and **do not deploy**. Most often ChangeGuard AI is missing evidence and says which: no environment named, the environment has not reported recently (stale), or the proposed artifact has not been independently evaluated. Missing evidence is never treated as safe, which is exactly why a HOLD must not reach production on the grounds that it was not a BLOCK.
 - **BLOCK** — verified, and something critical is affirmatively wrong: it exceeds a namespace quota, requests more than its own limits allow, contradicts the workload's live state, or carries critical findings.
 
 ## Close the loop
