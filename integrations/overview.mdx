@@ -33,7 +33,7 @@ The primary integration. A GitHub App plus one short workflow file judges the ma
 | **Permissions** | The ChangeGuard GitHub App (contents and pull requests). The workflow authenticates with a short-lived identity token GitHub issues to it — **no API key, no secret to paste, nothing to rotate**. The environment is bound to the repository's connection in ChangeGuard AI, never written into the repository. |
 | **Effort** | Low. Authorize the App, pick the repository and its environment, add the 14-line workflow file. |
 | **Support level** | **GA.** |
-| **Enforcement** | **BLOCK fails the check; HOLD never does.** `enforce_block: false` runs it purely advisory; whether a failed check stops a merge is your branch rule. |
+| **Enforcement** | **BLOCK fails the check; HOLD never does.** `enforce_block: false` runs it purely advisory; whether a failed check stops a merge is your branch rule. The deploy step, if you enabled it, is a separate question and a stricter one: it runs on a SHIP and only a SHIP. |
 
 ## Any other CI / CD — the same judgment via API
 
