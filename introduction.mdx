@@ -1,20 +1,37 @@
 ---
-title: "Introduction"
-description: "Know whether a change should ship — before it does, and what happened after."
+title: "What is ChangeGuard AI?"
+sidebarTitle: "What is ChangeGuard?"
+description: "The decision and control layer for infrastructure change: know whether a production change should happen before it executes, bind authorized execution to a short-lived Permit, and verify what actually happened."
 ---
 
-ChangeGuard AI is the **independent judgment layer for production changes**. Before a change ships, it judges the proposed change against the environment it will actually enter and answers **SHIP**, **HOLD** or **BLOCK** with the reasons in plain terms. After the change deploys, it observes what actually happened and writes that into the same record. If something goes wrong, it proposes the fix within the authority you grant — advisory unless you say otherwise.
+ChangeGuard AI is the **decision and control layer for infrastructure change**. Before a change executes, it judges the proposed change against the environment it will actually enter and answers **SHIP**, **HOLD** or **BLOCK**, with the reasons. When a change is authorized — by a person, or by a policy you wrote — that authority becomes a short-lived **ChangeGuard Permit**. An **Executor** carries out only the permitted action. Then ChangeGuard observes what actually happened, attributes it to the change, and verifies the outcome against fresh evidence.
 
 ```text
-PROPOSED CHANGE → ENVIRONMENT → CHANGEGUARD JUDGMENT → SHIP / HOLD / BLOCK
-→ DEPLOYMENT → OBSERVED OUTCOME → REMEDIATION IF NEEDED → PERMANENT CHANGE HISTORY
+PROPOSE → IDENTIFY → UNDERSTAND → JUDGE → AUTHORIZE → PERMIT → EXECUTE → OBSERVE → ATTRIBUTE → VERIFY → RESPOND
 ```
 
-Production changes now come from humans _and_ AI agents, and every one of them arrives with a green build. A passing build says the code compiled; it says nothing about the environment the change is about to land in. That question — _should this ship, here, now?_ — is the one ChangeGuard AI answers, and it never treats missing evidence as safe.
+Or, in short: **Judgment → Permit → Execution → Outcome.**
 
-## New here? Start here
+Infrastructure is now changed by humans, CI/CD, automation and AI agents, and every change arrives with a green build. Existing authorization answers _"can this actor make the change?"_ ChangeGuard answers _"should this exact change happen in this exact environment right now?"_ — and then _"did reality match the judgment?"_ AI can make the change. ChangeGuard decides whether it should.
 
-The first-use path takes you from a blank account to a verdict on your own pull requests without learning the architecture first. Nothing to install for your first verdict; nothing to paste for GitHub.
+## Four things, kept apart on purpose
+
+|  | What it is | What it is not |
+| --- | --- | --- |
+| **Judgment** | What ChangeGuard believes about this change, here, now — SHIP, HOLD or BLOCK, with the evidence it had and did not have | An authorization. A verdict grants nothing. |
+| **Permit** | What is authorized: a signed, single-use token bound to this action, this target, this environment, this approval or policy, and this time window | An API key, a session, a standing grant, or a blanket permission for AI |
+| **Executor** | What acts: the Cloud Executor (nothing to install) or a Local Executor, with a per-environment least-privilege identity | Something that decides. The Executor never authorizes anything. |
+| **Observation** | What proves what happened: fresh evidence from the environment, attributed to the change by identity | An assumption. No observation, no VERIFIED. |
+
+**Autonomous-capable by design. Human-controlled by default.** Every environment starts in **Advise**: ChangeGuard can diagnose, prepare and execute, but a human authorization must exist before anything executes. **Auto** is opt-in and acts only inside an explicit policy; outside it, Auto falls back to Advise. See [Advise and Auto](/autonomy/autonomy-model).
+
+## Where it runs today
+
+Kubernetes on **AWS EKS** is the current wedge. **Fleet** reads your environments centrally with read-only access you authorize — nothing to install. **Edge** is an optional in-cluster collector for evidence that must stay local; it is never required for judgment or execution. The **Executor** is the governed action plane. See [Fleet, Edge and the Executor](/connect/fleet-edge-executor).
+
+## Start here
+
+The first-use path takes you from a blank account to a verdict on your own pull requests without learning the architecture first — nothing to install for your first verdict, nothing to paste for GitHub.
 
 <CardGroup cols={2}>
   <Card title="1. What ChangeGuard AI does" icon="circle-info" href="/start-here/what-changeguard-does">
@@ -41,23 +58,30 @@ The first-use path takes you from a blank account to a verdict on your own pull 
     A real change judged, its outcome recorded, one permanent address.
   </Card>
 
-  <Card title="9 – 10. Remediation and authority" icon="wrench" href="/start-here/enable-remediation">
-    Optional: let it propose fixes; choose Advise or Auto per environment.
+  <Card title="9 – 10. Execution and authority" icon="ticket" href="/start-here/enable-remediation">
+    Optional: enable the Executor; choose Advise or Auto per environment.
   </Card>
 
-  <Card title="Watch the two-minute demo" icon="circle-play" href="https://changeguard.ai/#watch">
+  <Card title="Watch the live demo" icon="circle-play" href="https://demo.changeguard.ai">
     The same path, recorded live against a real environment.
   </Card>
 </CardGroup>
 
-## Then go deeper
+## How we label claims
 
-Everything else in these docs explains one part of the lifecycle in depth: how environments are connected and what evidence is collected (Fleet centrally, the optional Edge collector locally), how the verdict is computed, how the GitHub and CI integrations work, how remediation is bounded and verified, the security and trust model, and the API.
+Every capability in these docs is one of:
 
-<Info>
-  **Maturity labels.** Capabilities are marked **GA** (generally available), **Early Access** (design partners / on request), or **Roadmap**. The **Engineering Advisor** and related reasoning capabilities are Early Access. Nothing emerging is documented as if it ships today. See [Product concepts](/concepts/overview) and [Known limitations](/concepts/limitations-and-roadmap).
-</Info>
+| Label | Meaning |
+| --- | --- |
+| **Live** | Running in production for every tenant (plan gating noted where it applies) |
+| **Live-proven** | Running in production _and_ exercised end to end by production acceptance and continuous security testing — the Permit, the Cloud Executor, per-environment execution identity |
+| **Supported** | Available and used where the topology calls for it — the Local Executor, ChangeGuard Edge |
+| **Early Access** | Real, off by default, on request — the Engineering Advisor and related reasoning capabilities |
+| **Roadmap** | Planned, not shipping — Realms, SSO/SAML, self-hosted inference for judgment and reasoning |
+| **Vision** | Direction, not a feature — governed autonomous change beyond Kubernetes |
+
+Nothing emerging is documented as if it ships today. See [Core concepts](/concepts/overview) and [Known limitations and roadmap](/concepts/limitations-and-roadmap).
 
 <Note>
-  **Who these docs are for.** Anyone deciding whether a change should ship — developers, on-call engineers, platform teams — and the operators who connect environments. If you're evaluating ChangeGuard AI for your organization, start at [changeguard.ai](https://changeguard.ai).
+  **Who these docs are for.** Anyone deciding whether a change should happen — developers, on-call engineers, platform teams, security reviewers — and the operators who connect environments and enable execution. Evaluating ChangeGuard AI for your organization? Start at [changeguard.ai](https://changeguard.ai), or [become a design partner](https://changeguard.ai/contact#design-partner).
 </Note>
