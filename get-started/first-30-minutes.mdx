@@ -7,7 +7,7 @@ sidebarTitle: "Your first recommendation"
 This page is one path with no branching, and it ends at the moment the product has to prove itself: the first recommendation you can check against evidence. Follow the eight steps in order — about half an hour — and you will have installed ChangeGuard AI, seen your first score and verdict, triggered a safe sample incident, and read an evidence-cited investigation of it on your own cluster.
 
 <Note>
-  Everything here is **advisory and read-only**. Nothing in this guide changes your workloads (the sample incident happens in a scratch namespace you create and delete). ChangeGuard AI does not act on your cluster until you explicitly opt into [remediation](/autonomy/autonomy-model).
+  Everything here is **advisory and read-only**. Nothing in this guide changes your workloads (the sample incident happens in a scratch namespace you create and delete). ChangeGuard AI does not act on your cluster until you explicitly [enable execution](/start-here/enable-remediation) for the environment — and even then only under a Permit.
 </Note>
 
 <Steps>
@@ -15,13 +15,13 @@ This page is one path with no branching, and it ends at the moment the product h
     One command installs the operator and the read-only collector — the [install page](/get-started/install) walks it through. Already installed? Carry straight on.
   </Step>
   <Step title="Connect your cluster">
-    Confirm the operator and collector are healthy and your cluster appears in **Fleet** with green connection indicators ("Agent connected", "Workloads detected") — the checks are on [Connect your first cluster](/get-started/connect-first-cluster). If anything doesn't match, [the fix table there](/get-started/connect-first-cluster#if-a-step-didnt-produce-the-result-shown) covers it — it's almost always egress or the API key.
+    Confirm the operator and collector are healthy and your cluster reads **Ready** in **Environments → Connected environments** (evidence source: Edge), with the collector shown as connected on **Edge → Edge status** — the checks are on [Connect your first cluster](/get-started/connect-first-cluster). If anything doesn't match, [the fix table there](/get-started/connect-first-cluster#if-a-step-didnt-produce-the-result-shown) covers it — it's almost always egress or the API key.
   </Step>
   <Step title="See your first score">
-    Your cluster's **CSC Score** appears in Fleet within ~10 seconds of connecting — a deterministic 0–100 read of deploy readiness. Every point ties to a concrete signal you can inspect: [Understanding your score](/how-it-works).
+    Your cluster's **CSC Score** appears on its environment page within ~10 seconds of connecting — a deterministic 0–100 read of deploy readiness. Every point ties to a concrete signal you can inspect: [Understanding your score](/how-it-works).
   </Step>
   <Step title="Run a pre-flight check — and meet the Advisor">
-    Open **Safe to Ship?** and run a pre-flight check. You get **SHIP / HOLD / BLOCK** with the score and reasons — advisory, never an enforced block. Where the [Engineering Advisor](/get-started/engineering-advisor) is enabled (Early Access), its note appears alongside the verdict: the read a senior engineer would give.
+    Open **Preflight → Judge a change** and evaluate a change against this environment. You get **SHIP / HOLD / BLOCK** with the score and reasons — a judgment, which authorizes nothing and blocks nothing here (your CI decides what to enforce). Where the [Engineering Advisor](/get-started/engineering-advisor) is enabled (Early Access), its note appears alongside the verdict: the read a senior engineer would give.
 
     <Info>
       Two things that are correct, not broken: if the Advisor has nothing material to add it stays **silent** — restraint is the feature. And if you don't see the Advisor at all, that's expected — it's Early Access, off by default.
@@ -59,23 +59,23 @@ This page is one path with no branching, and it ends at the moment the product h
     kubectl delete namespace cg-sample
     ```
 
-    The rollout recovers, the incident reflects it, and the timeline records the whole arc — change, failure, fix, recovery. You applied this fix yourself; if you later opt into [Autonomous Remediation](/autonomy/autonomy-model), ChangeGuard AI can execute fixes within the policy you set, **verify** them against real workload health, and roll back once if verification fails.
+    The rollout recovers, the incident reflects it, and the timeline records the whole arc — change, failure, fix, recovery. You applied this fix yourself; if you later [enable execution](/start-here/enable-remediation), ChangeGuard AI can apply a fix like this under a short-lived, single-use [Permit](/govern/permit) — after you approve it (Advise, the default) or inside a policy you wrote (Auto) — **verify** it against fresh evidence, and perform one compensating action if verification fails.
   </Step>
 </Steps>
 
 ## Set your comfort level
 
-ChangeGuard AI's autonomy is a dial, not a switch: **Observe → Advise → Approve → Auto**, default **Advise**.
+Authority is decided per environment, in one of two modes — default **Advise**:
 
-| Level | What ChangeGuard AI does |
+| Mode | What ChangeGuard AI does |
 | --- | --- |
-| **Observe** | Watches and records only. |
-| **Advise** _(default)_ | Recommends actions; a human does everything. |
-| **Approve** | Prepares an action and waits for a human to authorize it. |
-| **Auto** | Executes within policy, then verifies — and rolls back once if verification fails. |
+| **Advise** _(default)_ | Diagnoses, proposes the exact fix and prepares it; a signed-in person must approve before anything executes. |
+| **Auto** _(opt-in)_ | Authorizes its own proposal only inside an explicit policy — namespaces, fix types, a confidence floor, an hourly cap — and falls back to Advise outside it. |
+
+Either way, an approved change becomes a short-lived, single-use **Permit**, an Executor applies exactly that change, and ChangeGuard AI verifies the result against fresh evidence — or hands it back to a human.
 
 <Warning>
-  `Approve` and `Auto` only do anything after you opt into [Autonomous Remediation](/autonomy/autonomy-model) and grant its RBAC. Until then, ChangeGuard AI stays at advice.
+  Neither mode can act until you enable execution for the environment and apply the generated grant — see [Enable execution](/start-here/enable-remediation). Until then, ChangeGuard AI stays at advice.
 </Warning>
 
 ## You've now seen the loop
@@ -84,7 +84,7 @@ In 30 minutes: a verified install, a scored cluster, a pre-flight verdict, a fai
 
 <CardGroup cols={2}>
   <Card title="Understand the concepts" icon="book" href="/concepts/overview">
-    What CSC Score, Change Intelligence, and the autonomy model really mean.
+    What judgment, the Permit, the Executor and Advise/Auto really mean — with every capability labeled.
   </Card>
 
   <Card title="Operate it day-to-day" icon="gear" href="/operations/overview">
