@@ -1,28 +1,67 @@
 ---
-title: "Known Limitations & Roadmap"
-description: "One consolidated, honest list: what's supported today, what's Early Access, and what isn't supported yet."
+title: "Known limitations and roadmap"
+description: "One consolidated, honest list: what is live and live-proven today, what is supported, what is Early Access, what is roadmap, what is vision — and what isn't supported yet."
 ---
 
-Expectations you can plan around, in one place. Anything marked **Supported today** is GA for every tenant (plan gating noted where it applies); **Early Access** is real but off by default and not self-serve; **Not yet supported** means exactly that — don't design around it until it moves.
+Expectations you can plan around, in one place, using the same claim classes as the rest of the product: **Live** = running in production for every tenant (plan gating noted); **Live-proven** = running in production _and_ exercised end to end by production acceptance and continuous security testing; **Supported** = available, used where the topology calls for it; **Early Access** = real but off by default and not self-serve; **Roadmap** = planned, not shipping; **Vision** = direction, not a feature; **Not yet supported** means exactly that — don't design around it until it moves.
+
+## Judgment, authority, execution, outcome
 
 | Capability | Status | Notes |
 | --- | --- | --- |
-| Change tracking with shipped diffs | **Supported today** | Deployments, config, and GitOps changes, correlated to failing workloads. |
-| CSC Score & pre-flight verdicts (SHIP / HOLD / BLOCK) | **Supported today** | Deterministic; advisory unless you wire the CI gate yourself. |
-| Incident investigation with cited evidence | **Supported today** | Root cause, proposed fix, verify criteria. |
-| Autonomous remediation with verification | **Supported today** (opt-in) | Off until you enable it and grant the namespaced RBAC. |
-| Security scanning (CIS, CVE, runtime, SBOM, deprecated APIs) | **Supported today** (plan-gated) | Includes a privileged Falco DaemonSet — [disclosed here](/get-started/permissions#security-scanners-optional-on-by-default). |
-| Compliance mapping (SOC 2, PCI, HIPAA…) | **Supported today** (plan-gated) | Evidence support — not a certification. |
-| Engineering Advisor / Opinion / Experience / Reasoning factors | **Early Access** | Off by default, per-tenant flags — [the full list](/concepts/overview#early-access). |
+| SHIP / HOLD / BLOCK judgment and CSC Score | **Live-proven** | Deterministic for the same inputs. A judgment authorizes nothing; in CI the shipped templates fail on BLOCK by default and can run advisory. |
+| ChangeGuard Permit | **Live-proven** | KMS-signed, single-use, ≤ 15 minutes, revocable; bound to action, target, environment, authority and time window. [Details](/govern/permit) |
+| Cloud Executor | **Live-proven** | Per-environment role with no AWS permissions; nothing installed; Edge not required. [Details](/execute/cloud-executor) |
+| Local Executor | **Supported** | For topologies or policies that require local presence. [Details](/execute/local-executor) |
+| Advise (default) and Auto (policy-bounded) | **Live-proven** | Per environment; Auto falls back to Advise outside its policy. [Details](/autonomy/autonomy-model) |
+| Verification against fresh evidence; one compensating action; escalation | **Live-proven** | No observation, no VERIFIED. |
+| AWS Account Center | **Live** | Connect, verify, discover, repair, reauthorize. [Details](/connect/aws-account-center) |
+| Connected Environments | **Live** | Status, evidence source, judgment readiness, execution readiness, latest Permit, mode. [Details](/connect/connected-environments) |
+| Change record and history; repo-scoped retrieval of retained CI verdicts | **Live-proven** | Append-only; outcomes attached by identity, never by recency. |
+| GitHub pull-request verdicts (OIDC) and any-CI judgment | **Live** | BLOCK fails the check; HOLD never does. |
+| Incident investigation with cited evidence | **Live-proven** | Root cause, proposed fix, verify criteria. |
+
+## Evidence and posture
+
+| Capability | Status | Notes |
+| --- | --- | --- |
+| Fleet (centralized, read-only evidence) | **Live** | Nothing to install; short-lived credentials; `get`/`list` only, no Secret access requested. |
+| ChangeGuard Edge (optional in-cluster collector) | **Supported** | For node-local evidence or unreachable clusters. Never required for judgment, execution or Auto. |
+| Security scanning (CIS, CVE, runtime, SBOM, deprecated APIs) | **Supported** (Edge, plan-gated) | Includes a privileged Falco DaemonSet — [disclosed here](/get-started/permissions#security-scanners-optional-on-by-default). |
+| Compliance mapping (SOC 2, PCI, HIPAA, FedRAMP, EO 14028 controls) | **Supported** (Edge, plan-gated) | Evidence support for _your_ controls — not a certification of ChangeGuard or of you. |
+| Argo CD / Flux change discovery | **Supported** (Edge) | Fleet-only environments do not read GitOps controller state. |
+| Collector resource tuning | **Supported** (chart ≥ 5.3.6) | Defaults 25m/64Mi requests, 500m/512Mi limits; override via `agent.collector.resources`. |
+
+## Reasoning and collaboration
+
+| Capability | Status | Notes |
+| --- | --- | --- |
+| Engineering Advisor / Opinion / Experience / Reasoning factors | **Early Access** | Off by default, per-tenant flags — [the full list](/concepts/overview). |
 | Multiplayer incident workspace | **Early Access** | Flag `WORKSPACE_ENABLED`. |
-| Code Graph (repo knowledge graphs for investigation) | **Early Access** | Ships in the chart, off by default (`codeGraph.enabled`). |
-| Collector resource tuning | **Supported today** (chart ≥ 5.3.6) | Defaults 25m/64Mi requests, 500m/512Mi limits; override via `agent.collector.resources` — [sizing](/get-started/before-you-install). |
-| HTTP(S) proxy support | **Not yet supported** | Direct outbound HTTPS to `api.changeguard.ai:443` is required. |
-| `kubectl` CSC / push-count status columns | **Not yet supported** | The CR prints blank `CSC`/`PUSHES` columns; the dashboard is the source of truth. |
-| Terraform plan awareness | **Not yet supported** | Change intelligence covers Kubernetes and GitOps changes today. |
+| Code Graph (repo knowledge graphs for investigation) | **Early Access** | Ships in the Edge chart, off by default (`codeGraph.enabled`). |
+
+## Roadmap and vision
+
+| Capability | Status | Notes |
+| --- | --- | --- |
+| Realms — a tenant split into production and test with separate authority | **Roadmap** | Designed; not built, not shipping. |
+| SSO / SAML for app sign-in | **Roadmap** | Not available as of this release. |
+| Self-hosted inference for judgment and reasoning | **Roadmap** | Judgment and reasoning run on Amazon Bedrock in the control plane today. (An optional Edge-side NVIDIA NIM setting exists for on-cluster scan analysis only — see [AI analysis](/ai/overview).) |
+| AWS Marketplace listing | **Roadmap** | Not live. |
+| Outcome-informed prediction | **Future** | Verdicts and outcomes are recorded so prediction can be measured against reality; no model, threshold, policy or prompt is modified by an outcome today. ChangeGuard does not "learn from every change". |
+| Governed autonomous change beyond Kubernetes (Terraform, IAM, cloud resources, networking, databases) | **Vision** | The same judgment, Permit and verification wherever a production change originates. Not shipping. |
+
+## Not yet supported
+
+| Capability | Status | Notes |
+| --- | --- | --- |
+| HTTP(S) proxy support for the Edge collector | **Not yet supported** | Direct outbound HTTPS to `api.changeguard.ai:443` is required. Fleet-only environments need no egress to ChangeGuard. |
+| `kubectl` CSC / push-count status columns | **Not yet supported** | The CR prints blank `CSC`/`PUSHES` columns; the product is the source of truth. |
+| Terraform plan awareness | **Not yet supported** | Judgment covers Kubernetes changes (and GitOps changes with Edge) today. |
 | On-call schedule awareness | **Not yet supported** | Recommendations don't know who is on call. |
 | Self-serve API key rotation API | **Not yet supported** | Rotate in-app; confirm full invalidation via [support](mailto:support@changeguard.ai) for high-assurance cases. |
+| Formal certifications (SOC 2, ISO 27001, FedRAMP) | **Not held** | Not claimed. See [Testing and assurance](/security/testing-and-assurance) for what _is_ proven. |
 
 <Note>
-  This page is maintained with releases. If a capability isn't listed and isn't marked GA in [Product concepts](/concepts/overview), treat it as not-yet-available and ask before depending on it — we would rather tell you "not yet" than let a plan assume otherwise.
+  This page is maintained with releases. If a capability isn't listed and isn't marked Live or Live-proven in [Core concepts](/concepts/overview), treat it as not-yet-available and ask before depending on it — we would rather tell you "not yet" than let a plan assume otherwise.
 </Note>
