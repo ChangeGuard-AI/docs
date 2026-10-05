@@ -41,6 +41,11 @@
             "pages": []
           },
           {
+            "group": "Decide",
+            "icon": "scale-balanced",
+            "pages": []
+          },
+          {
             "group": "Going deeper",
             "icon": "layer-group",
             "pages": [
