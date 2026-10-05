@@ -1,0 +1,42 @@
+---
+title: "Testing and assurance"
+sidebarTitle: "Testing & assurance"
+description: "How ChangeGuard's security claims are tested: a blocking customer-security gate on every build, a Permit safety matrix in the backend, and a daily live acceptance journey against production. No certification claims."
+icon: "vial"
+---
+
+ChangeGuard's trust claims are not asserted in a document. They are pinned by tests that block every release, and the whole customer path is walked against production every day. This page says exactly what runs, so a reviewer can tell what is proven from what is merely described.
+
+## What ChangeGuard does not claim
+
+ChangeGuard does **not** hold SOC 2, ISO 27001, FedRAMP or any other formal certification today, and does not claim one. Compliance features in the product help you *evidence* controls — they are not a certification of ChangeGuard or of you. If you need a specific attestation or a data-processing agreement, ask [support](mailto:support@changeguard.ai); you will get an exact answer about what exists today.
+
+## Blocking customer-security gate (every build)
+
+A browser-driven suite runs the real customer workflows against a production build of the product, with the backend stubbed at the API boundary so every scenario is deterministic. The security-critical tests are **blocking**: a build cannot ship if any of them fails. They cover:
+
+- real login, tenant assertion and role assertion after login;
+- cross-tenant direct-navigation refusal and cross-environment authority separation, including two distinct environment identities on one shared cluster;
+- revoked and expired Permits as the customer sees them — the change returns to awaiting approval; nothing executes;
+- unauthorized action refusal (a viewer cannot approve; a forbidden approval is refused), and code-change proposals that must escalate rather than execute;
+- **no VERIFIED without observation** — an applied action stays "Action applied / waiting for fresh evidence" until independent evidence arrives;
+- the Advise and Auto workflows: approve, reject, withdraw, in-policy Auto, and out-of-policy Auto falling back to Advise;
+- Connected Environments, Permit lifecycle visibility and Executor state.
+
+The same suite classifies every remaining test as a customer-workflow or UI-regression check; those run on every build as well.
+
+## Permit safety matrix (backend, every build)
+
+Named backend tests pin the authority model: Advise by default and no approval means no Permit; rejected means no Permit; only operators authorize; a modified action needs a new approval and a new Permit; every binding is checked at consume and replay is refused; expired and revoked Permits are refused and the change returns to a human; Auto with an empty or default policy fails closed; in-policy Auto records the policy id, version, scope and rule; out-of-policy Auto falls back to Advise; a policy change revokes and versions; execution reports require a consumed Permit; legacy executors are served nothing; execution-path gates (signing, enabled, verified, location, namespace); Fleet-only execution with no Edge; read and write roles stay distinct; target identity changes revoke at consume; system namespaces are never granted; history is never rewritten; VERIFIED requires observed evidence; a silent attempt is unreported, not assumed. The KMS signer, key rotation, the canonical action form, consume-before-any-cluster-call (dynamic and by source scan), single use under concurrency, the approval and policy-version races, and every failure mode in [Safety guarantees](/autonomy/safety-guarantees) have their own tests. Verification probes have theirs: no AWS call without a verified probe Permit.
+
+## Daily live acceptance journey (production, every day)
+
+A scheduled run signs in as a synthetic customer through the real login, walks trial onboarding and the environment journey, judges real changes through the same call the GitHub Action makes, reads the customer repository's retained CI verdicts by durable repo-scoped identity (never "somewhere in the latest rows"), and checks the integrity of evidence, Executor and audit settings — all against production. It uses dedicated test identities with runtime-fetched credentials that are never printed or packaged, resets its fixtures to a known baseline before it runs, restores anything it changed, and emits a structured report. It never loosens an assertion to go green: a failure is preserved as evidence and reported as the actual defect. The latest complete run passed **18 of 18** phases.
+
+## Release discipline
+
+Every release runs the full quality gate before any image is built — backend tests with a real database and migration validation, the UI unit suite, the blocking customer-security suite, and supply-chain scans — and only then rolls out. Production acceptance of the Permit, the Cloud Executor and per-environment execution identity was performed on ChangeGuard's own environments first, with the Local Executor migrated through the same supported path customers use.
+
+<Note>
+  This page describes what runs today. When a test or a schedule changes, this page changes with it. If you want to see a specific proof for a specific claim, ask — a reviewer should never have to take a trust claim on faith.
+</Note>

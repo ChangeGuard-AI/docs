@@ -23,6 +23,7 @@
             "icon": "flag-checkered",
             "pages": [
               "introduction",
+              "concepts/overview",
               "start-here/what-changeguard-does",
               "start-here/first-preflight",
               "start-here/ship-hold-block",
@@ -41,6 +42,7 @@
             "pages": [
               "connect/aws-account-center",
               "connect/connected-environments",
+              "get-started/connect-your-fleet",
               "connect/fleet-edge-executor"
             ]
           },
@@ -73,7 +75,6 @@
             "group": "Going deeper",
             "icon": "layer-group",
             "pages": [
-              "get-started/connect-your-fleet",
               "get-started/engineering-advisor",
               "how-it-works",
               "gate-your-pipeline",
@@ -117,6 +118,7 @@
               "security/architecture",
               "security/permit-security",
               "security/environment-isolation",
+              "security/testing-and-assurance",
               "security/agent-security",
               "security/data-handling",
               "security/authentication",
@@ -128,7 +130,6 @@
             "group": "Concepts & Architecture",
             "icon": "book-open",
             "pages": [
-              "concepts/overview",
               "concepts/how-changeguard-decides",
               "get-started/architecture",
               "get-started/permissions",
