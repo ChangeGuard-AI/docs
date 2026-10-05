@@ -234,6 +234,21 @@
       "source": "/agent/installation",
       "destination": "/get-started/install",
       "permanent": true
+    },
+    {
+      "source": "/agent/configuration",
+      "destination": "/get-started/install",
+      "permanent": true
+    },
+    {
+      "source": "/agent/troubleshooting",
+      "destination": "/get-started/faq",
+      "permanent": true
+    },
+    {
+      "source": "/security/agent-security",
+      "destination": "/get-started/permissions",
+      "permanent": true
     }
   ]
 }
