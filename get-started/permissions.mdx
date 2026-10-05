@@ -81,16 +81,17 @@ helm upgrade --install changeguard changeguard/changeguard-operator \
   -n changeguard-system --set agent.security.enabled=false
 ```
 
-## Remediation permissions (opt-in only)
+## Execution permissions (opt-in, per environment)
 
-If — and only if — you enable [Autonomous Remediation](/autonomy/autonomy-model), ChangeGuard AI needs permission to act. That permission is deliberately narrow:
+If — and only if — you enable execution for an environment, ChangeGuard AI gets a **separate identity** to act with. It is never the collector's or Fleet's identity, and it is deliberately narrow:
 
-- It is a **namespaced Role**, not a ClusterRole — you grant it per namespace.
-- It allows the specific write actions remediation performs (e.g. scaling, rolling back a Deployment).
-- It does **not** grant delete of arbitrary resources, and does **not** grant write access to Secrets or RBAC.
+- **Cloud Executor (preferred, nothing to install).** An IAM role in your account, `ChangeGuardExecutor-<environment-instance>`, with **no AWS permissions** and a trust policy admitting only ChangeGuard's Cloud Executor with your external ID; one EKS access entry mapping it to the Kubernetes group `changeguard:executor:<environment-instance>`; a ClusterRole `changeguard-executor-<environment-instance>` that only _defines_ `get`, `list` and `patch` on Deployments, StatefulSets and DaemonSets; and a RoleBinding of the same name in each namespace you chose.
+- **Local Executor (where topology or policy requires it).** The same verbs, through a per-environment ServiceAccount `changeguard-local-executor-<environment-instance>`, bound only in the namespaces you chose.
+- Neither grants `delete`, `create`, `update`, `pods/exec`, Secrets, RBAC writes, impersonation, node access, wildcards or cluster-admin — and **Verify execution access** proves each of those denials before the environment is execution-ready, and again every 12 hours.
+- Holding the identity is still not authority: nothing is written without a consumed, single-use [Permit](/govern/permit) for exactly one approved change.
 
 <Warning>
-  Until you create this Role, `Approve` and `Auto` autonomy levels have nothing to act with. Remediation is off until you both flip it on and grant the Role.
+  Enabling execution approves nothing. In **Advise** (the default) a signed-in operator approves each change; in **Auto** an explicit policy does, inside its bounds. Until you apply the generated grant, neither mode has anything to act with. See [Execution authority and least privilege](/autonomy/rbac-boundaries).
 </Warning>
 
 ## Inspect what's actually granted
@@ -105,8 +106,10 @@ kubectl describe clusterrole changeguard-agent
 # What the collector's ServiceAccount (changeguard-agent) is bound to
 kubectl get clusterrolebinding -o wide | grep changeguard
 
-# Any namespaced remediation role (only present if you opted in)
-kubectl get role -A | grep changeguard
+# The Executor's grant (only present if you enabled execution for an environment):
+# a ClusterRole that only defines get/list/patch on workloads, bound per namespace
+kubectl get clusterrole | grep changeguard-executor
+kubectl get rolebinding -A | grep changeguard
 ```
 
 <Check>
@@ -122,7 +125,7 @@ helm uninstall changeguard -n changeguard-system
 kubectl delete crd changeguardagents.changeguard.ai
 ```
 
-To revoke only remediation while keeping visibility, delete the namespaced remediation Role (or set autonomy back to `Advise`/`Observe`).
+To revoke only execution while keeping visibility, delete the Executor's RoleBindings, the EKS access entry or the execution role (Cloud Executor), or the Local Executor's manifest — or disable execution for the environment in ChangeGuard AI. Evidence is unaffected either way.
 
 <Note>
   Revoking API-key access on the control-plane side is handled in-app under API keys. See the [Operations handbook](/operations/overview) for key rotation guidance and its current limitations.
