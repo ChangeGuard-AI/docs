@@ -52,7 +52,9 @@
           {
             "group": "Govern",
             "icon": "ticket",
-            "pages": []
+            "pages": [
+              "govern/permit"
+            ]
           },
           {
             "group": "Execute",
