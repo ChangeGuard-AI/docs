@@ -1,41 +1,60 @@
 ---
-title: "Safety Guarantees"
-description: "The invariants that hold even when models are wrong, policies change mid-flight, or the control plane crashes"
+title: "Safety guarantees"
+sidebarTitle: "Safety guarantees"
+description: "The invariants that hold even when a model is wrong, a policy changes mid-flight, a credential leaks, or the control plane crashes — each one pinned by a named test in every build."
+icon: "lock"
 ---
 
-Autonomous execution is only trustworthy if its safety properties are _invariants_ - things that stay true when a model produces a bad patch, an operator changes the policy mid-flight, or the control plane crashes at the worst possible moment. These are the invariants ChangeGuard AI maintains, and each one is exercised against a live production cluster as part of release validation.
+Governed execution is only trustworthy if its safety properties are _invariants_ — things that stay true when a model produces a bad patch, an operator changes the policy mid-flight, an attacker holds a stolen token, or the control plane crashes at the worst possible moment. These are the invariants ChangeGuard maintains. Each is exercised by an automated test that blocks the build, and the end-to-end path is exercised against production every day ([Testing and assurance](/security/testing-and-assurance)).
+
+## Authority
+
+- **Advise is the default; no approval means no Permit.** A rejected proposal never gets a Permit. Only signed-in operators authorize; API keys cannot.
+- **Authority binds the exact action.** The authorization records the canonical action hash. A modified action needs a new approval and a new Permit; a Permit for A can never execute B — the Executor applies only the signed bytes.
+- **Auto fails closed.** An empty or default policy authorizes nothing. In-policy authorizations record the policy id, version, scope and rule. Outside the policy, the change returns to a human.
+- **A policy change revokes and versions.** Permits issued under the old version are revoked; nothing is re-authorized silently under the new one.
+- **No standing authority.** Enabling execution approves nothing; reading never implies writing; the execution role carries no AWS permissions and the Kubernetes identity holds only `get`/`list`/`patch` in your namespaces.
+
+## The Permit
+
+- **Offline validity is not authority.** Signature, issuer, audience, lifetime, binding and hash are verified offline — and then revocation and single use are enforced online, at consume, before any write.
+- **Consume is the commit point.** No AWS call and no Kubernetes write happens before a successful consume; this is checked dynamically and by a source scan. Revoke-versus-consume on the same Permit has exactly one winner.
+- **Single use under concurrency.** Twelve concurrent consumes yield one winner. Replay is refused; the same attempt re-delivering its claim is idempotent.
+- **Expired and revoked Permits are refused** even though their signatures still verify. Retiring a signing key never revives anything.
+- **The exact token, or nothing.** Consume binds the SHA-256 of the token ChangeGuard issued; a differently encoded token with a valid signature is refused.
+- **Environment and executor are bound.** A swapped endpoint never reaches AWS; a role bound to another environment, tenant or account is refused even when its name matches; the Local Executor serving one environment is never served another's work.
+- **History is never rewritten.** Signed fields are immutable; status only moves out of `issued`; events are append-only.
 
 ## What may be changed at all
 
-- **Server-side field allowlist.** Every manifest patch - model-generated or not - is validated by the control plane against an allowlist of safe operational fields (resources, replicas, environment variables, probes, and similar). Patches that touch identity or metadata are rejected. The executor only ever receives patches that have already passed this validation, so a compromised or confused analysis step cannot smuggle an unsafe write.
-- **Manifest patches only.** Code-level fixes are never executed automatically, at any autonomy level, under any policy.
-
-## Who authorized it, and is that still true
-
-- **Deny-by-default policy, enforced twice.** The [execution policy](/autonomy/execution-policy) is checked when work is queued _and re-checked when the executor fetches it_. Tightening the policy takes effect immediately, including for work already queued - stale approvals are demoted, not executed.
-- **Same-or-stronger rollback authorization.** A rollback never runs with more autonomy than its original; a policy-approved fix whose policy no longer covers it gets a human-gated rollback instead (`rollback_policy_denied`).
-- **Attribution everywhere.** Every approval is recorded as a named human or `agent-policy` - there is no anonymous execution path.
+- **Server-side field allowlist.** Every manifest patch — model-generated or not — is validated against an allowlist of safe operational fields (resources, replicas, environment variables, probes, and similar). Patches that touch identity or metadata are rejected. The Executor re-checks the same allowlist and refuses exec probes.
+- **Manifest patches only.** Code-level fixes are never executed automatically, in any mode, under any policy.
+- **One remediation per workload at a time.** While any remediation or rollback is in flight for a workload, further apply requests are refused.
 
 ## What happens when a fix is wrong
 
-- **No un-undoable writes.** Pre-state is captured read-before-write before the first apply; if it cannot be recorded, the executor refuses to execute. See [Compensating actions](/autonomy/compensating-actions).
-- **Drift refusal.** If the touched fields changed since the remediation (a human intervened), the rollback stops rather than overwriting - preserving the human's change and escalating.
-- **Exactly one compensating action.** An atomic one-shot claim guarantees at most one rollback per remediation - no retry loops, no rollback-of-a-rollback - and a rollback terminal state always leaves the incident `escalated`, never silently resolved.
+- **No un-undoable writes.** Pre-state is captured read-before-write before the first apply; if it cannot be recorded, the Executor refuses to execute. See [Compensating actions](/autonomy/compensating-actions).
+- **Drift refusal.** If the touched fields changed since the remediation (a human intervened), the rollback stops rather than overwriting — preserving the human's change and escalating.
+- **Exactly one compensating action,** under its own authority and its own Permit — no retry loops, no rollback-of-a-rollback — and a rollback terminal state always leaves the incident `escalated`, never silently resolved.
+- **VERIFIED requires observation.** No fresh evidence, no VERIFIED. Still unhealthy after the window → failed. A silent attempt is `unreported`, failed and escalated — never assumed to have worked.
 
-## Concurrency and rate limits
+## Failure modes, by design
 
-- **One remediation per workload at a time.** While any remediation or rollback is in flight for a workload, further apply requests are refused with HTTP 409.
-- **Hourly execution cap.** Auto mode cannot exceed the per-tenant `max_per_hour` you set, whatever the incident volume.
-- **Duplicate suppression.** Incident creation is race-free (a partial unique index over open incidents), so a noisy symptom cannot fan out into parallel remediation attempts.
+| Failure | Behavior |
+| --- | --- |
+| Signing key unavailable | No Permit is issued; Executors are served nothing; the approval stands |
+| ChangeGuard unavailable to the Executor | No work, no consume → no AWS or Kubernetes call |
+| Consume store unavailable | Consume answers `503`; nothing is spent; the Executor retries later as a **new** attempt |
+| Cloud Executor cannot assume the role | One consume, one attempt, `failed: could not reach the cluster` reported once; never retried silently |
+| Kubernetes API unreachable | Read-before-write fails → no write, `failed` reported; a retry is a new change with a new Permit |
+| Crash after consume, before write | The Permit is spent; the change is never re-served; after 15 minutes it is `unreported` → failed → escalated |
+| Crash after write, before report | No second write is possible (replay refused); `unreported` → failed → escalated; never VERIFIED |
+| Observation never arrives | Stays "Action applied"; never VERIFIED and never failed on absence alone; past the window a human is told once and the incident escalated |
 
 ## Crash tolerance
 
-The control plane is deliberately crash-tolerant: controller restarts were injected at every lifecycle boundary - during apply, after rollback creation, and between apply and verification - and in every case the system converged within about two minutes of restart with **no duplicated executions, no duplicated rollbacks, and no lost or duplicated audit events**. In-flight verification windows resume; one-shot claims hold across restarts.
+The control plane is deliberately crash-tolerant: restarts injected at every lifecycle boundary — during apply, after rollback creation, between apply and verification — converge within minutes with **no duplicated executions, no duplicated rollbacks, and no lost or duplicated audit events**. In-flight verification windows resume; one-shot claims hold across restarts; a consumed Permit stays consumed.
 
 ## Validated, not asserted
 
-These guarantees are backed by an end-to-end validation matrix run against ChangeGuard AI's own production stack - successful rollback, drift refusal, executor restart mid-rollback, concurrent contention, rollback-verification failure, policy denial after the fact, preservation of unrelated human edits, and controller-crash convergence at each step. The matrix is re-run when the remediation pipeline changes.
-
-<Note>
-  Two of the guarantees above exist because the validation matrix caught real bugs before customers could: the field allowlist once correctly rejected benign-but-unlisted identity fields in a model-generated patch, and a result-classification bug was found and fixed the same day. The point of publishing invariants is that they are tested adversarially, not assumed.
-</Note>
+Every guarantee above corresponds to a named test in the build — the Permit safety matrix, the authority and failure-mode suites, the Executor's own refusals — and the customer-visible behaviours (revoked and expired Permits, cross-tenant and cross-environment refusal, no VERIFIED without observation) are exercised through the real UI by a blocking customer-security gate. The whole path is then walked against production every day by the live acceptance journey. See [Testing and assurance](/security/testing-and-assurance).
