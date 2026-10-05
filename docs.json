@@ -38,11 +38,28 @@
           {
             "group": "Connect",
             "icon": "plug",
-            "pages": []
+            "pages": [
+              "connect/aws-account-center"
+            ]
           },
           {
             "group": "Decide",
             "icon": "scale-balanced",
+            "pages": []
+          },
+          {
+            "group": "Govern",
+            "icon": "ticket",
+            "pages": []
+          },
+          {
+            "group": "Execute",
+            "icon": "bolt",
+            "pages": []
+          },
+          {
+            "group": "Observe",
+            "icon": "eye",
             "pages": []
           },
           {
