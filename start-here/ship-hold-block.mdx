@@ -22,7 +22,10 @@ A verdict is only as good as what it could see, so every judgment lists its evid
 A BLOCK says what would break and by how much. From a real pull request against a live environment:
 
 <Frame caption="[CRITICAL] Kubernetes-infeasible against namespace quota: requests.memory used 256Mi + proposed delta 768Mi exceeds hard 512Mi. Valid manifest; wrong in context.">
-  <img src="https://changeguard.ai/img/change-record-block.jpg" alt="A change record with verdict BLOCK and the quota reason spelled out in numbers" />
+  <img
+    src="/images/change-record-block.jpg"
+    alt="A change record with verdict BLOCK and the quota reason spelled out in numbers"
+  />
 </Frame>
 
 Findings that are not blocking (a missing probe, a workload running as root, a single replica) are listed with their severity so the reasons are complete, not just the headline.

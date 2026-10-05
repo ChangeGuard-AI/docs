@@ -12,11 +12,17 @@ A verdict before execution is half the story. The other half is what happened af
 If you turned on _…and what happened after each deploy_ in [step 5](/start-here/connect-github), the workflow runs your deploy — **on a SHIP and only a SHIP** — and reports the result back automatically. Nothing to add to the file. A HOLD does not deploy: it means ChangeGuard AI could not establish that the change is safe, and there is nothing to report the outcome of. Two real cases from a live environment:
 
 <Frame caption="A pull request judged SHIP, deployed, and reported back: Deployed successfully. Attached to this change by the verdict it named, not by recency.">
-  <img src="https://changeguard.ai/img/change-record-outcome.jpg" alt="Change record: SHIP, then What actually happened: Deployed successfully" />
+  <img
+    src="/images/change-record-outcome.jpg"
+    alt="Change record: SHIP, then What actually happened: Deployed successfully"
+  />
 </Frame>
 
 <Frame caption="A change judged SHIP whose deploy failed: Incident after deploy, recorded against exactly this change.">
-  <img src="https://changeguard.ai/img/change-record-incident.jpg" alt="Change record: SHIP, then What actually happened: Incident after deploy" />
+  <img
+    src="/images/change-record-incident.jpg"
+    alt="Change record: SHIP, then What actually happened: Incident after deploy"
+  />
 </Frame>
 
 ## From any other pipeline
