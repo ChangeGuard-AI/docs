@@ -14,7 +14,7 @@ This page states ChangeGuard AI's cluster permissions plainly, including the par
 - ChangeGuard AI does **not** request `cluster-admin`.
 - ChangeGuard AI does **not** use wildcard (`*`) RBAC rules.
 - The operator and collector **read** cluster resources. To correlate changes and score posture, that read is **cluster-wide** and **includes Secrets and RBAC objects** (read-only).
-- ChangeGuard AI **writes nothing** to your workloads unless you separately opt into remediation and grant a **namespaced** Role.
+- ChangeGuard AI's evidence identities **write nothing** to your workloads. Writes happen only through a separately enabled **Executor** identity — per environment, in the namespaces you grant, and only with a consumed [Permit](/govern/permit). See [Execution permissions](#execution-permissions-opt-in-per-environment) below.
 
 <Warning>
   **Read this carefully:** because the collector reads Secrets cluster-wide, it can _see_ the values of your Kubernetes Secrets. It is designed **not to transmit** secret values off-cluster (see [what leaves your cluster](/get-started/architecture)), but the in-cluster read grant is real. If your security posture forbids any component reading all Secrets, raise this with your team before installing.
@@ -51,8 +51,8 @@ The operator manages ChangeGuard AI's own components (the collector and optional
     Secret **values** are not transmitted to the control plane.
   </Card>
 
-  <Card title="No inbound access" icon="ban">
-    ChangeGuard AI opens no inbound path into your cluster. All communication is outbound HTTPS from the collector.
+  <Card title="No inbound path for evidence" icon="ban">
+    The collector initiates all communication outbound over HTTPS, and Fleet reads over access you authorized. Only the Executor — when you enable it — calls your Kubernetes API, and only with a Permit.
   </Card>
 
   <Card title="No cluster-admin" icon="ban">
