@@ -43,7 +43,18 @@
               "connect/aws-account-center",
               "connect/connected-environments",
               "get-started/connect-your-fleet",
-              "connect/fleet-edge-executor"
+              "connect/fleet-edge-executor",
+              "get-started/architecture",
+              {
+                "group": "ChangeGuard Edge (in-cluster)",
+                "icon": "server",
+                "pages": [
+                  "get-started/before-you-install",
+                  "get-started/install",
+                  "get-started/connect-first-cluster",
+                  "get-started/first-30-minutes"
+                ]
+              }
             ]
           },
           {
@@ -79,16 +90,6 @@
               "how-it-works",
               "gate-your-pipeline",
               "get-started/faq"
-            ]
-          },
-          {
-            "group": "ChangeGuard Edge (in-cluster)",
-            "icon": "server",
-            "pages": [
-              "get-started/before-you-install",
-              "get-started/install",
-              "get-started/connect-first-cluster",
-              "get-started/first-30-minutes"
             ]
           },
           {
@@ -131,7 +132,6 @@
             "icon": "book-open",
             "pages": [
               "concepts/how-changeguard-decides",
-              "get-started/architecture",
               "get-started/permissions",
               "concepts/limitations-and-roadmap"
             ]
