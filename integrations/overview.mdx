@@ -9,6 +9,20 @@ ChangeGuard AI is designed to sit alongside the tools you already run, not repla
   This list covers the integrations we verified for this release. If you need one that isn't here (a specific chat platform, ticketing system, or CI vendor), contact [support@changeguard.ai](mailto:support@changeguard.ai) — several are handled case-by-case and aren't self-serve yet.
 </Info>
 
+## AWS — AWS Account Center and the Cloud Executor
+
+The AWS connection is how ChangeGuard AI reaches EKS environments: one discovery role per account for read-only evidence, and — only if you enable execution — one execution role per environment for the Cloud Executor.
+
+| Aspect | Detail |
+| --- | --- |
+| **Reads** | EKS cluster discovery (`eks:ListClusters`, `eks:DescribeCluster`) and, per cluster you authorize, Kubernetes API state over a `get`/`list` grant you apply. |
+| **Writes** | Nothing, by default. With execution enabled for an environment, exactly one permitted patch per [Permit](/govern/permit), to workloads in the namespaces you chose, through a per-environment role with **no AWS permissions**. |
+| **Permissions** | Roles you create from generated trust material, assumed with a ChangeGuard-issued external ID and short-lived sessions. No long-lived keys. |
+| **Effort** | Low. Guided in **Environments → AWS Account Center** and **Add environment → AWS / EKS**; verify, repair and reauthorize from the same place. |
+| **Support level** | **Live** (AWS Account Center, Connected Environments) · **Live-proven** (Cloud Executor). |
+
+Details: [AWS Account Center](/connect/aws-account-center) · [Connected Environments](/connect/connected-environments) · [Cloud Executor](/execute/cloud-executor).
+
 ## GitOps — Argo CD & Flux
 
 ChangeGuard AI ingests changes from GitOps controllers so that "what changed" reflects your real delivery pipeline, not just raw cluster mutations.
@@ -17,10 +31,10 @@ ChangeGuard AI ingests changes from GitOps controllers so that "what changed" re
 | --- | --- |
 | **Reads** | Application / sync state and the change metadata (what was applied, when, from which revision). |
 | **Writes** | Nothing. GitOps ingest is read-only. |
-| **Permissions** | Covered by the collector's existing read grants — no extra Git credentials required for cluster-side change detection. |
-| **Effort** | Low. If Argo CD or Flux is running in the cluster, changes are correlated automatically. |
-| **Support level** | **GA.** |
-| **Value** | Change Intelligence attributes incidents to the actual synced change and its diff. |
+| **Permissions** | Covered by the Edge collector's existing read grant — no extra Git credentials required for cluster-side change detection. |
+| **Effort** | Low. If Argo CD or Flux is running in a cluster where the optional [Edge collector](/get-started/install) is installed, changes are correlated automatically. |
+| **Support level** | **Supported** (requires Edge in that cluster; Fleet-only environments do not read GitOps controller state). |
+| **Value** | ChangeGuard attributes incidents to the actual synced change and its diff. |
 
 ## GitHub — a verdict on every pull request
 
@@ -86,4 +100,4 @@ The scanners aren't third-party integrations you wire up — they ship with Chan
 
 ## What ChangeGuard AI does not integrate with (yet)
 
-To keep this honest: there is **no outbound HTTP-proxy support** for the collector today, and **no SSO/SAML** for app sign-in as of this release. If either is a requirement for you, raise it with [support](mailto:support@changeguard.ai) before you plan a rollout — we'd rather set the right expectation up front.
+To keep this honest: there is **no outbound HTTP-proxy support** for the Edge collector today, **no SSO/SAML** for app sign-in as of this release, and **no AWS Marketplace listing** yet. If any of these is a requirement for you, raise it with [support](mailto:support@changeguard.ai) before you plan a rollout — we'd rather set the right expectation up front.

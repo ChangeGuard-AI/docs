@@ -29,10 +29,10 @@ Before writing, the executor compares the live values of the touched fields agai
 
 ## Same-or-stronger authorization
 
-A rollback never runs with less authority than the original fix had:
+A compensating action is a separate action, so it needs its own authority and its own [Permit](/govern/permit) — the original Permit was consumed by the original fix and can never be reused. A rollback also never runs with less authority than the original fix had:
 
-- **Human-approved original** → the rollback is created as `proposed` and waits for a human to approve it.
-- **Policy-approved original (Auto)** → the rollback is auto-approved **only if the current [execution policy](/autonomy/execution-policy) still allows it**. If the policy has since been tightened, the rollback is created `proposed` with a `rollback_policy_denied` audit event and waits for a human.
+- **Human-approved original (Advise)** → the rollback is created as `proposed` and waits for a human to approve it; the approval issues a new Permit.
+- **Policy-approved original (Auto)** → the rollback is auto-approved **only if the current [execution policy](/autonomy/execution-policy) still allows it**, and then receives its own Permit. If the policy has since been tightened, the rollback is created `proposed` with a `rollback_policy_denied` audit event and waits for a human.
 
 ## One attempt, ever
 
