@@ -36,6 +36,11 @@
             ]
           },
           {
+            "group": "Connect",
+            "icon": "plug",
+            "pages": []
+          },
+          {
             "group": "Going deeper",
             "icon": "layer-group",
             "pages": [

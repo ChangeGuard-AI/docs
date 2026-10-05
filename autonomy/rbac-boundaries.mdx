@@ -1,45 +1,85 @@
 ---
-title: "RBAC Boundaries"
-description: "The control plane never holds your cluster credentials - execution authority lives in your cluster, scoped by RBAC you grant"
+title: "Execution authority and least privilege"
+sidebarTitle: "Execution authority & least privilege"
+description: "Reading never implies writing. Execution uses its own per-environment identity, holds no standing authority, acts only with a consumed Permit, and is denied everything it does not need — proven by Verify execution access."
+icon: "key"
 ---
 
-The most important security property of autonomous remediation is architectural, not procedural: **ChangeGuard AI's control plane has no credentials for your cluster.** All execution authority lives inside your cluster, in an executor you install, bounded by Kubernetes RBAC that you grant.
+The most important security property of ChangeGuard execution is architectural: **execution authority is separate from evidence, separate per environment, and inert without a Permit.** Nothing ChangeGuard reads lets it write; nothing it may write is reachable without a live, consumed Permit; and the identity that writes cannot do anything beyond `get`, `list` and `patch` on workloads in the namespaces you chose.
 
-## How execution reaches your cluster
+## Three identities, kept apart
 
-```mermaid
-flowchart LR
-    subgraph saas [ChangeGuard AI control plane]
-        Q[Validated remediation queue]
-    end
-    subgraph cluster [Your cluster]
-        X[Executor] -->|applies patch within its RBAC| W[Workload]
-    end
-    X -->|outbound HTTPS poll, API key| Q
-```
+| Plane | Identity | Authority |
+| --- | --- | --- |
+| **Fleet** (evidence) | A read role in your account limited to EKS discovery, plus a per-cluster read-only Kubernetes grant | `get`/`list` on cluster state. No `watch`, no writes, no wildcards, no Secret access requested. |
+| **Edge** (optional local evidence) | A read-only collector in your cluster | Supplies evidence only. It never acts, and it is never required for execution. |
+| **Executor** (action) | **Cloud Executor:** a per-environment execution role in your account with **no AWS permissions**, mapped by an EKS access entry to a per-environment Kubernetes group. **Local Executor:** a per-environment ServiceAccount. | `get`, `list`, `patch` on Deployments, StatefulSets and DaemonSets in the namespaces you chose — only with a consumed [Permit](/govern/permit). |
 
-- The **executor** runs in your cluster and polls the control plane outbound over HTTPS, authenticating with a scoped API key. There is no inbound path: ChangeGuard AI cannot connect into your cluster, and there is no kubeconfig, token, or cloud credential for your cluster stored on our side.
-- The control plane's only lever is what it **serves to the executor from the validated queue** - work that has already passed the [field allowlist and execution-policy checks](/autonomy/safety-guarantees).
-- The executor applies patches using **its own ServiceAccount**, so every write is subject to Kubernetes RBAC evaluation in your cluster, attributable in your audit logs, and revocable by you at any moment.
+The execution role is always a different role from the read role (`read_write_not_separated` is refused), and it is registered per (connection, environment). Reading is a standing, read-only grant you can revoke; writing is never standing at all.
+
+## Per-environment identity
+
+Everything about execution carries the environment's instance — `<environment-slug>-<10 hex of a hash of tenant and environment>`:
+
+- the IAM role `ChangeGuardExecutor-<instance>` (Cloud) or the ServiceAccount `changeguard-local-executor-<instance>` (Local);
+- the Kubernetes group `changeguard:executor:<instance>`;
+- the ClusterRole `changeguard-executor-<instance>` and the RoleBindings of the same name in each granted namespace.
+
+Two environments on one physical cluster — even two tenants in one AWS account — never share a role ARN, an EKS access entry or a write-authority group. The invariant ChangeGuard enforces at issuance and again at consume:
+
+> Permit environment = AWS execution identity environment = Kubernetes execution identity environment
+
+A role bound to another environment, another tenant, or another account is refused even if its name matches. See [Environment isolation](/security/environment-isolation).
+
+## What the Executor can never do
+
+The ClusterRole only _defines_ `get`, `list` and `patch` on `apps/deployments`, `apps/statefulsets` and `apps/daemonsets`; authority exists only where a RoleBinding grants it, in the namespaces you selected. `kube-*` namespaces are never granted. There is no `delete`, no `create`, no `update` (full replace), no `pods/exec`, no Secrets, no RBAC writes, no impersonation, no node access, no wildcard verbs or resources, and no cluster-admin — anywhere in the execution model.
+
+<Frame caption="Verify execution access proves the negatives, not just the positives: every verb the Executor must not hold is checked and must come back denied.">
+  <img
+    src="/images/no-excess-authority.jpg"
+    alt="Verify execution access results: No excess authority passed — cluster-admin wildcard denied, delete and create Deployments denied, exec into pods denied, read and list Secrets denied, create RoleBindings and ClusterRoleBindings denied, escalate Roles denied, impersonate users and groups denied, patch nodes denied; Namespace scope passed — patch deployments in kube-system and default denied; Permit verification passed"
+  />
+</Frame>
+
+## Verify execution access
+
+Before an environment is execution-ready, and again every 12 hours, ChangeGuard runs **Verify execution access**. Nothing is read from or written to any workload — only access reviews and a signed probe Permit (`use=verify`, which can never execute).
+
+| Check | By | Proves |
+| --- | --- | --- |
+| Permit signing | ChangeGuard | the KMS signing key is available |
+| Execution role (write) | ChangeGuard | a write role exists and is not the read role |
+| Cluster identity | ChangeGuard | EKS cluster, region and account; endpoint and CA pinned from discovery |
+| Executor reachable | ChangeGuard | the Executor is polling and speaks `permit-v1` |
+| Assume execution role | Executor | a 15-minute session with the external ID |
+| EKS authentication | Executor | the access entry maps the role |
+| Environment match | Executor | TLS against the pinned CA, a token bound to that cluster, the probe Permit binds it |
+| Required access | Executor | `get`/`list`/`patch` on workloads in every chosen namespace |
+| No excess authority | Executor | **cannot** delete, create, exec, read Secrets, escalate, impersonate, use wildcards or act cluster-wide |
+| Namespace scope | Executor | nothing outside the chosen namespaces |
+| Permit verification | Executor | verified a signed probe Permit against the published key |
+
+A path verifies for 24 hours. A failed verification takes the path out of service and revokes its live Permits.
 
 ## Two independent fences
 
-Autonomous execution is bounded by two mechanisms that fail independently:
+Execution is bounded by two mechanisms that fail independently:
 
-1. **The execution policy** (logical): namespaces, fix types, confidence floor, hourly cap - evaluated by the control plane at queue and serve time.
-2. **The executor's RBAC** (physical): a namespace-scoped Role limited to patching workload resources (Deployments and similar) in the namespaces you chose at install time.
+1. **Authority (logical).** No Permit, no action. The Permit binds the exact action, target, environment, executor and authority, expires in minutes, is consumed once, and is refused at consume if the approval, the policy version or the execution path changed.
+2. **Identity (physical).** Even a valid Permit can only be exercised through an identity that holds `get`/`list`/`patch` in the granted namespaces. If the binding is gone, the Kubernetes API server refuses the write, full stop.
 
-A control-plane bug, a compromised policy, or a malicious patch cannot cross the second fence: if the executor's ServiceAccount has no rights in a namespace, the Kubernetes API server refuses the write, full stop. For the same reason, keeping the executor's RBAC no broader than your policy's namespace allowlist is the recommended posture - the two should mirror each other.
+A control-plane bug, a compromised policy or a malicious patch cannot cross the second fence; a stolen credential cannot cross the first.
 
 ## You hold the off switches
 
-Every one of these is under your control, effective immediately, with no ChangeGuard AI involvement:
+Every one of these is under your control, effective immediately, with no ChangeGuard involvement:
 
-- **Scale the executor to zero** (or uninstall it) - queued work simply holds in `approved` and executes nothing; the platform was validated to hold and resume cleanly across executor outages.
-- **Revoke the executor's API key** - the poll loop stops being served.
-- **Shrink the executor's RBAC** - writes outside the new scope fail at the API server.
-- **Empty the execution policy or lower the autonomy dial** - nothing further auto-queues, and already-queued work is demoted at serve time.
+- **Delete the EKS access entry, the RoleBinding or the execution role** — the Cloud Executor can no longer act in that environment.
+- **Scale the Local Executor to zero, delete its manifest, or revoke its API key** — queued work holds; nothing executes.
+- **Shrink the RoleBindings** — writes outside the new scope fail at the API server.
+- **Disable execution, revoke Permits, or set the mode back to Advise** in ChangeGuard — nothing further is served.
 
 <Note>
-  The executor is intentionally boring: it fetches validated work, records pre-state, applies a patch, reports the result, and heartbeats. Analysis, policy, verification, and audit all live in the control plane where they cannot widen cluster access. Executor liveness is monitored - a stale executor is flagged in the dashboard so "nothing is happening" is always distinguishable from "nothing is wrong."
+  The Executor is intentionally boring: verify, consume once, record pre-state, apply one patch, read back, report. Analysis, authorization, Permit issuance, verification and audit all live in the control plane, where they cannot widen cluster access. Executor liveness is monitored — a stale Executor is flagged in the product, so "nothing is happening" is always distinguishable from "nothing is wrong".
 </Note>
