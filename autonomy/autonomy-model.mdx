@@ -1,40 +1,65 @@
 ---
-title: "Autonomy Model"
-description: "Four explicit levels - Observe, Advise, Approve, Auto - decide what ChangeGuard AI may do on its own"
+title: "Advise and Auto"
+sidebarTitle: "Advise and Auto"
+description: "Authority is a per-environment decision with two modes. Advise (the default): ChangeGuard can diagnose, prepare and execute, but a human authorization must exist before anything executes. Auto: it acts only inside an explicit policy, and falls back to Advise outside it."
+icon: "sliders"
 ---
 
-Every tenant has a single autonomy dial with four positions. It is the master switch for the closed loop: each level strictly adds capability on top of the previous one, and nothing in the platform ever acts above the level you have set. You change it in the dashboard on the Incidents view, next to the [execution policy editor](/autonomy/execution-policy).
+ChangeGuard is **autonomous-capable by design and human-controlled by default**. How much authority it has is decided per environment, never account-wide, and in one of two modes:
 
-## The four levels
-
-| Level | ChangeGuard AI will... | ChangeGuard AI will not... |
+| Mode | What ChangeGuard may do | What must exist before anything executes |
 | --- | --- | --- |
-| **Observe** | Detect incidents and record them | Diagnose, propose, or touch anything |
-| **Advise** | Add root-cause analysis and a concrete recommended fix to each incident | Queue anything for execution |
-| **Approve** | Queue the recommended fix for execution **when a human clicks Apply fix** | Execute anything without a human click |
-| **Auto** | Queue and execute fixes automatically - but only inside the [execution policy](/autonomy/execution-policy) | Execute anything the policy does not explicitly allow |
+| **Advise** (default) | Detect, diagnose, propose the exact fix, prepare it for execution, and — once authorized — execute and verify it | A **human authorization**: a signed-in operator, admin or owner approves this exact change. API keys cannot approve. |
+| **Auto** (opt-in) | Everything in Advise, plus authorize its own proposal **inside an explicit policy** | A complete, non-empty **execution policy** for this environment — namespaces, fix types, a confidence floor, an hourly cap — with a policy id and version. Outside the policy, the change waits for a human exactly as in Advise. |
 
-The default for every new tenant is **Advise**: you get diagnosis and recommendations with zero write risk, and you opt into execution deliberately.
-
-## What "Auto" actually means
-
-Auto is not a blank check. A fix is queued automatically only when **all** of the following hold:
-
-1. The autonomy dial is set to Auto.
-2. The execution policy is complete and allows the target namespace, the fix type, and the analysis confidence, and the hourly cap has headroom. An empty or partial policy means **nothing auto-executes** - the dashboard says this explicitly.
-3. The fix is expressible as a safe, server-validated manifest patch. Code-level fixes are never auto-executed; they surface as recommendations.
-
-Remediations approved this way are attributed to `agent-policy` in the [audit trail](/autonomy/audit-trail), so you can always distinguish machine approvals from human ones. The policy is also re-checked at execution time - if you tighten it after something was queued, the queued work is demoted rather than executed. See [Safety guarantees](/autonomy/safety-guarantees).
-
-## Rollback authorization follows the same dial
-
-When a fix fails [verification](/autonomy/verification), the compensating rollback requires **same-or-stronger authorization** than the original:
-
-- A **human-approved** fix gets a rollback proposed for human approval (Approve mode behavior).
-- A **policy-approved** fix (Auto) rolls back automatically **only if the current policy still allows it**. If the policy has changed since - say the namespace was removed from the allowlist - the rollback is created as `proposed` for a human instead, with a `rollback_policy_denied` audit event.
-
-Autonomy never escalates itself: nothing in the loop can move the dial, widen the policy, or approve on your behalf.
+Either way, authority becomes a [ChangeGuard Permit](/govern/permit) bound to the exact action, and an [Executor](/execute/cloud-executor) carries out only the permitted action. Judgment never authorizes; a verdict of SHIP is a belief, not a grant.
 
 <Note>
-  Changing the dial takes effect immediately for **new** decisions. Work already queued is still re-validated against the policy at execution time, so lowering autonomy is always safe: it can only reduce what happens next.
+  **Three things, kept apart.** _Evidence_ is what ChangeGuard knows about an environment (Fleet, Edge) — read-only. The _mode_ is how much authority you gave it in that environment. The _Executor_ is whether it can act at all — a separately enabled, separately identified path proven by Verify execution access. An environment with no Executor is advisory in practice whatever its mode.
 </Note>
+
+## Where you set it
+
+Open the environment in **Connected environments** (or the environment panel at the top of **Changes → Remediations**). The **Mode** toggle reads **Advise** or **Auto**; the policy editor sits beside it. An environment with no explicit setting is Advise.
+
+## Advise — the default
+
+When ChangeGuard proposes a fix, the change appears as **Awaiting approval** with **Approve** and **Reject**. Approving records your identity and binds the canonical hash of the exact action; ChangeGuard then issues a Permit and the Executor applies the fix. The record keeps _proposed by changeguard-agent · approved by ‹you›_ permanently, together with the Permit and its outcome. Rejecting keeps the record too, with the reason.
+
+A fix that is applied is verified against fresh evidence before it is called successful; a fix that fails verification is handed back to a human. Nothing in Advise executes on ChangeGuard's say-so.
+
+## Auto — bounded by policy, falling back to Advise
+
+In Auto, ChangeGuard may authorize its own proposal — but only when **all** of the following hold:
+
+1. the environment's mode is Auto and its policy is complete: namespaces, fix types, a confidence floor and an hourly cap, each non-empty;
+2. the proposal is inside every dimension — the target namespace is allowed, the fix type is allowed (manifest patches only; code fixes are never auto-executed), the analysis confidence meets the floor, and the hourly cap has headroom;
+3. the action passes the same server-side allowlist as every other change.
+
+Anything outside the policy is created as **Awaiting approval** for a human, exactly as in Advise. An empty or default policy **fails closed**: nothing auto-executes, and the product says so. A fix authorized by policy records _approved by agent-policy_ and the policy id and version that authorized it, so history always says who decided.
+
+The policy is re-derived at the moment of execution, not just at proposal time: editing a policy bumps its version and revokes every Permit issued under the old one. A change already consumed completes under the authority it had; a change not yet consumed returns to a human. It is never re-authorized silently under the new version.
+
+## Either way
+
+- Every applied fix is **verified** against fresh evidence of the environment before it is called successful. No observation, no VERIFIED.
+- A failed fix is handed to a human. A compensating action needs its own authority and its own Permit.
+- Every record keeps the **mode at execution**, the **approver or policy version**, and the **Permit** — permanently.
+- Nothing in the loop can move the mode, widen the policy or approve on your behalf. Lowering authority is always safe: it can only reduce what happens next.
+
+<Frame caption="A verified fix authorized by agent-policy under Auto: its state ladder, its Permit consumed exactly once, its policy version recorded. A fix approved under Advise keeps the same record, with a named approver instead of a policy.">
+  <img
+    src="/images/permit-lifecycle.jpg"
+    alt="A verified remediation showing the state ladder from authorized by policy through Permit issued, execution started, action applied and verifying to verified, authorized by an Auto policy and consumed once"
+  />
+</Frame>
+
+<CardGroup cols={2}>
+  <Card title="Execution policy" icon="shield-check" href="/autonomy/execution-policy">
+    The dimensions that bound Auto, and what happens when you change them.
+  </Card>
+
+  <Card title="ChangeGuard Permit" icon="ticket" href="/govern/permit">
+    How an approval or a policy becomes a short-lived, single-use authority.
+  </Card>
+</CardGroup>
