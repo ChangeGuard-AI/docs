@@ -59,7 +59,9 @@
           {
             "group": "Execute",
             "icon": "bolt",
-            "pages": []
+            "pages": [
+              "execute/cloud-executor"
+            ]
           },
           {
             "group": "Observe",
