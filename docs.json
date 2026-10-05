@@ -40,7 +40,8 @@
             "icon": "plug",
             "pages": [
               "connect/aws-account-center",
-              "connect/connected-environments"
+              "connect/connected-environments",
+              "connect/fleet-edge-executor"
             ]
           },
           {
