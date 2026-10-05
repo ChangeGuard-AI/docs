@@ -3,7 +3,11 @@ title: "NVIDIA NIM"
 description: "Configure NVIDIA NIM for self-hosted model inference"
 ---
 
-## Cloud Mode (Recommended)
+<Info>
+  **An optional Edge setting, scoped to scan analysis.** These `ai` settings live on the `ChangeGuardAgent` resource of the optional Edge collector and route only the collector's on-cluster explanations of scanner findings. They do not change where ChangeGuard's judgment or its Engineering Advisor run (the control plane, on Amazon Bedrock), and they are not required for anything. Self-hosted inference for judgment and reasoning is roadmap — see [Known limitations and roadmap](/concepts/limitations-and-roadmap).
+</Info>
+
+## Cloud Mode
 
 ### Step 1: Get an API Key
 

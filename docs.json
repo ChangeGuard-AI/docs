@@ -2,7 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "ChangeGuard AI",
-  "description": "ChangeGuard AI — the independent judgment layer for production changes. Before a change ships, it judges the proposed change against the environment it will actually enter — SHIP, HOLD or BLOCK, with the reasons — and after deployment it records what actually happened.",
+  "description": "ChangeGuard AI — the decision and control layer for infrastructure change. Know whether a production change should happen before it executes: a SHIP, HOLD or BLOCK judgment against the actual target environment, authority bound to a short-lived Permit, execution by a verified Executor, and the outcome verified against fresh evidence. Kubernetes on AWS EKS today.",
   "colors": {
     "primary": "#4f46e5",
     "light": "#6366f1",
@@ -204,8 +204,8 @@
   "navbar": {
     "links": [
       {
-        "href": "https://changeguard.ai/#watch",
-        "label": "Watch the demo"
+        "href": "https://demo.changeguard.ai",
+        "label": "Watch the live demo"
       },
       {
         "label": "Sign in",
@@ -214,8 +214,8 @@
     ],
     "primary": {
       "type": "button",
-      "label": "Start free",
-      "href": "https://app.changeguard.ai"
+      "label": "Become a design partner",
+      "href": "https://changeguard.ai/contact#design-partner"
     }
   },
   "footer": {
@@ -228,6 +228,11 @@
     {
       "source": "/quickstart",
       "destination": "/get-started/connect-your-fleet",
+      "permanent": true
+    },
+    {
+      "source": "/agent/installation",
+      "destination": "/get-started/install",
       "permanent": true
     }
   ]
