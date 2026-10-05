@@ -60,7 +60,8 @@
             "group": "Execute",
             "icon": "bolt",
             "pages": [
-              "execute/cloud-executor"
+              "execute/cloud-executor",
+              "execute/local-executor"
             ]
           },
           {

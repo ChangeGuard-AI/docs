@@ -1,0 +1,50 @@
+---
+title: "Local Executor"
+sidebarTitle: "Local Executor"
+description: "The same Permit model from inside your cluster, for environments that ChangeGuard cannot reach centrally or where policy requires local presence. One generated install, one environment, least privilege."
+icon: "server"
+---
+
+<Note>
+  **Status: Supported.** Use the Local Executor where your topology or policy requires local presence. For reachable EKS environments the [Cloud Executor](/execute/cloud-executor) is preferred — nothing to install, and nothing in your cluster holds a credential. The Local Executor is never required for autonomy, and installing ChangeGuard Edge (the optional evidence collector) is not a prerequisite for either.
+</Note>
+
+The Local Executor runs the same `executor` package as the Cloud Executor, inside your cluster, under a service account you scope. It speaks the same protocol (`permit-v1`), verifies the same signed [Permits](/govern/permit), consumes each one exactly once with ChangeGuard before writing, records the pre-state, applies exactly the signed patch with the field manager `changeguard-executor`, and reports under the Permit and attempt id.
+
+## Installing it
+
+Open the environment in **Connected environments → Execution** and choose **Install Local Executor**. ChangeGuard generates a complete manifest for **this environment only**:
+
+- a dedicated namespace, ServiceAccount, Secret and Deployment, all named `changeguard-local-executor-<environment-instance>`;
+- a ClusterRole of the same name that only defines `get`, `list` and `patch` on Deployments, StatefulSets and DaemonSets;
+- a RoleBinding of the same name in each namespace you chose — and nowhere else;
+- a new agent credential for the Executor, embedded in the manifest and shown once.
+
+Apply it with your own credentials:
+
+```bash
+kubectl apply -f changeguard-local-executor-<environment-instance>.yaml
+```
+
+Applying it *is* the grant. Nothing in ChangeGuard can give itself write access. Then click **Verify execution access** in the Execution section: the Executor proves it holds the verbs it needs in your namespaces and not the ones it must never have, and verifies a signed probe Permit — without reading or changing any workload.
+
+Every object the install creates carries the environment's instance label and annotation, so regenerating the install updates this environment's Executor in place, another environment's install never touches it, and `kubectl delete -f` of the file removes this environment's Executor and nothing else. A cluster can safely carry several environments' Executors side by side.
+
+## What it may and may not do
+
+| May | May never |
+| --- | --- |
+| `get`, `list`, `patch` Deployments, StatefulSets and DaemonSets in the namespaces you granted | delete, create, exec into pods, read or list Secrets, write RBAC, impersonate, patch nodes, use wildcards or cluster-admin |
+| apply exactly the patch signed into a consumed Permit | apply anything else, retry a failed patch, or act without a consumed Permit |
+| report the result under the Permit and attempt id | mark anything VERIFIED — verification comes from independent observation |
+
+An Executor installed before per-environment names, or one that does not speak `permit-v1`, is served nothing and the environment reads **Local Executor · upgrade required**. Reinstall it from the Execution section; the old objects can then be removed by deleting exactly its own Deployment, ServiceAccount, credential Secret and bindings, and revoking its API key. Never delete a namespace the evidence collector shares.
+
+## Stopping it
+
+Scale the Deployment to zero or delete the manifest, revoke its API key, shrink its RoleBindings, or disable execution for the environment in ChangeGuard. Queued work simply holds; nothing executes without a consumed Permit, and a silent attempt is recorded as unreported and fails to a human — it is never assumed to have worked.
+
+<CardGroup cols={2}>
+  <Card title="Cloud Executor" icon="cloud" href="/execute/cloud-executor">The preferred Executor for reachable EKS environments.</Card>
+  <Card title="Execution authority and least privilege" icon="key" href="/autonomy/rbac-boundaries">The identity model behind both Executors.</Card>
+</CardGroup>
