@@ -33,7 +33,8 @@
               "start-here/observe-the-outcome",
               "start-here/the-change-record",
               "start-here/enable-remediation",
-              "start-here/advise-or-auto"
+              "start-here/advise-or-auto",
+              "get-started/faq"
             ]
           },
           {
@@ -46,13 +47,14 @@
               "connect/fleet-edge-executor",
               "get-started/architecture",
               {
-                "group": "ChangeGuard Edge (in-cluster)",
+                "group": "ChangeGuard Edge (optional collector)",
                 "icon": "server",
                 "pages": [
                   "get-started/before-you-install",
                   "get-started/install",
                   "get-started/connect-first-cluster",
-                  "get-started/first-30-minutes"
+                  "get-started/first-30-minutes",
+                  "operations/overview"
                 ]
               }
             ]
@@ -60,13 +62,22 @@
           {
             "group": "Decide",
             "icon": "scale-balanced",
-            "pages": []
+            "pages": [
+              "how-it-works",
+              "concepts/how-changeguard-decides",
+              "platform/csc-score",
+              "gate-your-pipeline",
+              "get-started/engineering-advisor"
+            ]
           },
           {
             "group": "Govern",
             "icon": "ticket",
             "pages": [
-              "govern/permit"
+              "govern/permit",
+              "autonomy/autonomy-model",
+              "autonomy/execution-policy",
+              "autonomy/safety-guarantees"
             ]
           },
           {
@@ -74,42 +85,17 @@
             "icon": "bolt",
             "pages": [
               "execute/cloud-executor",
-              "execute/local-executor"
+              "execute/local-executor",
+              "autonomy/rbac-boundaries"
             ]
           },
           {
             "group": "Observe",
             "icon": "eye",
-            "pages": []
-          },
-          {
-            "group": "Going deeper",
-            "icon": "layer-group",
-            "pages": [
-              "get-started/engineering-advisor",
-              "how-it-works",
-              "gate-your-pipeline",
-              "get-started/faq"
-            ]
-          },
-          {
-            "group": "Integrations",
-            "icon": "plug",
-            "pages": [
-              "integrations/overview"
-            ]
-          },
-          {
-            "group": "Policy-Governed Remediation",
-            "icon": "arrows-rotate",
             "pages": [
               "autonomy/overview",
-              "autonomy/autonomy-model",
-              "autonomy/execution-policy",
               "autonomy/verification",
               "autonomy/compensating-actions",
-              "autonomy/safety-guarantees",
-              "autonomy/rbac-boundaries",
               "autonomy/audit-trail"
             ]
           },
@@ -120,7 +106,7 @@
               "security/permit-security",
               "security/environment-isolation",
               "security/testing-and-assurance",
-              "security/agent-security",
+              "get-started/permissions",
               "security/data-handling",
               "security/authentication",
               "security/api-keys",
@@ -128,38 +114,28 @@
             ]
           },
           {
-            "group": "Concepts & Architecture",
-            "icon": "book-open",
+            "group": "Integrations",
+            "icon": "plug",
             "pages": [
-              "concepts/how-changeguard-decides",
-              "get-started/permissions",
-              "concepts/limitations-and-roadmap"
+              "integrations/overview",
+              "platform/argocd",
+              "platform/flux",
+              "platform/notifications"
             ]
           },
           {
-            "group": "Operations",
-            "icon": "gear",
+            "group": "Posture evidence (Edge)",
             "pages": [
-              "operations/overview"
-            ]
-          },
-          {
-            "group": "Platform",
-            "pages": [
-              "platform/csc-score",
               "platform/identity-access",
               "platform/attack-paths",
               "platform/compliance",
               "platform/resource-graph",
-              "platform/argocd",
-              "platform/flux",
               "platform/fleet-comparison",
-              "platform/notifications",
               "platform/export"
             ]
           },
           {
-            "group": "Security Scanning",
+            "group": "Security scanning (Edge)",
             "pages": [
               "scanning/overview",
               "scanning/kubebench",
@@ -177,7 +153,7 @@
             ]
           },
           {
-            "group": "Advanced configuration",
+            "group": "Edge operator reference",
             "pages": [
               "operator/installation",
               "operator/crd-reference",
@@ -185,16 +161,9 @@
             ]
           },
           {
-            "group": "Agent (Legacy)",
+            "group": "Releases & roadmap",
             "pages": [
-              "agent/installation",
-              "agent/configuration",
-              "agent/troubleshooting"
-            ]
-          },
-          {
-            "group": "Releases",
-            "pages": [
+              "concepts/limitations-and-roadmap",
               "changelog"
             ]
           }
