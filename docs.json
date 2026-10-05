@@ -19,7 +19,7 @@
         "tab": "Documentation",
         "groups": [
           {
-            "group": "Start here",
+            "group": "Get started",
             "icon": "flag-checkered",
             "pages": [
               "introduction",
