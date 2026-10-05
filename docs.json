@@ -115,6 +115,7 @@
             "group": "Security",
             "pages": [
               "security/architecture",
+              "security/permit-security",
               "security/agent-security",
               "security/data-handling",
               "security/authentication",

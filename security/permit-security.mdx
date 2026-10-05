@@ -1,0 +1,47 @@
+---
+title: "Permit security"
+sidebarTitle: "Permit security"
+description: "How ChangeGuard Permits are signed, verified, consumed once, revoked and rotated — the properties a security reviewer should expect, and the tests that pin them."
+icon: "ticket"
+---
+
+A [ChangeGuard Permit](/govern/permit) is the only thing that lets a ChangeGuard Executor write to your environment. This page is the security reviewer's view of it.
+
+## Signing
+
+| Property | Fact |
+| --- | --- |
+| Algorithm | ES256 (ECDSA P-256 over SHA-256), compact JWS |
+| Key | An asymmetric key in **AWS KMS** (`ECC_NIST_P256`, sign/verify). Any other key type is refused at startup |
+| Private key | Never leaves KMS. Nothing in source, nothing in a customer environment, nothing in ChangeGuard's own pods |
+| Who may sign | Only ChangeGuard's backend role — enforced in the **key policy**, with explicit denies on grant creation and on signing by any other principal, so no IAM policy or grant can confer signing on anyone else. Changing who may sign requires a key-policy change, which CloudTrail records |
+| Verification | Every signature is verified against the public key before the Permit is handed out. Executors fetch the public keys (JWKS) from `GET /api/permits/keys`, keyed by KMS key id |
+| No key → fail closed | No Permit is issued; nothing executes; the product reads *Permits unavailable* |
+
+## Key rotation
+
+Every Permit names the key that signed it. Rotation is a phased overlap with no downtime and no weakening: publish the new key in the JWKS before it signs anything; switch signing so new Permits carry the new key while Permits signed by the old key stay valid until they expire; retire the old key from the JWKS only after every Permit it could have signed has expired. Retiring a key never revives anything — revoked, expired and consumed Permits stay refused, because status is authoritative — and retiring it too early cannot make a Permit usable either: such a Permit is refused at consume with nothing spent, and the next delivery re-issues it under the new key.
+
+## Single use and replay
+
+Consumption is an atomic transition of the Permit row from `issued` to `consumed`, with the attempt id recorded, in the same transaction that moves the change to `applying`. Unique indexes allow one live and one consumed Permit per change and one consumption per attempt. A second attempt is refused as a replay; the same attempt re-delivering its claim is idempotent; concurrent consumes yield exactly one winner. Executors additionally keep a local replay cache.
+
+## Binding and tamper resistance
+
+The Permit's claims bind the tenant, the environment (including the EKS cluster, account, region, endpoint and certificate authority), the target workload, the exact action and its hash, the executor location and identity, the authority (approver or policy id and version) and the judgment result. The canonical action form refuses duplicate keys (including keys that differ only by escapes) and invalid UTF-8; verifiers refuse any header or claim set with a duplicated member, so a Permit has one meaning for every implementation. At consume the Executor must present the SHA-256 of the exact token it verified: a token with a valid ChangeGuard signature but different bytes is refused.
+
+## Revocation
+
+Immediate, up to the commit point. A revocation, a withdrawn approval, a material proposal change, a policy edit or an execution-path change that lands before consume makes the consume fail. Revocation and consume race on the same row lock; exactly one wins. Reasons are a closed set, signed into history: `human_revocation`, `policy_changed`, `environment_retired`, `target_identity_changed`, `proposal_changed`, `approval_withdrawn`, `security_event`, `execution_disabled`. An admin can revoke every live Permit as a security event.
+
+## Immutability
+
+A database trigger forbids changing any signed field. Status only moves out of `issued`. The outcome is written once. Permit events are append-only (the application role can insert and select, never update or delete).
+
+## What a Permit is not
+
+Not an API key, not an environment unlock, not a session, not a standing grant, not a broad write permission, and not a blanket permission for AI. Possession of a Permit is also not enough: the Executor must still hold a least-privilege identity bound to the same environment, and ChangeGuard must still answer the consume. See [Execution authority and least privilege](/autonomy/rbac-boundaries).
+
+## Pinned by tests
+
+Each property above is pinned by a named test in the build — key type and rotation, JWKS publishes only public keys, no signer means no Permit, short-lived and bounded TTL, refusal of bad signature/issuer/audience/lifetime/tenant/environment/target/action, consume-before-any-cluster-call (dynamically and by source scan), revoked-still-verifies-offline-but-cannot-write, consume binds the exact token, atomic single use under concurrency, revoke-versus-consume has one winner, role binding across tenants/accounts/environments, approval and policy-version races, and the full failure-mode table. See [Testing and assurance](/security/testing-and-assurance).
