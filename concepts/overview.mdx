@@ -1,97 +1,72 @@
 ---
-title: "Product concepts"
-description: "The core ideas behind ChangeGuard AI — clearly labeled by maturity, so you always know what ships today."
+title: "Core concepts"
+sidebarTitle: "Core concepts"
+description: "The vocabulary the product, the docs and the website all use — judgment, Permit, Executor, observation; Advise and Auto; Fleet, Edge and the Executor — with every capability labeled live, live-proven, supported, Early Access, roadmap or vision."
 ---
 
-This is the vocabulary the product, the docs, and the website all use. Each concept is labeled by maturity so there's never ambiguity about what's available to you today.
+This is the vocabulary the product, the docs, and the website all use. Each concept is labeled by its claim class so there is never ambiguity about what is available to you today.
 
 <Info>
-  **How we label maturity.** **GA** = generally available. **Early Access** = real, but off by default and offered to design partners / on request. **Direction** = where we're headed, not a feature you can turn on. We never describe an Early Access or Direction capability as if it ships today.
+  **How we label claims.** **Live** = running in production. **Live-proven** = running in production _and_ exercised end to end by production acceptance and continuous security testing. **Supported** = available, used where the topology calls for it. **Early Access** = real, off by default, on request. **Roadmap** = planned, not shipping. **Vision** = direction, not a feature. We never describe an emerging capability as if it ships today.
 </Info>
 
 ## The idea
 
-A change can be authorized and still be dangerous. Your pipeline confirms the actor is allowed to make a change; it cannot tell you the service being changed is mid-incident, or that the cluster is carrying standing risk right now.
+A change can be authorized and still be dangerous. Your pipeline confirms the actor is allowed to make a change; it cannot tell you the service being changed is mid-incident, or that the change would exceed the namespace's quota the moment it lands, or that the artifact was never evaluated.
 
-ChangeGuard AI makes **change** the primary object: it evaluates a proposed change against the live state of the environment it will land in, returns a risk decision before the change executes, and — after execution — records what actually followed against the change that caused it.
+ChangeGuard AI makes **the change** the primary object. It evaluates a proposed change against the live state of the environment it will land in and returns a judgment before the change executes. When a change is authorized, it binds that authority to a short-lived Permit, lets an Executor carry out only the permitted action, and records what actually followed against the change that caused it.
 
-<Note>
-  **The decision layer for infrastructure change** is our term for the long-term direction: the same judgment applied to production change wherever it originates, not only in Kubernetes. That is **direction**, not a feature you can turn on. Kubernetes is the wedge and the proving ground, and everything below labeled **GA** is what ships today.
-</Note>
+```text
+PROPOSE → IDENTIFY → UNDERSTAND → JUDGE → AUTHORIZE → PERMIT → EXECUTE → OBSERVE → ATTRIBUTE → VERIFY → RESPOND
+```
 
-## Generally available today
+## Judgment, Permit, Executor, Observation
 
-### Change history & attribution — **GA**
+| Concept | What it is | Claim class |
+| --- | --- | --- |
+| **Judgment** — SHIP / HOLD / BLOCK | What ChangeGuard believes about this change against this environment right now, with the reasons and an explicit list of the evidence it had and did not have. Deterministic for the same inputs; the CSC score is its numeric form. Judgment authorizes nothing. | **Live-proven** |
+| **ChangeGuard Permit** | A short-lived, machine-verifiable authorization bound to this action, this target, this environment, this approval or policy, and this time window. Signed in AWS KMS, used once, revocable, expiring in minutes. [Details](/govern/permit) | **Live-proven** |
+| **Executor** | What acts. The **Cloud Executor** runs in ChangeGuard's estate with a per-environment role that has no AWS permissions — nothing to install. A **Local Executor** runs in your cluster where topology or policy requires it. Both apply only what a consumed Permit authorizes. | Cloud: **Live-proven** · Local: **Supported** |
+| **Observation** | What proves what happened: fresh evidence from the environment, attributed to the change by identity. **VERIFIED** requires an observation after the action showing the permitted state, healthy — never an assumption. | **Live-proven** |
 
-Continuous tracking of every deployment, config, and GitOps change across your fleet, with each failing workload correlated to the change that caused it — including the diff that shipped. This is the foundation the rest builds on.
+## Advise and Auto
 
-### Readiness score (`CSC`) — **GA**
+Authority is a per-environment decision with two modes. **Advise** (the default): ChangeGuard can diagnose, prepare and execute, but a human authorization must exist before anything executes. **Auto** (opt-in): it acts only inside an explicit policy — namespaces, fix types, a confidence floor, an hourly cap — and falls back to Advise outside it. _Autonomous-capable by design, human-controlled by default._ [Details](/autonomy/autonomy-model) — **Live-proven**.
 
-A deterministic, explainable 0–100 readiness score. Same inputs, same score — which is what lets you rely on it as a signal. Every point ties to a concrete factor you can inspect. `CSC` is the stable identifier used in the API and the dashboard; in prose we call it the readiness score.
+## Fleet, Edge and the Executor
 
-### Pre-flight check — **GA**
+- **Fleet** — the centralized evidence plane. ChangeGuard reads your Kubernetes API from outside, over read-only access you authorize through AWS Account Center. Nothing to install. **Live.**
+- **Edge** — an optional local-evidence extension: a small read-only collector for signals that need presence on the node, or clusters that can't be reached centrally. Never required for judgment or execution. **Supported.**
+- **Executor** — the governed action plane, above. Inert without a Permit.
 
-An on-demand "is it safe to ship right now?" verdict: **SHIP / HOLD / BLOCK**, with the score and reasons. It is **advisory** — a recommendation, never an enforced gate, unless you choose to wire it into your own pipeline.
+[Fleet, Edge and the Executor](/connect/fleet-edge-executor) explains which you need.
 
-### Incident investigation — **GA**
+## The rest of the product
 
-Detect a failing workload, explain the root cause with **cited evidence**, propose a fix, and describe how to verify it. Analysis you can check, not a black-box verdict.
-
-### Current Understanding — **GA (where incident context is enabled)**
-
-The maintained, change-centric read of an incident — what someone joining right now needs to know. Available where incident context is enabled for your tenant.
-
-### Autonomy model — **GA**
-
-Four levels — **Observe → Advise → Approve → Auto** — with **Advise** as the default. You decide how much ChangeGuard AI may do on its own. See [Policy-governed remediation](/autonomy/autonomy-model).
-
-### Policy-governed remediation — **GA, opt-in**
-
-Detection → diagnosis → policy-gated execution → **verification** → rollback. Off until you enable it and grant a narrow, namespaced RBAC Role. Below **Auto**, every action waits for a human to approve it. ChangeGuard AI never claims a fix succeeded it hasn't verified against real workload health, and on failed verification it performs exactly one audited rollback, then hands off to a human.
-
-### Security scanning — **GA, plan-gated**
-
-CIS benchmarks (KubeBench), CVEs (Grype), deprecated APIs (Pluto), SBOM (Syft), and runtime signals (Falco). Findings go to the control plane; your images and manifests don't.
-
-### Compliance mapping — **GA, plan-gated**
-
-Maps scan, RBAC, and SBOM evidence to framework controls (SOC 2, PCI, HIPAA, and others). This is **support for evidencing** controls — it helps you show your work. It is **not** a certification, and ChangeGuard AI does not certify you as compliant.
+| Capability | What it does | Claim class |
+| --- | --- | --- |
+| **Preflight** | Judge a change by hand — description, artifact or manifest — against an environment, or with nothing connected | **Live** |
+| **GitHub pull-request verdicts** | A verdict on every pull request with a short-lived OIDC identity; the outcome after deploy joined back to it. BLOCK fails the check; HOLD never does | **Live** |
+| **CI/CD and agent judgment** | One call from any pipeline or coding agent; the shipped templates fail the job on BLOCK by default and can run purely advisory | **Live** |
+| **AWS Account Center** | Which AWS accounts ChangeGuard is connected to and whether each connection is healthy: verify, discover, repair, reauthorize | **Live** |
+| **Connected Environments** | Every environment, its evidence source, judgment readiness, execution readiness, latest Permit and mode; connect, authorize, verify, repair, retire | **Live** |
+| **Change record and history** | One permanent, shareable record per change: verdict, authority, Permit, attempt, outcome. Append-only. Repo-scoped retrieval of retained CI verdicts | **Live-proven** |
+| **Incidents and remediation** | Failing workloads attributed to the change that shipped them; a proposed fix with the exact patch; execution under a Permit; verification; one compensating action; escalation | **Live-proven** |
+| **Measured outcomes** | Predicted versus observed CPU, memory and replicas, joined by change identity | **Live** |
+| **Posture evidence** (with Edge) | CIS benchmarks, image CVEs, deprecated APIs, SBOM, runtime signals, RBAC and attack-path analysis, compliance evidence export — evidence support, not a certification | **Supported**, plan-gated |
+| **Engineering Advisor, Opinion, Experience, Reasoning** | The read a senior engineer would add to a verdict; an owned position on an incident; recall of similar past incidents when material; honest ✓/⚠ factors | **Early Access** |
+| **Multiplayer incident workspace** | A shared incident workspace organized around one current understanding | **Early Access** |
+| **Realms** | A tenant split into production and test with separate authority | **Roadmap** |
+| **SSO/SAML; self-hosted inference for judgment and reasoning** | Planned. (An optional Edge-side NVIDIA NIM setting exists for on-cluster scan analysis only — see [AI analysis](/ai/overview).) | **Roadmap** |
+| **Governed autonomous change beyond Kubernetes** | The same judgment, Permit and verification wherever a production change originates, for every actor that can act on infrastructure | **Vision** |
 
 ## What ChangeGuard AI does not do today
 
-Worth stating plainly, because the labels above only tell you what exists.
-
-- **It does not learn from outcomes.** The outcome loop is instrumented — a verdict is recorded before a change, and what followed is recorded after — but no model, threshold, policy or prompt is modified by an outcome. Recall of similar past incidents (Early Access) is retrieval, not retraining.
-- **It does not act on its own by default.** Autonomy ships at Advise. Execution requires you to raise the level and define a policy.
-- **It does not cover infrastructure beyond Kubernetes.** Terraform, IAM, cloud resources, networking and databases are direction, not shipping capability.
-
-## Early Access
-
-These are real and running, but **off by default** and offered to design partners or on request. Don't plan production dependencies on them yet.
-
-| Capability | What it adds | Flag (default off) |
-| --- | --- | --- |
-| **Engineering Advisor** | The advice a senior engineer would give before a change proceeds — surfaced only when it materially helps. | `AI_ENGINEERING_ADVISOR_ENABLED` |
-| **Engineering Opinion** | An owned, evidence-tied position on an incident: belief, confidence, tradeoff, and unknowns. | `AI_OPINION_ENABLED` |
-| **Engineering Experience** | Institutional memory — what similar past incidents did — woven in only when it changes the decision. | `AI_MEMORY_ENABLED` |
-| **Reasoning / confidence factors** | Honest ✓ / ⚠ factors and "why not the obvious move" behind an opinion. | `AI_REASON_ENABLED` |
-| **Multiplayer AI** | A shared incident workspace organized around one current understanding. | `WORKSPACE_ENABLED` |
-
-<Warning>
-  If you don't see one of these in your tenant, that's expected — they're not self-serve. Contact [support](mailto:support@changeguard.ai) if you'd like to join the Early Access program.
-</Warning>
-
-## Components
-
-| Term | What it is |
-| --- | --- |
-| **Collector** (the agent) | The small, read-only in-cluster component that reads state and pushes it to the control plane. |
-| **Operator** | The in-cluster controller that installs and manages the collector and scanners via a CRD. |
-| **Control plane** | ChangeGuard AI's hosted side (`api.changeguard.ai`) where correlation, scoring, and analysis happen. |
-| **Approval** | A human authorizing an action before it runs, at the `Approve` / `Auto` boundaries. |
-| **Verification** | Confirming a fix worked against real workload health before calling it done. |
-| **Activity timeline** | The append-only, per-incident audit record of what was observed and decided. |
+- **It does not learn from every change.** The outcome record is instrumented — a verdict is recorded before a change and what followed is recorded after — so that prediction can be measured against reality. No model, threshold, policy or prompt is modified by an outcome. Recall of similar past incidents (Early Access) is retrieval, not retraining.
+- **It does not act on its own by default.** Every environment starts in Advise. Auto is opt-in and policy-bounded.
+- **It does not cover infrastructure beyond Kubernetes.** Terraform, IAM, cloud resources, networking and databases are vision, not shipping capability.
+- **It does not hold a certification.** SOC 2, ISO 27001 and FedRAMP are not claimed. See [Testing and assurance](/security/testing-and-assurance) for what _is_ proven.
 
 ## A note on honesty
 
-If a capability isn't listed as **GA** above, treat it as not-yet-generally-available and check with your ChangeGuard AI contact before depending on it. The [website](https://changeguard.ai) uses these exact same labels — so what you evaluate is what you can turn on.
+If a capability isn't labeled **Live** or **Live-proven** above, treat it as not-yet-generally-available and check with your ChangeGuard AI contact before depending on it. The [website](https://changeguard.ai) uses these exact same labels — so what you evaluate is what you can turn on.
