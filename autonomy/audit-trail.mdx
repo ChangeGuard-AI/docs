@@ -12,8 +12,9 @@ Expand any incident in the dashboard and the timeline shows the complete lifecyc
 - **Detection** - the incident opened, with the symptom
 - **Analysis** - root cause attached, incident `analyzed`
 - **Queued** - a remediation was created (`proposed` or policy-`approved`)
-- **Approval** - who approved: a named human, or `agent-policy` under Auto
-- **Execution** - the executor applied the fix
+- **Approval** - who approved: a named human, or `agent-policy` under Auto (with the policy id and version)
+- **Permit** - `permit_issued` when the authority was bound to a short-lived [Permit](/govern/permit); the Permit's own events (issued, consumed, used, expired, revoked with its reason) sit on the change record, correlated by Permit id and attempt id
+- **Execution** - the Executor consumed the Permit and applied the fix
 - **Verification** - `verified`, or `verify_failed` after the 20-minute window
 - **Rollback** (if any) - `rollback_initiated`, then `rollback_verified`, `rollback_failed`, or `rollback_policy_denied`
 - **Resolution or escalation** - resolved with attribution, or `escalated` to a human
@@ -23,7 +24,7 @@ The same data is available as ordered JSON from `GET /api/timeline?incident_id=.
 ## Properties of the record
 
 - **Append-only.** Events are only ever added, each stamped with actor, timestamp, and detail. Nothing in the product edits or deletes an audit event - state transitions add entries rather than rewriting history.
-- **Attribution is total.** Every execution traces to a named human approval or to `agent-policy`, and a policy approval implies the policy's terms at that moment (namespace, confidence, cap) were satisfied - there is no anonymous path to a cluster write.
+- **Attribution is total.** Every execution traces to a named human approval or to `agent-policy`, and a policy approval implies the policy's terms at that moment (namespace, confidence, cap) were satisfied - there is no anonymous path to a cluster write. Every write also traces to one consumed Permit and one attempt id; with the Cloud Executor the Permit id is the AWS session name in your own CloudTrail.
 - **Failure is as visible as success.** `verify_failed`, `rollback_failed`, `rollback_policy_denied`, and drift refusals are first-class events. The timeline of an escalated incident shows precisely where automation stopped and why it handed control to you.
 - **Crash-consistent.** Controller crash injection during validation confirmed every lifecycle event lands exactly once - no lost events, no duplicates - so the trail remains trustworthy evidence even across control-plane restarts.
 
@@ -35,8 +36,8 @@ A healthy escalation reads like this - every hop attributable, terminating with 
 | --- | --- | --- | --- |
 | 1 | incident detected | system | OOM crash loop on `payments/api` |
 | 2 | analyzed | system | Root cause: memory limit below working set |
-| 3 | queued \+ approved | agent-policy | Auto mode; policy allowed `payments`, high confidence |
-| 4 | applied | executor | Limit raised; pre-state captured first |
+| 3 | queued + approved | agent-policy | Auto mode; policy allowed `payments`, high confidence; `permit_issued` |
+| 4 | applied | executor | Permit consumed once; limit raised; pre-state captured first |
 | 5 | verify\_failed | system | Still crash-looping after 20 minutes |
 | 6 | rollback\_initiated | agent-rollback | Policy still allows - auto-rollback |
 | 7 | applied | executor | Original limit restored, only touched fields |

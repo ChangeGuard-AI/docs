@@ -1,6 +1,6 @@
 ---
 title: "Connect your first cluster"
-description: "Confirm the operator and collector are healthy, watch your cluster appear in Fleet, and see your first CSC Score — with fixes for anything that doesn't match."
+description: "Confirm the operator and collector are healthy, watch your environment reach Ready in Connected environments, and see your first CSC Score — with fixes for anything that doesn't match."
 ---
 
 You've run the [install command](/get-started/install). Now confirm each piece is healthy and watch your cluster show up in the product. Each step shows the result you should see.
@@ -50,10 +50,10 @@ The collector serves health on port `9090` (`/healthz` liveness, `/readyz` readi
     Sign in at [app.changeguard.ai](https://app.changeguard.ai).
   </Step>
   <Step title="Find your cluster">
-    Your cluster appears in **Fleet** within about a minute (up to ~2 minutes on a first-ever install while container images pull), workload counts populate, and a **CSC Score** is computed — typically within ~10 seconds of the collector connecting.
+    Your cluster reads **Ready** in **Environments → Connected environments** (evidence source: Edge) within about a minute (up to ~2 minutes on a first-ever install while container images pull), workload counts populate, and a **CSC Score** is computed — typically within ~10 seconds of the collector connecting. **Edge → Edge status** shows the collector's own health.
   </Step>
   <Step title="Run a pre-flight check">
-    Open **Safe to Ship?** and run a pre-flight check. You get a **SHIP / HOLD / BLOCK** verdict with the score and the reasons behind it. This is **advisory** — it never blocks your pipeline on its own.
+    Open **Preflight → Judge a change** and evaluate a change against this environment. You get a **SHIP / HOLD / BLOCK** verdict with the score and the reasons behind it. A verdict is a judgment, not an authorization: here it blocks nothing, and in CI the shipped templates fail the job on BLOCK by default — your choice to enforce.
   </Step>
 </Steps>
 

@@ -88,7 +88,7 @@ So you can review — or fully remove — everything:
 | Secret | `changeguard-credentials` (key `api-key`) | `changeguard-agent` |
 | CronJob / DaemonSet | security scanners (optional) | `changeguard-agent` |
 
-No PersistentVolumeClaims are created, and **none of your existing workloads are modified**. ChangeGuard AI is read-only until you explicitly opt into [remediation](/autonomy/autonomy-model) and grant its namespaced RBAC.
+No PersistentVolumeClaims are created, and **none of your existing workloads are modified**. The Edge collector is read-only, always. ChangeGuard AI acts only through a separately enabled Executor, under a short-lived Permit — see [Enable execution](/start-here/enable-remediation); installing Edge is not a prerequisite for that.
 
 ## Uninstall / rollback
 

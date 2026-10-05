@@ -16,6 +16,18 @@ Short answers to the questions customers actually hit, each linking to the full 
     No. The AWS connection authorizes **discovery** — listing and describing your EKS clusters with a role you create. Kubernetes read access is a separate, per-cluster grant you make explicitly through the generated authorization workflow, and you can revoke it per cluster at any time. See [Connect your EKS fleet](/get-started/connect-your-fleet).
   </Accordion>
 
+  <Accordion title="Where do I see whether an environment is healthy?">
+    **Environments → Connected environments** shows every environment with its status, evidence source (Fleet, Edge or both), judgment readiness, execution readiness, latest Permit and mode. **Environments → AWS Account Center** shows each connected AWS account and whether that connection is healthy, with one guided action per problem. See [Connected Environments](/connect/connected-environments) and [AWS Account Center](/connect/aws-account-center).
+  </Accordion>
+
+  <Accordion title="Does enabling execution give ChangeGuard AI write access to my cluster?">
+    Only through a separate, per-environment identity that you create and can revoke: a role in your account with no AWS permissions, mapped to a Kubernetes group that holds `get`, `list` and `patch` on workloads in exactly the namespaces you chose — and even that identity does nothing without a short-lived, single-use [Permit](/govern/permit) for one approved change. Enabling execution approves nothing. See [Enable execution](/start-here/enable-remediation).
+  </Accordion>
+
+  <Accordion title="Do I need to install Edge for ChangeGuard AI to apply fixes?">
+    No. The **Cloud Executor** acts on a reachable EKS cluster with nothing installed. Edge is an optional evidence collector; it never acts, and it is not a prerequisite for execution or for Auto. A **Local Executor** exists for topologies or policies that require local presence. See [Fleet, Edge and the Executor](/connect/fleet-edge-executor).
+  </Accordion>
+
   <Accordion title="Our clusters sit behind an egress proxy — does Fleet still work?">
     Fleet reverses the direction: ChangeGuard AI connects _to_ your Kubernetes API endpoint centrally, so the cluster itself needs no outbound path to ChangeGuard AI for standard evidence. The direct-egress requirement below applies only to the optional Edge install.
   </Accordion>
@@ -53,7 +65,7 @@ Short answers to the questions customers actually hit, each linking to the full 
 
 <AccordionGroup>
   <Accordion title="What do SHIP / HOLD / BLOCK mean?">
-    The one verdict vocabulary, everywhere: **SHIP** = sufficient evidence supports proceeding. **HOLD** = ChangeGuard AI cannot establish that proceeding is safe enough — including when important evidence is missing or too stale to trust (it says so rather than pretending the evidence is available). **BLOCK** = affirmative evidence indicates the change should not proceed. Verdicts are advisory unless you wire the [CI gate](/gate-your-pipeline) yourself.
+    The one verdict vocabulary, everywhere: **SHIP** = sufficient evidence supports proceeding. **HOLD** = ChangeGuard AI cannot establish that proceeding is safe enough — including when important evidence is missing or too stale to trust (it says so rather than pretending the evidence is available). **BLOCK** = affirmative evidence indicates the change should not proceed. A verdict is a judgment, not an authorization: it grants nothing and, in the product, blocks nothing. In CI, the shipped templates fail the job on BLOCK by default and never on HOLD — see [Use the Verdict in CI](/gate-your-pipeline).
   </Accordion>
 
   <Accordion title="The dashboard says my score is unavailable or shows a red zero">
@@ -73,7 +85,7 @@ Short answers to the questions customers actually hit, each linking to the full 
   </Accordion>
 
   <Accordion title="Is ChangeGuard AI going to block my deploys?">
-    Not unless you tell it to. Verdicts are advisory; the default autonomy level is **Advise**. Blocking only happens where you wire the [CI gate](/gate-your-pipeline) or enable Approve/Auto autonomy with its RBAC — see [How ChangeGuard AI Makes Decisions](/concepts/how-changeguard-decides).
+    Only where you ask it to. A verdict authorizes nothing, and a judgment in the product blocks nothing. In CI, the shipped templates fail the job on BLOCK by default and never on HOLD; set `enforce_block: false` to run purely advisory. Execution is the other direction — ChangeGuard AI _applying_ a fix — and that happens only in environments where you enabled an Executor, under a Permit, after a person approves (**Advise**, the default) or your policy allows (**Auto**). See [Advise and Auto](/autonomy/autonomy-model) and [ChangeGuard Permit](/govern/permit).
   </Accordion>
 </AccordionGroup>
 
@@ -81,7 +93,7 @@ Short answers to the questions customers actually hit, each linking to the full 
 
 The two canonical fix tables:
 
-- **Install and first connection** — [Connect your first cluster](/get-started/connect-first-cluster#if-a-step-didnt-produce-the-result-shown): repeated `401`s, egress timeouts, cluster never appearing in Fleet, operator `CrashLoopBackOff`.
+- **Install and first connection** — [Connect your first cluster](/get-started/connect-first-cluster#if-a-step-didnt-produce-the-result-shown): repeated `401`s, egress timeouts, an environment never reaching **Ready** in Connected environments, operator `CrashLoopBackOff`.
 - **Day-2 operations** — [Operations handbook](/operations/overview#troubleshooting-quick-reference): collector crash loops, stale clusters, missing features, version skew.
 
 Still stuck? [support@changeguard.ai](mailto:support@changeguard.ai) — include the collector logs (`kubectl logs -n changeguard-agent deploy/changeguard-collector --tail=50`); they contain no secrets.

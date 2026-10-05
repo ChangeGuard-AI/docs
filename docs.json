@@ -2,7 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "ChangeGuard AI",
-  "description": "ChangeGuard AI — the independent judgment layer for production changes. Before a change ships, it judges the proposed change against the environment it will actually enter — SHIP, HOLD or BLOCK, with the reasons — and after deployment it records what actually happened.",
+  "description": "ChangeGuard AI — the decision and control layer for infrastructure change. Know whether a production change should happen before it executes: a SHIP, HOLD or BLOCK judgment against the actual target environment, authority bound to a short-lived Permit, execution by a verified Executor, and the outcome verified against fresh evidence. Kubernetes on AWS EKS today.",
   "colors": {
     "primary": "#4f46e5",
     "light": "#6366f1",
@@ -19,10 +19,11 @@
         "tab": "Documentation",
         "groups": [
           {
-            "group": "Start here",
+            "group": "Get started",
             "icon": "flag-checkered",
             "pages": [
               "introduction",
+              "concepts/overview",
               "start-here/what-changeguard-does",
               "start-here/first-preflight",
               "start-here/ship-hold-block",
@@ -32,48 +33,69 @@
               "start-here/observe-the-outcome",
               "start-here/the-change-record",
               "start-here/enable-remediation",
-              "start-here/advise-or-auto"
-            ]
-          },
-          {
-            "group": "Going deeper",
-            "icon": "layer-group",
-            "pages": [
-              "get-started/connect-your-fleet",
-              "get-started/engineering-advisor",
-              "how-it-works",
-              "gate-your-pipeline",
+              "start-here/advise-or-auto",
               "get-started/faq"
             ]
           },
           {
-            "group": "ChangeGuard Edge (in-cluster)",
-            "icon": "server",
-            "pages": [
-              "get-started/before-you-install",
-              "get-started/install",
-              "get-started/connect-first-cluster",
-              "get-started/first-30-minutes"
-            ]
-          },
-          {
-            "group": "Integrations",
+            "group": "Connect",
             "icon": "plug",
             "pages": [
-              "integrations/overview"
+              "connect/aws-account-center",
+              "connect/connected-environments",
+              "get-started/connect-your-fleet",
+              "connect/fleet-edge-executor",
+              "get-started/architecture",
+              {
+                "group": "ChangeGuard Edge (optional collector)",
+                "icon": "server",
+                "pages": [
+                  "get-started/before-you-install",
+                  "get-started/install",
+                  "get-started/connect-first-cluster",
+                  "get-started/first-30-minutes",
+                  "operations/overview"
+                ]
+              }
             ]
           },
           {
-            "group": "Policy-Governed Remediation",
-            "icon": "arrows-rotate",
+            "group": "Decide",
+            "icon": "scale-balanced",
             "pages": [
-              "autonomy/overview",
+              "how-it-works",
+              "concepts/how-changeguard-decides",
+              "platform/csc-score",
+              "gate-your-pipeline",
+              "get-started/engineering-advisor"
+            ]
+          },
+          {
+            "group": "Govern",
+            "icon": "ticket",
+            "pages": [
+              "govern/permit",
               "autonomy/autonomy-model",
               "autonomy/execution-policy",
+              "autonomy/safety-guarantees"
+            ]
+          },
+          {
+            "group": "Execute",
+            "icon": "bolt",
+            "pages": [
+              "execute/cloud-executor",
+              "execute/local-executor",
+              "autonomy/rbac-boundaries"
+            ]
+          },
+          {
+            "group": "Observe",
+            "icon": "eye",
+            "pages": [
+              "autonomy/overview",
               "autonomy/verification",
               "autonomy/compensating-actions",
-              "autonomy/safety-guarantees",
-              "autonomy/rbac-boundaries",
               "autonomy/audit-trail"
             ]
           },
@@ -81,7 +103,10 @@
             "group": "Security",
             "pages": [
               "security/architecture",
-              "security/agent-security",
+              "security/permit-security",
+              "security/environment-isolation",
+              "security/testing-and-assurance",
+              "get-started/permissions",
               "security/data-handling",
               "security/authentication",
               "security/api-keys",
@@ -89,40 +114,28 @@
             ]
           },
           {
-            "group": "Concepts & Architecture",
-            "icon": "book-open",
+            "group": "Integrations",
+            "icon": "plug",
             "pages": [
-              "concepts/overview",
-              "concepts/how-changeguard-decides",
-              "get-started/architecture",
-              "get-started/permissions",
-              "concepts/limitations-and-roadmap"
+              "integrations/overview",
+              "platform/argocd",
+              "platform/flux",
+              "platform/notifications"
             ]
           },
           {
-            "group": "Operations",
-            "icon": "gear",
+            "group": "Posture evidence (Edge)",
             "pages": [
-              "operations/overview"
-            ]
-          },
-          {
-            "group": "Platform",
-            "pages": [
-              "platform/csc-score",
               "platform/identity-access",
               "platform/attack-paths",
               "platform/compliance",
               "platform/resource-graph",
-              "platform/argocd",
-              "platform/flux",
               "platform/fleet-comparison",
-              "platform/notifications",
               "platform/export"
             ]
           },
           {
-            "group": "Security Scanning",
+            "group": "Security scanning (Edge)",
             "pages": [
               "scanning/overview",
               "scanning/kubebench",
@@ -140,7 +153,7 @@
             ]
           },
           {
-            "group": "Advanced configuration",
+            "group": "Edge operator reference",
             "pages": [
               "operator/installation",
               "operator/crd-reference",
@@ -148,16 +161,9 @@
             ]
           },
           {
-            "group": "Agent (Legacy)",
+            "group": "Releases & roadmap",
             "pages": [
-              "agent/installation",
-              "agent/configuration",
-              "agent/troubleshooting"
-            ]
-          },
-          {
-            "group": "Releases",
-            "pages": [
+              "concepts/limitations-and-roadmap",
               "changelog"
             ]
           }
@@ -198,8 +204,8 @@
   "navbar": {
     "links": [
       {
-        "href": "https://changeguard.ai/#watch",
-        "label": "Watch the demo"
+        "href": "https://demo.changeguard.ai",
+        "label": "Watch the live demo"
       },
       {
         "label": "Sign in",
@@ -208,8 +214,8 @@
     ],
     "primary": {
       "type": "button",
-      "label": "Start free",
-      "href": "https://app.changeguard.ai"
+      "label": "Become a design partner",
+      "href": "https://changeguard.ai/contact#design-partner"
     }
   },
   "footer": {
@@ -222,6 +228,26 @@
     {
       "source": "/quickstart",
       "destination": "/get-started/connect-your-fleet",
+      "permanent": true
+    },
+    {
+      "source": "/agent/installation",
+      "destination": "/get-started/install",
+      "permanent": true
+    },
+    {
+      "source": "/agent/configuration",
+      "destination": "/get-started/install",
+      "permanent": true
+    },
+    {
+      "source": "/agent/troubleshooting",
+      "destination": "/get-started/faq",
+      "permanent": true
+    },
+    {
+      "source": "/security/agent-security",
+      "destination": "/get-started/permissions",
       "permanent": true
     }
   ]

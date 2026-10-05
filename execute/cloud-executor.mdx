@@ -1,0 +1,72 @@
+---
+title: "Cloud Executor"
+sidebarTitle: "Cloud Executor"
+description: "The preferred Executor: runs in ChangeGuard's estate, reaches your EKS environments through a per-environment role with no AWS permissions, and applies exactly one permitted patch per Permit. Nothing to install."
+icon: "cloud"
+---
+
+<Note>
+  **Status: Live-proven.** The Cloud Executor carries ChangeGuard's own production and acceptance environments and is exercised end to end by the daily live acceptance journey. Edge is **not** required for it, and neither is anything installed in your cluster.
+</Note>
+
+The Cloud Executor is ChangeGuard's governed action plane for environments that are safely reachable — today, EKS clusters connected through [AWS Account Center](/connect/aws-account-center). It is the preferred Executor: reading and acting stay separate identities, you install nothing, and every action it takes is attributable in your own AWS CloudTrail and EKS audit logs.
+
+## What it is
+
+A deployment in ChangeGuard's estate that polls ChangeGuard for work. It holds **no Kubernetes access of its own** — its pod mounts no Kubernetes API token and its service account carries no RBAC — and its only AWS permission is to assume roles named `ChangeGuardExecutor*`. Per [Permit](/govern/permit) it:
+
+1. verifies the Permit offline against ChangeGuard's published public keys;
+2. checks that the delivered cluster endpoint and certificate authority equal the ones signed into the Permit — a swapped endpoint never reaches AWS;
+3. **consumes** the Permit with ChangeGuard, exactly once, before any AWS or Kubernetes call;
+4. assumes your environment's execution role with the ChangeGuard-issued external ID, for a 15-minute session named after the Permit (`cg-permit-<id>`);
+5. mints a 60-second EKS token bound to exactly that cluster, with the cluster's certificate authority pinned;
+6. records the pre-state of the workload (and refuses to continue if it cannot);
+7. applies exactly the signed strategic-merge patch with the field manager `changeguard-executor`, reads it back, and reports the result under the Permit and attempt id.
+
+It never deletes, creates, execs, reads Secrets, writes RBAC or uses wildcards — and it proves that denial every time execution access is verified.
+
+## What you set up (per environment)
+
+Open the environment in **Connected environments → Execution** and choose **Set up Cloud Executor**. Everything is generated for you — nothing to type, no identifiers to look up — and everything is **environment-specific**: the role name, the Kubernetes group and the RBAC names all carry the environment's instance, so two environments on one physical cluster never share write authority.
+
+<Steps>
+  <Step title="Create the execution role in your account">
+    An IAM role named `ChangeGuardExecutor-<environment-instance>` with **no AWS permissions at all**. Its trust policy names only ChangeGuard's Cloud Executor principal, with the external ID ChangeGuard issued for your connection. CloudFormation, Terraform and CLI forms are provided.
+  </Step>
+  <Step title="Let the role reach this cluster">
+    One EKS access entry mapping the role to the Kubernetes group `changeguard:executor:<environment-instance>`, with no access policy attached. Each environment has its own role ARN and therefore its own access entry.
+  </Step>
+  <Step title="Grant it the namespaces you chose">
+    A ClusterRole that only *defines* `get`, `list` and `patch` on Deployments, StatefulSets and DaemonSets, granted by a RoleBinding of the same name in each namespace you selected. `kube-*` namespaces are never granted.
+  </Step>
+  <Step title="Verify execution access">
+    Click **Verify execution access**. ChangeGuard checks signing, the execution role, the cluster identity and the Executor's reachability; the Executor then proves it can assume the role, authenticate to exactly this cluster, hold the verbs it needs in your namespaces — and **not** hold delete, create, exec, secrets, impersonation, RBAC writes or cluster-admin — and verifies a signed probe Permit. No workload is read or changed by this check.
+  </Step>
+</Steps>
+
+<Frame caption="The Execution section of an environment after verification: Cloud Executor Ready, the namespaces it may act in, and the checks — ChangeGuard's own first, then the Executor's.">
+  <img src="/images/execution-verify.jpg" alt="Execution section: Cloud Executor Ready, runs in ChangeGuard Cloud Executor, namespaces listed, last verified 4 hours ago; Verify execution access passed with checks for permit signing, execution role separate from the read role, cluster identity, executor reachable, assume execution role, EKS authentication and environment match" />
+</Frame>
+
+A verified path stays valid for 24 hours and is re-verified after 12. A failed verification takes the path out of service and revokes its live Permits.
+
+## Role binding is server-side, never by name
+
+The `ChangeGuardExecutor*` name prefix is defence in depth only. At registration, at issuance and again at consume, ChangeGuard requires that the role belongs to your tenant, was registered on an AWS connection whose account has been verified with STS, lives in the same account as the environment's Fleet identity, is registered on the same connection the environment reads through, and is bound to **this** environment. A role belonging to another environment — even one in the same account on the same cluster — is refused at issuance and at consume (`target_identity_changed`), so environment A's execution authority can never authorize environment B. The external ID is ChangeGuard-issued per connection and never caller-chosen, so your trust policy admits only this tenant's Permits.
+
+## Reading and acting are separate
+
+The execution role is always a different role from the read-only Fleet role, registered per (connection, environment). Re-pointing an environment's execution role makes only that environment verify again and revokes its Permits. An execution role that is not bound to an environment authorizes nothing and fails closed until the environment registers its own role.
+
+## Stopping it
+
+- **Revoke** a live Permit from the environment or the change record; an admin can revoke all live Permits as a security event.
+- **Disable execution** for the environment — nothing is served and nothing executes.
+- **Your own levers**, effective immediately without ChangeGuard's involvement: delete the EKS access entry, the RoleBinding or the role itself. An action already past the commit point then fails and is reported as such — never assumed to have worked.
+
+Everything the Cloud Executor does appears in your CloudTrail (the Permit id is the session name) and your EKS audit log (every write carries the field manager `changeguard-executor`).
+
+<CardGroup cols={2}>
+  <Card title="ChangeGuard Permit" icon="ticket" href="/govern/permit">What is bound, how it is consumed, how it expires and is revoked.</Card>
+  <Card title="Execution authority and least privilege" icon="key" href="/autonomy/rbac-boundaries">Identities, verbs, namespaces, and what the Executor can never do.</Card>
+</CardGroup>

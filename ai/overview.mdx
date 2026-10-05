@@ -3,7 +3,11 @@ title: "AI Analysis"
 description: "Model-assisted analysis on Amazon Bedrock (Claude), with optional NVIDIA NIM for self-hosted inference"
 ---
 
-ChangeGuard AI includes model-assisted analysis of your cluster's security posture — the backend owns the facts and the numbers; the model writes the language. By default this runs server-side on **Amazon Bedrock** using Anthropic's **Claude** — there is nothing to install and no GPU required. For self-hosted or air-gapped environments, you can route inference through **NVIDIA NIM** instead.
+<Info>
+  **Scope.** This page covers the model-assisted _explanations_ of posture findings produced by the optional Edge collector's scanners. ChangeGuard's **judgment** (SHIP / HOLD / BLOCK) is deterministic and runs in the control plane, and the **Engineering Advisor** reasoning layers (Early Access) run on Amazon Bedrock in the control plane. Neither is affected by the settings below. Self-hosted inference for judgment and reasoning is **roadmap** — see [Known limitations and roadmap](/concepts/limitations-and-roadmap).
+</Info>
+
+ChangeGuard AI includes model-assisted analysis of your cluster's security posture — the backend owns the facts and the numbers; the model writes the language. By default this runs server-side on **Amazon Bedrock** using Anthropic's **Claude** — there is nothing to install and no GPU required. For the Edge collector's on-cluster scan analysis, you can optionally route that inference through **NVIDIA NIM** instead (an Edge chart setting, off by default).
 
 ## Inference backends
 

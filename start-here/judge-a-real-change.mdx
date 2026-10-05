@@ -24,7 +24,10 @@ With GitHub connected, every pull request that touches a manifest is judged as t
 From a live environment: a pull request that scales a workload to eight replicas. The manifest is valid. Against what is actually running, it would exceed the namespace's memory quota — and the record says exactly by how much.
 
 <Frame caption="Scale storefront to 8 replicas → BLOCK: requests.memory used 256Mi + proposed delta 768Mi exceeds hard 512Mi.">
-  <img src="https://changeguard.ai/img/change-record-block.jpg" alt="A BLOCK change record from a pull request, with the quota reason" />
+  <img
+    src="/images/change-record-block.jpg"
+    alt="A BLOCK change record from a pull request, with the quota reason"
+  />
 </Frame>
 
 A second kind of BLOCK is a change that is wrong on its own terms in context — for example a container requesting more CPU than its own limit allows, which can never schedule. A linter passes it; a judgment against live state does not.

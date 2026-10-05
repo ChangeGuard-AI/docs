@@ -3,6 +3,28 @@ title: "Changelog"
 description: "Release history and what shipped when"
 ---
 
+## ChangeGuard Permit, Executors and Connected Environments — October 2026
+
+**Governed execution: judgment → Permit → Executor → observed outcome.**
+
+The decision layer now has a control layer. Authority for any ChangeGuard-governed change is bound to a **ChangeGuard Permit** — a short-lived (default 10 minutes, never more than 15), single-use, ES256 token signed by a key held in AWS KMS and bound to one action, one target, one environment, one approval or policy, and one time window. Nothing executes without a consumed Permit, and VERIFIED requires a fresh observation of the environment.
+
+### New
+
+- **Cloud Executor** — ChangeGuard applies approved fixes to reachable EKS environments with nothing installed, through a per-environment execution role in your account that carries **no AWS permissions**, an EKS access entry mapped to a per-environment Kubernetes group, and `get`/`list`/`patch` on workloads in exactly the namespaces you choose. Reading and acting are separate identities, always.
+- **Local Executor** — the same Permit model from inside your cluster, generated per environment, for topologies or policies that require local presence. Executors that do not speak the Permit protocol are served nothing and read _upgrade required_.
+- **Verify execution access** — proves, per environment, that the Executor holds exactly the required verbs and is denied delete, create, exec, Secrets, impersonation, RBAC writes, nodes, wildcards and cluster-admin, and that it verifies a signed probe Permit. Re-verified every 12 hours.
+- **Advise and Auto per environment** — Advise (default) requires a signed-in operator's approval for each change; Auto authorizes only inside an explicit, versioned execution policy and falls back to Advise outside it. A policy edit revokes Permits issued under the old version.
+- **AWS Account Center** — which AWS accounts ChangeGuard is connected to and whether each connection is healthy, with verify, discover, detect-regions, repair and reauthorize actions, in customer words.
+- **Connected Environments** — one place to add, authorize, verify, repair and retire environments, showing status, evidence source, judgment readiness, execution readiness, latest Permit and mode. Fleet and Edge reporting the same cluster is one environment.
+- **Change record** — every record now carries its authority, its Permit, the execution ladder (Permit issued → Execution started → Action applied → Verifying → Verified) and the Permit's own events; retained CI verdicts are retrievable by durable repo-scoped identity.
+
+### Assurance
+
+The Permit safety matrix, the authority and failure-mode suites and the per-environment identity suite run in every build; the customer-visible behaviours are exercised through the real UI by a blocking customer-security gate; and the whole path is walked against production daily by the live acceptance journey (latest complete run 18 / 18). See [Testing and assurance](/security/testing-and-assurance).
+
+---
+
 ## Chart 5.3.6 / Operator v5.3.5 — August 2026
 
 **Configurable collector resources, with safe defaults.**

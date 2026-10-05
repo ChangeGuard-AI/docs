@@ -1,0 +1,39 @@
+---
+title: "Fleet, Edge and the Executor"
+sidebarTitle: "Fleet, Edge & Executor"
+description: "Three planes, kept apart: Fleet is the centralized evidence plane, Edge is an optional local-evidence extension, and the Executor is the governed action plane. None of them grants another's authority, and Edge is never required for judgment or execution."
+icon: "layer-group"
+---
+
+People new to ChangeGuard sometimes assume "connecting" means "installing an agent", and that installing an agent is what lets ChangeGuard act. Neither is true. There are three planes, and they are deliberately different things.
+
+| Plane | What it is | Identity | Required? |
+| --- | --- | --- | --- |
+| **Fleet** | The centralized evidence plane. ChangeGuard reads your Kubernetes API *from outside*, over access you authorize — for EKS, through [AWS Account Center](/connect/aws-account-center). | A read-only AWS role limited to EKS discovery, plus a per-cluster `get`/`list` grant you apply. Sessions minted per operation; tokens minted per collection cycle. | The default. Nothing to install. |
+| **Edge** | An optional in-cluster collector for evidence that needs local presence — runtime signals (Falco), node benchmarks (kube-bench), GitOps controller state — or clusters ChangeGuard cannot reach centrally. | A read-only ServiceAccount in your cluster. One outbound HTTPS connection to `api.changeguard.ai:443`. | **Optional.** Never required for judgment, for execution, or for Auto. |
+| **Executor** | The governed action plane: the [Cloud Executor](/execute/cloud-executor) (preferred) or a [Local Executor](/execute/local-executor). | A per-environment execution identity with no standing authority: a role with no AWS permissions, mapped to a per-environment Kubernetes group with `get`/`list`/`patch` in your namespaces only. | Only if you want ChangeGuard to act. Inert without a consumed [Permit](/govern/permit). |
+
+## Fleet by default
+
+Connect AWS once, discover your EKS clusters, authorize the ones ChangeGuard may observe. From then on ChangeGuard collects Kubernetes API state centrally, with short-lived credentials, and a broken or unreachable cluster never stops collection from the healthy ones. Removing the grant you created revokes ChangeGuard within about a minute. See [Connected Environments](/connect/connected-environments) and [Connect your EKS fleet](/get-started/connect-your-fleet).
+
+## Edge when the evidence has to stay local
+
+Some evidence only exists on the node. Runtime threat signals and node-level benchmarks need presence; some clusters can't be reached from outside. For those, install the Edge collector — a small, non-root, read-only component — and add it to the same environment card. Fleet + Edge on one cluster is **one environment**: one identity, one judgment, one execution location. Edge supplies evidence. It never acts, and nothing about installing it changes what ChangeGuard may do. Install steps: [Install ChangeGuard Edge](/get-started/install).
+
+## The Executor acts — only with a Permit
+
+Whether you choose the Cloud Executor or a Local Executor, the model is the same: a separate identity from reading, scoped to the namespaces you chose, verified by **Verify execution access**, and inert until a [Permit](/govern/permit) for exactly one change is consumed. The Cloud Executor is preferred wherever the environment is safely reachable — nothing to install, nothing in your cluster holding a credential, and every action attributable in your own CloudTrail and EKS audit logs. The Local Executor exists for topologies or policies that require local presence.
+
+<Warning>
+  **Edge ≠ Executor. Edge ≠ permission to act.** A reachable EKS cluster needs nothing installed to be judged or to be acted on under a Permit. If you only ever install Edge, ChangeGuard can see more; it cannot do more.
+</Warning>
+
+## Which do I need?
+
+| You want | You need |
+| --- | --- |
+| Judgment on changes with live environment context | **Fleet** — connect AWS and authorize the clusters |
+| Runtime signals, node benchmarks or Argo CD / Flux state in the evidence | **Fleet + Edge** (or Edge alone where Fleet cannot reach) |
+| ChangeGuard to apply approved fixes | **Fleet + the Cloud Executor** (preferred), or a Local Executor where required |
+| Judgment with nothing connected at all | Nothing — Preflight and GitHub verdicts work without an environment; the verdict simply says live evidence was not available |

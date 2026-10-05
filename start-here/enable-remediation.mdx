@@ -1,45 +1,53 @@
 ---
-title: "9. Optional: enable remediation"
-sidebarTitle: "9. Optional: enable remediation"
-description: "Let ChangeGuard AI propose fixes when a change causes a problem — and grant, per environment, the narrow write access needed to apply them."
-icon: "wrench"
+title: "9. Optional: enable execution"
+sidebarTitle: "9. Optional: enable execution"
+description: "Let ChangeGuard AI apply approved fixes — through the Cloud Executor, with nothing installed, under a short-lived single-use Permit, in the namespaces you choose."
+icon: "ticket"
 ---
 
-Everything so far has been read-only. Remediation is the one place ChangeGuard AI can *act* in an environment, and it is built so that the watching side stays read-only no matter what: acting uses a separate identity, installed by you, with the minimum verbs, scoped to one environment.
+Everything so far has been read-only. Execution is the one place ChangeGuard AI can _act_ in an environment, and it is built so that the watching side stays read-only no matter what: acting uses a separate identity, registered per environment, with the minimum verbs, scoped to the namespaces you name — and nothing executes without a [Permit](/govern/permit).
 
-Open **Changes → Remediations**. The **Environments** panel at the top explains the model in one line: *Evidence is what ChangeGuard knows. The mode is how much authority you give it — per environment, never account-wide. The executor is whether it can act at all.*
+Open the environment in **Environments → Connected environments** and scroll to **Execution**. The panel explains the model in one line: _ChangeGuard acts only with a permit: one approved change, to one workload, valid for a few minutes, used once. Enabling execution approves nothing._
 
-<Frame caption="The environment panel: evidence (read-only) on the left, remediation authority (write, by grant) on the right.">
-  <img src="https://changeguard.ai/img/remediation-verified.jpg" alt="Remediations page showing a verified fix proposed by ChangeGuard AI and approved by a named person" />
-</Frame>
+## What happens without execution enabled
 
-## What happens without an executor
+ChangeGuard AI still detects incidents (**Changes → Incidents**: every failing workload, attributed to the change that shipped it), explains them, and proposes a fix with the exact patch. It just cannot apply anything. Many teams run this way for a while.
 
-ChangeGuard AI still detects incidents (**Changes → Incidents**: every failing workload, correlated to the change that shipped it), explains them, and proposes a fix with the exact patch. It just cannot apply anything. Many teams run this way for a while.
-
-## Granting the executor (per environment)
+## Enabling the Cloud Executor (preferred)
 
 <Steps>
-  <Step title="Get the one-time install">
-    In the environment panel, the **Executor** row offers the install for that environment. ChangeGuard AI generates `changeguard-executor.yaml`, a complete manifest that embeds a newly created credential for this environment. It is shown once. You type no internal identifiers — the environment identity is already in the file.
+  <Step title="Choose the namespaces">
+    Click **Set up Cloud Executor** and name the namespaces ChangeGuard may act in — for example `shop, payments`. `kube-*` namespaces are never granted.
   </Step>
-  <Step title="Apply it with your own credentials">
-    `kubectl apply -f changeguard-executor.yaml` — the one command in this whole path that runs in a terminal, because applying it *is* the grant. Nothing else in ChangeGuard AI can give itself write access.
+  <Step title="Create the execution role in your AWS account">
+    ChangeGuard generates an IAM role for **this environment** — `ChangeGuardExecutor-<environment-instance>` — with **no AWS permissions** and a trust policy that admits only ChangeGuard's Cloud Executor with your external ID. CloudFormation, Terraform and CLI forms are provided; nothing is typed by hand.
   </Step>
-  <Step title="Watch it announce itself">
-    Within a minute the panel shows **Executor: Ready · heartbeat … ago**. If the heartbeat goes stale, the panel says so and nothing is applied until it returns.
+  <Step title="Let the role reach this cluster, and grant the namespaces">
+    One generated EKS access entry maps the role to this environment's own Kubernetes group, and one generated RBAC file grants that group `get`, `list` and `patch` on Deployments, StatefulSets and DaemonSets in exactly the namespaces you chose. You apply both with your own credentials — applying them _is_ the grant. Nothing in ChangeGuard AI can give itself write access.
+  </Step>
+  <Step title="Verify execution access">
+    Click **Verify execution access**. Within about a minute the panel reads **Cloud Executor Ready** and lists every check: ChangeGuard's own (signing, the execution role, the cluster identity, the Executor reachable) and the Executor's (assume the role, authenticate to exactly this cluster, hold the required verbs in your namespaces, hold **none** of the forbidden ones, verify a signed probe Permit). No workload is read or changed by this check.
   </Step>
 </Steps>
 
-## What the executor may do
+<Frame caption="Execution verified: the Cloud Executor can act in the chosen namespaces — and is denied delete, create, exec, secrets, impersonation, RBAC writes and cluster-admin.">
+  <img
+    src="/images/execution-verify.jpg"
+    alt="The Execution section after verification: Cloud Executor Ready, the namespaces it may act in, last verified, and the passed checks"
+  />
+</Frame>
 
-- Its **own service account** — the collector that gathers evidence keeps zero write verbs.
-- Only `get`, `list` and `patch` on the workloads it is scoped to. No `cluster-admin`, no wildcards, no secrets, no `delete`, no `create`, no `pods/exec`.
-- It applies only fixes ChangeGuard AI proposed *and* that were approved by a person (Advise) or allowed by your policy (Auto) — [step 10](/start-here/advise-or-auto).
-- Every applied fix is **verified** against real workload health before it is called successful, and every record keeps its approver.
+Prefer an Executor inside your cluster? **Install Local Executor** generates a complete, environment-specific manifest instead; apply it and verify the same way. See [Local Executor](/execute/local-executor). Installing ChangeGuard Edge is not required for either.
 
-Removing the executor's service account revokes the grant immediately; the evidence side is unaffected.
+## What the Executor may do
 
-Deeper: [Policy-governed remediation](/autonomy/overview) · [RBAC boundaries](/autonomy/rbac-boundaries) · [Verification](/autonomy/verification).
+- Act **only with a consumed Permit** — one approved change, one workload, minutes, once. Enabling execution approves nothing.
+- Only `get`, `list` and `patch` on the workloads in the namespaces you chose. No cluster-admin, no wildcards, no secrets, no `delete`, no `create`, no `pods/exec`.
+- Apply only fixes ChangeGuard AI proposed _and_ that were approved by a person (Advise) or allowed by your policy (Auto) — [step 10](/start-here/advise-or-auto).
+- Every applied fix is **verified** against fresh evidence before it is called successful, and every record keeps its approver, its policy version and its Permit.
+
+Deleting the access entry, the RoleBinding or the role revokes the grant immediately; the evidence side is unaffected. You can also revoke any live Permit, or disable execution for the environment, from the same panel.
+
+Deeper: [ChangeGuard Permit](/govern/permit) · [Cloud Executor](/execute/cloud-executor) · [Execution authority and least privilege](/autonomy/rbac-boundaries) · [Verification](/autonomy/verification).
 
 Next (optional): [10. Choose Advise or Auto](/start-here/advise-or-auto).

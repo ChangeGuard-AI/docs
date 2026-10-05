@@ -1,0 +1,44 @@
+---
+title: "Tenant and environment isolation"
+sidebarTitle: "Tenant & environment isolation"
+description: "Tenants are isolated at the database. Environments are isolated at the identity: the execution role, the Kubernetes group and the RBAC names all carry the environment, so one environment's authority can never act on another — even on the same cluster or in the same AWS account."
+icon: "layer-group"
+---
+
+## Tenant isolation
+
+Every tenant's data is isolated inside PostgreSQL with row-level security policies the database evaluates independently of the application; the application's role cannot bypass them, and the audit and Permit event tables are append-only at the grant level. Every API request is additionally scoped to a tenant at the middleware layer before any handler runs. Requests without a valid tenant context are rejected. A credential from one tenant cannot read, infer or act on another tenant's environments, changes, Permits or outcomes — and the customer-security gate exercises exactly that refusal through the real UI on every build.
+
+## Environment isolation
+
+Reading and acting are separate identities, and acting is identified **per environment**. Every execution object carries the environment's instance — `<environment-slug>-<10 hex of a hash of tenant and environment>`:
+
+| Object | Name |
+| --- | --- |
+| Cloud Executor role (your account) | `ChangeGuardExecutor-<instance>` — no AWS permissions |
+| EKS access entry group | `changeguard:executor:<instance>` |
+| ClusterRole (defines the verbs) | `changeguard-executor-<instance>` — `get`/`list`/`patch` on workloads only |
+| RoleBindings (grant the verbs) | same name, one per namespace you chose |
+| Local Executor | `changeguard-local-executor-<instance>`: its namespace, ServiceAccount, Secret and Deployment |
+
+Because the names depend only on (tenant, environment), two environments on one physical cluster — even two tenants in one AWS account — never share a role ARN, an access entry or a write-authority group. The invariant enforced at Permit issuance and again at consume:
+
+> Permit environment = AWS execution identity environment = Kubernetes execution identity environment
+
+- A role bound to another environment, even in the same account on the same cluster, is refused (`target_identity_changed`) and the Permit revoked.
+- A role in another tenant or another account with a matching name is refused; binding is server-side, by registration on an STS-verified connection, never by name.
+- A Permit signs the cluster's identity, endpoint and certificate authority; a swapped endpoint never reaches AWS.
+- A Local Executor install for one environment never touches another environment's objects, and `kubectl delete -f` of its manifest removes only its own.
+- An execution role not bound to an environment authorizes nothing and fails closed until the environment registers its own.
+
+## Environment-scoped AWS identity
+
+One execution role per environment, in your account, with no AWS permissions. Its trust policy admits only ChangeGuard's Cloud Executor principal with a ChangeGuard-issued external ID that is never caller-chosen. The Cloud Executor assumes it for 15 minutes, in a session named after the Permit, and mints a 60-second EKS token bound to exactly that cluster. The read-only Fleet role is a different role, limited to EKS discovery, used with sessions minted per operation. There are no long-lived AWS access keys anywhere in the model.
+
+## Environment-scoped Kubernetes identity
+
+The access entry maps the execution role to the environment's group with no access policy attached; authority comes only from the RoleBindings you applied in the namespaces you chose. `kube-*` namespaces are never granted. **Verify execution access** proves, per environment, that the identity holds exactly the required verbs in exactly those namespaces and is denied everything else — delete, create, exec, Secrets, impersonation, RBAC writes, nodes, wildcards, cluster-admin.
+
+## Environments on shared clusters
+
+ChangeGuard's own acceptance cluster runs several environments and components side by side: two tenants' evidence collectors, a Local Executor and the Cloud Executor's per-environment RBAC. The per-environment identity suite — two environments and two tenants on one cluster stay isolated; an unbound role fails closed; a migration maps only unambiguous roles — is part of the blocking build. See [Testing and assurance](/security/testing-and-assurance).

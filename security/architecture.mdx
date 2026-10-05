@@ -5,39 +5,53 @@ description: "How ChangeGuard AI protects your clusters and data"
 
 ## Overview
 
-ChangeGuard AI is designed with a zero-trust, least-privilege architecture, and evidence reaches it two ways:
+ChangeGuard AI is designed with a zero-trust, least-privilege architecture built on one rule: **reading never implies writing.** Evidence reaches it two ways, both read-only; acting on an environment is a third, separately identified path that exists only where you enable it and only under a short-lived [Permit](/govern/permit) — see [Execution and the Permit](#execution-and-the-permit) below.
+
+Evidence:
 
 - **ChangeGuard Fleet (default).** The Fleet service reads your Kubernetes API centrally over access you authorize. Every AWS session is minted per operation via STS AssumeRole with a ChangeGuard-issued external ID and expires in 15 minutes; Kubernetes authentication uses a short-lived bearer minted per collection cycle and held only in memory. The Kubernetes grant is explicit and read-only — `get`/`list` only, no `watch`, no writes, no wildcards, and **no Secret access is requested**. Removing the access entry or role binding you created revokes ChangeGuard AI within about a minute. Nothing runs in your cluster.
-- **ChangeGuard Edge (optional).** For node-local evidence, a read-only agent runs inside your cluster and pushes encrypted metadata outbound. There is never any inbound access to your infrastructure. The rest of this page describes the Edge data path and the shared control-plane protections.
+- **ChangeGuard Edge (optional).** For node-local evidence, a read-only collector runs inside your cluster and pushes encrypted metadata outbound. Evidence collection never opens an inbound path into your infrastructure. The next sections describe the Edge data path and the shared control-plane protections; [Execution and the Permit](#execution-and-the-permit) covers the one path that can act.
 
 ## Architecture
 
-<Frame caption="Outbound-only by design: a read-only agent and the five scanners in your cluster push findings out over TLS 1.2+ to the ChangeGuard AI platform on AWS. No inbound connection is ever opened to your infrastructure.">
+<Frame caption="The Edge evidence path, outbound-only by design: a read-only collector and the optional scanners in your cluster push findings out over TLS 1.2+ to the ChangeGuard AI platform on AWS. Evidence collection opens no inbound connection to your infrastructure.">
   ![ChangeGuard AI security architecture: a read-only, non-root agent and the KubeBench, Grype, Falco, Pluto, and Syft scanners in your Kubernetes cluster connect outbound over TLS to AWS WAF, load balancing, the backend on Amazon EKS, Amazon RDS (AES-256 at rest), and Amazon Bedrock for AI analysis.](https://install.changeguard.ai/assets/architecture.svg)
 </Frame>
 
 ## Data Flow
 
-<Frame caption="The agent connects outbound only — telemetry is encrypted in transit (TLS 1.2+) and at rest (AES-256), with no inbound path into your cluster.">
+<Frame caption="The Edge collector connects outbound only — telemetry is encrypted in transit (TLS 1.2+) and at rest (AES-256), with no inbound path into your cluster for evidence.">
   ![ChangeGuard AI data flow: the in-cluster agent pushes snapshots outbound over HTTPS (TLS 1.2\+, gzip, API key) through AWS WAF and the load balancer to the backend on Amazon EKS, which writes to Amazon RDS PostgreSQL with sslmode=require and AES-256 encryption at rest.](https://install.changeguard.ai/assets/dataflow.svg)
 </Frame>
 
 Every component in this chain enforces encryption:
 
-- **Agent → Backend:** TLS 1.2\+ enforced in the agent's HTTP transport configuration. The agent will not downgrade to plain HTTP.
+- **Collector → Backend:** TLS 1.2+ enforced in the collector's HTTP transport configuration. It will not downgrade to plain HTTP.
 - **ALB:** AWS-managed TLS certificate via ACM. HTTP requests on port 80 receive a 301 redirect to HTTPS.
 - **Backend → Database:** PostgreSQL connections use `sslmode=require`. All queries are encrypted in transit.
 - **Database at rest:** AES-256 encryption via AWS-managed keys on the RDS instance.
 
 ## Network Requirements
 
-The agent needs outbound HTTPS access to a single endpoint:
+The Edge collector needs outbound HTTPS access to a single endpoint:
 
 ```text
 api.changeguard.ai:443
 ```
 
-No inbound connectivity is required. No LoadBalancer, Ingress, or NodePort is created. The agent is compatible with private clusters, air-gapped environments with egress proxies, and clusters behind corporate firewalls — as long as outbound HTTPS to our API is permitted.
+No inbound connectivity is required for evidence. No LoadBalancer, Ingress, or NodePort is created. The collector is compatible with private clusters and clusters behind corporate firewalls — as long as direct outbound HTTPS to our API is permitted (there is no HTTP-proxy support today; see [Known limitations](/concepts/limitations-and-roadmap)). Fleet reverses the direction entirely: ChangeGuard reads your EKS API endpoint over access you authorized, so a Fleet-only environment needs no egress to ChangeGuard at all. The Cloud Executor, when enabled, likewise reaches your EKS API endpoint from ChangeGuard's estate.
+
+## Execution and the Permit
+
+Acting on an environment is the only path that is not read-only, and it is governed end to end:
+
+- **Human-controlled by default.** Every environment starts in **Advise**: a signed-in operator must approve each change. **Auto** is opt-in and bounded by an explicit per-environment policy; outside the policy it falls back to Advise.
+- **A separate, environment-scoped identity.** The Cloud Executor assumes a role in your account — `ChangeGuardExecutor-<environment-instance>` — that carries **no AWS permissions**, admits only ChangeGuard's Cloud Executor with a ChangeGuard-issued external ID, and is assumed for 15 minutes with the Permit id as the session name. An EKS access entry maps it to a per-environment Kubernetes group that holds only `get`/`list`/`patch` on workloads in the namespaces you chose. **No long-lived AWS access keys exist anywhere in the model.**
+- **No cluster-admin, no Secrets.** The Executor cannot delete, create, exec, read Secrets, write RBAC, impersonate or use wildcards — and **Verify execution access** proves those denials before the path is usable.
+- **KMS-backed Permit signing, single use.** Authority reaches the Executor only as a Permit signed by a key in AWS KMS, bound to one action, one target, one environment, one approval or policy and a window of minutes, consumed exactly once before any write.
+- **Observation required for VERIFIED.** An applied action is never called successful until fresh evidence from the environment shows the permitted state, healthy.
+
+Details: [ChangeGuard Permit](/govern/permit) · [Permit security](/security/permit-security) · [Tenant and environment isolation](/security/environment-isolation) · [Execution authority and least privilege](/autonomy/rbac-boundaries) · [Testing and assurance](/security/testing-and-assurance).
 
 ## Infrastructure
 

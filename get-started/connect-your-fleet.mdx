@@ -11,7 +11,7 @@ ChangeGuard Fleet collects Kubernetes API state **centrally**, over access you a
 
 ## 1. Connect your AWS account
 
-In **Fleet → Connect an environment**, register your account and create one IAM role from the trust policy shown. Two properties make this safe:
+In **Environments → AWS Account Center**, choose **Add AWS account**: name the account and create one IAM role from the trust policy shown (or paste the ARN of a role you already created). Two properties make this safe:
 
 - The role's only permissions are `eks:ListClusters` and `eks:DescribeCluster` — discovery, nothing else.
 - Its trust policy requires ChangeGuard AI's principal **and** a unique external ID issued by ChangeGuard AI, so no one else can ever have your role assumed — and ChangeGuard AI never accepts an external ID from a caller.
@@ -32,7 +32,7 @@ The grant is read-only by construction: `get`/`list` only, no `watch`, no write 
 
 ## 5. Verify
 
-Each target shows **connected** under **Access &amp; Trust** once its first evidence arrives — typically within a minute of authorization.
+Each environment reads **Ready** in **Environments → Connected environments** once its first evidence arrives — typically within a minute of authorization — with its evidence source (Fleet) and judgment readiness shown separately. The AWS connection itself reads **Connected** in [AWS Account Center](/connect/aws-account-center), where **Verify connection** re-checks the role, the regions and discovery at any time. (The **Fleet → Access & Trust** page still lists the underlying identities.)
 
 ## 6. Your first live-evidence judgment
 
@@ -56,5 +56,9 @@ ChangeGuard AI does not treat stale environment state as current evidence. If it
 Observation is managed centrally: discover the fleet, select the clusters, authorize them through the generated bulk workflow, and ChangeGuard AI handles ongoing collection — with no ChangeGuard installation in any cluster, and a broken or unreachable cluster never stopping collection from the healthy ones.
 
 <Info>
-  **Need node-local evidence?** Runtime signals (Falco) and node benchmarks (kube-bench) require local presence, and some environments can't be reached centrally. That's what the optional **ChangeGuard Edge** in-cluster install is for — see [ChangeGuard Edge](/get-started/install). Fleet by default; Edge when the evidence has to stay local.
+  **Need node-local evidence?** Runtime signals (Falco) and node benchmarks (kube-bench) require local presence, and some environments can't be reached centrally. That's what the optional **ChangeGuard Edge** in-cluster install is for — see [ChangeGuard Edge](/get-started/install). Fleet by default; Edge when the evidence has to stay local. Neither is required for execution.
 </Info>
+
+## Reading is not acting
+
+Everything Fleet does is read-only, and nothing here grants write access. If you want ChangeGuard AI to _apply_ an approved fix, enable execution per environment: the **Cloud Executor** uses a separate role in your account with no AWS permissions, a separate Kubernetes group with `get`/`list`/`patch` in the namespaces you choose, and acts only with a short-lived, single-use [Permit](/govern/permit). See [Enable execution](/start-here/enable-remediation) and [Cloud Executor](/execute/cloud-executor).

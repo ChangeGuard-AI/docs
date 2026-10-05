@@ -10,6 +10,8 @@ Every significant action in ChangeGuard AI is recorded in an immutable audit tra
 Recorded actions include:
 
 - Pre-flight verdict decisions (SHIP, HOLD, BLOCK)
+- Approvals and policy authorizations of a change, with the approver or the policy id and version
+- Permit issuance, consumption, expiry and revocation (with its reason), and every execution attempt — correlated by Permit id and attempt id, never by recency
 - Policy evaluations and scoring events
 - CI/CD validation requests and results
 - Suppression changes (muted/unmuted risks)
@@ -32,7 +34,7 @@ Each audit entry includes:
 
 ## Audit Export
 
-Export the full audit trail as CSV from **Intelligence → Audit Trail → Export**.
+Export the full audit trail as CSV or JSON from the **Audit trail** view (open it from the command palette, or from an environment's page) with **Export CSV** / **Export JSON**, or from `GET /api/audit/export`.
 
 The CSV includes all fields above, plus GitHub/GitLab context (PR number, approval status, CI pass/fail, branch, commit SHA) when available. Source IP is included in every row for incident correlation.
 
@@ -73,20 +75,20 @@ ChangeGuard AI logs security-relevant events for monitoring:
 
 These logs are available via Kubernetes log aggregation on the backend deployment.
 
-## SOC 2 Readiness
+## Certifications and controls
 
-ChangeGuard AI implements controls aligned with SOC 2 Trust Service Criteria:
+ChangeGuard AI does **not** currently hold SOC 2, ISO 27001, FedRAMP or any other formal certification, and does not claim one. What it does have is a set of implemented, continuously tested controls — described below and proven as described in [Testing and assurance](/security/testing-and-assurance) — organized here by the categories security reviewers usually ask about:
 
 | Category | Controls |
 | --- | --- |
-| **Security** | TLS everywhere, bcrypt hashing, RBAC, rate limiting, WAF, CORS, CSP, HSTS |
+| **Security** | TLS everywhere, bcrypt hashing, RBAC, rate limiting, WAF, CORS, CSP, HSTS; environment-scoped execution identity with no long-lived AWS keys; KMS-signed, single-use Permits |
 | **Availability** | AWS EKS with multi-AZ, RDS with automated backups, health monitoring |
-| **Confidentiality** | AES-256 at rest, tenant isolation, no secret collection, token masking |
-| **Processing Integrity** | Audit trail on all decisions, score history persistence, deterministic scoring |
+| **Confidentiality** | AES-256 at rest, tenant isolation enforced in the database, no secret collection, token masking |
+| **Processing Integrity** | Append-only audit trail on every decision and every Permit event, deterministic scoring, observation required for VERIFIED |
 | **Privacy** | Data minimization, no PII collection beyond login email, cascading deletion |
 
 <Info>
-  SOC 2 Type II preparation is underway, with controls already implemented across all five Trust Service Criteria. Contact [security@changeguard.ai](mailto:security@changeguard.ai) if your organization requires a formal attestation, the current pre-audit security questionnaire, or has specific compliance questions.
+  If your organization requires a formal attestation, a security questionnaire, or has specific compliance questions, contact [security@changeguard.ai](mailto:security@changeguard.ai) — you will get an exact answer about what exists today.
 </Info>
 
 ## Responsible Disclosure

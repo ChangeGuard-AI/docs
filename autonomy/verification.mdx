@@ -1,31 +1,36 @@
 ---
 title: "Verification"
-description: "ChangeGuard AI never claims success it hasn't observed - every applied fix is verified against real workload health"
+sidebarTitle: "Verification"
+description: "ChangeGuard never claims success it hasn't observed. VERIFIED requires fresh evidence from the environment showing the permitted state, healthy — attributed to the change by its Permit and attempt, never by recency."
+icon: "clipboard-check"
 ---
 
-Applying a fix is not the same as fixing the problem. ChangeGuard AI treats every applied remediation as an open question until the workload itself answers it: after the executor applies a fix, the remediation enters a **verification window** and the platform watches actual workload health before deciding anything.
+Applying a fix is not the same as fixing the problem. ChangeGuard treats every applied action as an open question until the environment itself answers it: after the Executor applies a fix under its [Permit](/govern/permit), the change enters a **verification window**, and the platform watches actual workload health before concluding anything.
 
 ## How a fix is verified
 
-1. The executor applies the validated patch and reports `applied`.
-2. The controller's verification sweep watches the target workload's live health - restarts, readiness, and the original symptom - using the same cluster telemetry that detected the incident.
-3. **If the workload becomes healthy**, the remediation is marked `verified` and the incident is resolved with explicit attribution: the incident record says which remediation fixed it, who approved that remediation, and when verification confirmed it.
-4. **If the workload is still unhealthy after 20 minutes**, the remediation is marked `failed` with a `verify_failed` audit event - and, for manifest fixes, exactly one [compensating action](/autonomy/compensating-actions) is triggered.
+1. The Executor consumes the Permit, records the pre-state, applies the signed patch, and reports the result under the **Permit id and attempt id**. The change reads **Action applied**.
+2. ChangeGuard waits for **fresh evidence** of the same environment — a new observation written at least **90 seconds** after the action was applied, from the same collection that detected the incident (Fleet, Edge or both).
+3. **VERIFIED** only when that observation shows the permitted state: the workload is found, the patched values are present, every replica is updated and available, and the pods are healthy. The incident is resolved with explicit attribution — which change fixed it, who or what authorized it, which Permit governed it, and when verification confirmed it.
+4. **Still unhealthy after 20 minutes** → the change is marked `failed` with a `verify_failed` audit event, and for manifest fixes exactly one [compensating action](/autonomy/compensating-actions) is proposed — under its own authority and its own Permit.
+5. **No report at all** → an attempt that does not report within 15 minutes is recorded `unreported`, the change `failed`, and a human is escalated. A late report cannot rewrite it.
 
-There is no third outcome. A fix ends `verified` or it ends `failed`; it cannot linger as "probably fine."
+There is no fourth outcome. A fix ends `verified`, it ends `failed`, or it is still waiting with the evidence absence stated — it never lingers as "probably fine", and the absence of an observation is never counted as success.
+
+## Attribution by identity, never by recency
+
+An outcome is attached to a change by the Permit and attempt it names. If two changes touch the same workload, or an operator intervenes by hand, the observation is not assigned to whatever happened most recently; it is matched to the attempt that carries the Permit. The same rule applies to CI outcomes on the change record: _attached to this change by the verdict it named, not by recency_.
 
 ## Verification applies to rollbacks too
 
-A rollback is itself a remediation, and it gets the same treatment: after the executor restores the pre-remediation state, the sweep must confirm the restore. A confirmed rollback moves the original remediation to `rolled_back` and writes a `rollback_verified` audit event; a rollback that cannot be confirmed within its own 20-minute window is marked `failed` once, with a `rollback_failed` event. Either way the incident is **escalated** - a verified rollback restores your cluster, but it does not fix the underlying problem, so the loop always ends with a human in it.
+A rollback is itself a change with its own Permit, and it gets the same treatment: after the Executor restores the pre-remediation state, a fresh observation must confirm the restore. A confirmed rollback moves the original change to `rolled_back` with a `rollback_verified` audit event; a rollback that cannot be confirmed within its own window is marked `failed` once, with a `rollback_failed` event. Either way the incident is **escalated** — a verified rollback restores your environment, but it does not fix the underlying problem, so the loop always ends with a human in it.
 
 ## Why this matters
 
-Verification is what turns "an AI applied a patch" into a safe control loop:
-
-- **Resolution is earned, not assumed.** Incidents are only closed by observed recovery (or by a human). ChangeGuard AI never marks something fixed because a patch applied cleanly.
-- **Failure has a bounded, predictable consequence.** One verification failure produces one rollback and one escalation - never a retry storm.
-- **Attribution survives.** Months later, the incident record still shows what was wrong, what was changed, whether it worked, and on whose authority - see [Audit trail](/autonomy/audit-trail).
+- **Resolution is earned, not assumed.** Incidents are only closed by observed recovery, or by a human. ChangeGuard never marks something fixed because a patch applied cleanly.
+- **Failure has a bounded, predictable consequence.** One verification failure produces at most one compensating action and one escalation — never a retry storm.
+- **Attribution survives.** Months later the record still shows what was wrong, what was changed, which Permit authorized it, whether it worked, and on whose authority — see [Audit trail](/autonomy/audit-trail).
 
 <Note>
-  The 20-minute window is deliberately conservative: it is long enough for rollout completion, probe stabilization, and a crash-looping container to reveal itself. Verification resumes automatically after a controller restart - convergence was validated to occur within about two minutes of the control plane coming back. See [Safety guarantees](/autonomy/safety-guarantees).
+  The 90-second floor and the 20-minute window are deliberately conservative: long enough for a rollout to complete, probes to stabilize, and a crash-looping container to reveal itself. Verification resumes automatically after a control-plane restart; in-flight windows are not lost.
 </Note>

@@ -48,12 +48,12 @@ flowchart TB
 ```
 
 <Info>
-  There is **no inbound path** into your cluster. The control plane never connects _to_ you — the collector always initiates the connection _out_.
+  **Evidence never needs an inbound path.** The Edge collector always initiates the connection _out_; Fleet reads the Kubernetes API over access you authorized. The one deliberate exception is **execution**: when you enable the Cloud Executor, ChangeGuard acts on your cluster through a separate, per-environment identity — and only with a consumed Permit. See [The execution path](#the-execution-path) below.
 </Info>
 
 ## Communication paths
 
-Exactly three network relationships exist, and all cluster-originated traffic is outbound HTTPS on 443.
+For evidence, exactly three network relationships exist, and all cluster-originated traffic is outbound HTTPS on 443. Execution, when you enable it, adds a fourth: the Executor's authenticated calls to your Kubernetes API, described in [The execution path](#the-execution-path).
 
 ```mermaid
 flowchart LR
@@ -125,6 +125,25 @@ flowchart TB
   The deterministic **CSC Score** and the **AI reasoning** capabilities are distinct. Scoring is deterministic and generally available; the reasoning layers (Engineering Advisor, Engineering Opinion, and related) are **Early Access** and off by default. See [Product concepts](/concepts/overview).
 </Note>
 
+## The execution path
+
+Evidence is read-only by construction. **Execution** — applying an approved fix — is a separate path with a separate identity, enabled per environment and inert until a [Permit](/govern/permit) exists.
+
+```mermaid
+flowchart LR
+  cp["ChangeGuard control plane<br/>judgment · authority · Permit (KMS-signed)"] -->|"work, Permit"| ce["Cloud Executor<br/>(ChangeGuard estate)"]
+  ce -->|"consume Permit, once"| cp
+  ce -->|"AssumeRole · 15 min<br/>ChangeGuardExecutor-&lt;env&gt; · no AWS permissions"| role["Your AWS account"]
+  role -->|"EKS access entry → changeguard:executor:&lt;env&gt;"| k8s["Your EKS API<br/>get / list / patch · chosen namespaces only"]
+  k8s -.->|"fresh evidence (Fleet / Edge)"| cp
+```
+
+- The **Cloud Executor** runs in ChangeGuard's estate. For each environment you enable, it assumes a role in _your_ AWS account — `ChangeGuardExecutor-<environment-instance>`, with **no AWS permissions** and a trust policy admitting only ChangeGuard's Cloud Executor with your external ID — and authenticates to exactly that cluster through an EKS access entry you created, as a Kubernetes group that holds `get`, `list` and `patch` on workloads in the namespaces you chose. Nothing is installed.
+- The **Local Executor** is the same component running inside your cluster, for topologies or policies that require local presence, under a per-environment ServiceAccount with the same narrow grant.
+- Either Executor acts only on a Permit — signed in AWS KMS, bound to one action, one target, one environment, one approval or policy and a window of minutes, used once — and ChangeGuard verifies the outcome from fresh evidence afterwards. **VERIFIED** is never assumed.
+
+Nothing about Fleet or Edge grants write access, and the Executor's identity cannot read Secrets, exec into pods, delete or create resources, or change RBAC. See [Cloud Executor](/execute/cloud-executor), [Local Executor](/execute/local-executor) and [Execution authority and least privilege](/autonomy/rbac-boundaries).
+
 ## Where data lives
 
 | Data | Location | Notes |
@@ -146,7 +165,7 @@ flowchart TB
   </Card>
 
   <Card title="Read-only" icon="eye">
-    `get` / `list` / `watch` only — no writes to your workloads unless you opt into remediation.
+    `get` / `list` / `watch` only. Writes happen only through a separately enabled Executor identity, only with a Permit — see [The execution path](#the-execution-path).
   </Card>
 </CardGroup>
 
