@@ -105,7 +105,7 @@ The optional scanners (CIS via KubeBench, CVE via Grype, deprecated-APIs via Plu
 | Collector `CrashLoopBackOff` | `kubectl describe pod` / `logs` in `changeguard-agent` | Confirm the Secret exists and the key is valid. |
 | Repeated `401` in logs | API key invalid or revoked | Rotate the key (above). |
 | Push timeouts | Egress to `api.changeguard.ai:443` | Confirm direct HTTPS egress and DNS. **No proxy support.** |
-| Cluster stale in Fleet | Collector `Ready`? Logs pushing? | Restart the collector; give it a few minutes. |
+| Environment reads **Evidence stale** or **Edge disconnected** in Connected environments | Collector `Ready`? Logs pushing? | Restart the collector; give it a few minutes. |
 | Operator won't reconcile | CRD present? RBAC applied? | Re-run the Helm upgrade to reconcile. |
 | A feature seems missing | Version skew or a gated/Early-Access flag | Confirm chart version; confirm the capability is GA on your plan. |
 
