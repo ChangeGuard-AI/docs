@@ -116,6 +116,7 @@
             "pages": [
               "security/architecture",
               "security/permit-security",
+              "security/environment-isolation",
               "security/agent-security",
               "security/data-handling",
               "security/authentication",
