@@ -40,6 +40,13 @@ Expectations you can plan around, in one place, using the same claim classes as 
 | Multiplayer incident workspace | **Early Access** | Flag `WORKSPACE_ENABLED`. |
 | Code Graph (repo knowledge graphs for investigation) | **Early Access** | Ships in the Edge chart, off by default (`codeGraph.enabled`). |
 
+## Buying and AWS validation
+
+| Capability | Status | Notes |
+| --- | --- | --- |
+| AWS Marketplace listing | **Live** | Public SaaS listing. The 14-day free trial covers up to 10 EKS environments and does not become a paid subscription; execution stays off unless you set it up. [View the listing](https://aws.amazon.com/marketplace/pp/prodview-yfod2c6qxcfpk) |
+| AWS Foundational Technical Review (FTR) | **Approved** | Approved by AWS on October 14, 2026, valid until October 12, 2028. It requires a Well-Architected review with no high risks in security, reliability or operational excellence. An AWS review, not a certification. |
+
 ## Roadmap and vision
 
 | Capability | Status | Notes |
@@ -47,7 +54,6 @@ Expectations you can plan around, in one place, using the same claim classes as 
 | Realms — a tenant split into production and test with separate authority | **Roadmap** | Designed; not built, not shipping. |
 | SSO / SAML for app sign-in | **Roadmap** | Not available as of this release. |
 | Self-hosted inference for judgment and reasoning | **Roadmap** | Judgment and reasoning run on Amazon Bedrock in the control plane today. (An optional Edge-side NVIDIA NIM setting exists for on-cluster scan analysis only — see [AI analysis](/ai/overview).) |
-| AWS Marketplace listing | **Roadmap** | Not live. |
 | Outcome-informed prediction | **Future** | Verdicts and outcomes are recorded so prediction can be measured against reality; no model, threshold, policy or prompt is modified by an outcome today. ChangeGuard does not "learn from every change". |
 | Governed autonomous change beyond Kubernetes (Terraform, IAM, cloud resources, networking, databases) | **Vision** | The same judgment, Permit and verification wherever a production change originates. Not shipping. |
 
