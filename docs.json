@@ -120,7 +120,8 @@
               "integrations/overview",
               "platform/argocd",
               "platform/flux",
-              "platform/notifications"
+              "platform/notifications",
+              "integrations/eks-mcp"
             ]
           },
           {
