@@ -30,12 +30,13 @@ curl -sL https://install.changeguard.ai/cli | bash
 changeguard login --api-key cg_...        # or export CHANGEGUARD_API_KEY=cg_...
 ```
 
-Then copy the companion into the project the agent works in. It ships in the ChangeGuard AI repository under `ci-templates/eks-mcp-companion` and is a directory of files, not a service:
+Then install the companion into the project the agent works in. It is a directory of files under `.changeguard/eks-mcp`, not a service:
 
 ```bash
-mkdir -p .changeguard && cp -r ci-templates/eks-mcp-companion .changeguard/eks-mcp
-chmod +x .changeguard/eks-mcp/changeguard-eks-mcp-gate.sh
+curl -sL https://install.changeguard.ai/eks-mcp/install.sh | bash
 ```
+
+The installer unpacks the gate script, the canonical instruction file and the per-agent wrappers. Nothing runs in the background, and nothing is written outside that directory.
 
 ## Configure the target environment
 
