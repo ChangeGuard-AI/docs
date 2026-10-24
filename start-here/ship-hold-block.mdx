@@ -13,6 +13,12 @@ Three answers. Each comes with its reasons and with the list of evidence the jud
 | **HOLD** | *ChangeGuard advises reviewing this change first.* | Something is missing or worth a look — most often evidence it did not have: no environment named, the environment has not reported recently (stale), or the proposed artifact has not been independently evaluated. |
 | **BLOCK** | *ChangeGuard advises against this change.* | Judged against live state it would fail or break something: it exceeds a namespace's resource quota, requests more than its own limits allow, contradicts what is actually running, or carries critical findings. |
 
+Three real verdicts on a live Amazon EKS environment, in three minutes:
+
+<Frame caption="Recorded on Northwind, our live test environment (3:01): a release held for missing evidence, a scale-up blocked over the namespace memory quota, a health-check change that ships and then fails in production, and the incident tied back to the change that caused it.">
+  <iframe className="w-full aspect-video rounded-xl" src="https://www.youtube-nocookie.com/embed/yeujUMSQMGI?rel=0" title="Should this change happen? How ChangeGuard AI judges a production change on Amazon EKS" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />
+</Frame>
+
 ## Missing evidence is never safe
 
 A verdict is only as good as what it could see, so every judgment lists its evidence classes and their status. A proposed artifact that has not been independently evaluated is **HOLD, never SHIP** — ChangeGuard AI will not say "ship" on evidence it does not have. When an environment has not reported recently, the judgment says so and is made on the change alone. The **Evidence** card's header — *absent evidence is never counted as safe* — is the rule, and the record keeps the evidence list forever.
