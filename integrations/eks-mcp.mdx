@@ -7,6 +7,10 @@ Amazon EKS MCP gives agents operational access to EKS. ChangeGuard AI adds the d
 
 AI can make the change. ChangeGuard AI decides whether it should.
 
+<Frame caption="A real run of the companion against Northwind, our live test environment (2:53): a change judged SHIP is admitted, a scale-up judged BLOCK is denied, an environment never observed is HOLD, and a write with no judgment at all is denied.">
+  <iframe className="w-full aspect-video rounded-xl" src="https://www.youtube-nocookie.com/embed/U03TzBU0xPA?rel=0" title="AI can make the change. ChangeGuard AI decides whether it should. The Amazon EKS MCP companion" loading="lazy" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen />
+</Frame>
+
 ## What Amazon EKS MCP does
 
 The [Amazon EKS MCP Server](https://docs.aws.amazon.com/eks/latest/userguide/eks-mcp-tools.html) is a Model Context Protocol server from AWS that lets AI coding and operations agents (Kiro, Claude Code, Cursor and any other MCP client) work with EKS: discover clusters, read Kubernetes resources, logs and events, search the EKS documentation, and, with full access, change things. Two of its tools mutate Kubernetes resources: `apply_yaml` applies manifests, and `manage_k8s_resource` creates, replaces, patches or deletes a resource. Access is governed by IAM: `eks-mcp:CallReadOnlyTool` for reads and `eks-mcp:CallPrivilegedTool` for writes, plus the cluster's access entry and Kubernetes RBAC for what the principal may touch.
