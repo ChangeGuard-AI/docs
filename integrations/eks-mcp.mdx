@@ -1,0 +1,100 @@
+---
+title: "Using ChangeGuard AI with Amazon EKS MCP"
+description: "Amazon EKS MCP gives agents operational access to EKS. ChangeGuard AI adds the decision layer before a privileged change executes."
+---
+
+Amazon EKS MCP gives agents operational access to EKS. ChangeGuard AI adds the decision layer before privileged change execution. This page is the companion workflow that puts the two together: before an agent calls a privileged EKS MCP tool, it asks ChangeGuard AI whether the exact change should happen in that environment, and it proceeds only on SHIP.
+
+AI can make the change. ChangeGuard AI decides whether it should.
+
+## What Amazon EKS MCP does
+
+The [Amazon EKS MCP Server](https://docs.aws.amazon.com/eks/latest/userguide/eks-mcp-tools.html) is a Model Context Protocol server from AWS that lets AI coding and operations agents (Kiro, Claude Code, Cursor and any other MCP client) work with EKS: discover clusters, read Kubernetes resources, logs and events, search the EKS documentation, and, with full access, change things. Two of its tools mutate Kubernetes resources: `apply_yaml` applies manifests, and `manage_k8s_resource` creates, replaces, patches or deletes a resource. Access is governed by IAM: `eks-mcp:CallReadOnlyTool` for reads and `eks-mcp:CallPrivilegedTool` for writes, plus the cluster's access entry and Kubernetes RBAC for what the principal may touch.
+
+## What ChangeGuard AI adds
+
+IAM tells the agent what it may access. Amazon EKS MCP gives the agent tools. ChangeGuard AI evaluates whether the exact proposed change should happen in the target environment. Those are three different questions. Permission to write a Deployment says nothing about whether this Deployment, with these resources, into this namespace, against what is running there right now, is a change that should ship. ChangeGuard AI judges the proposed change against live evidence from the environment and returns SHIP, HOLD or BLOCK with the reasons, through the same judgment surface your CI uses: `POST /api/cicd/preflight`, the `changeguard` CLI and `POST /api/cicd/outcome`.
+
+The companion makes that judgment a mechanical step in the agent's workflow: a gate script that judges the exact content, a hook that denies the privileged write unless a fresh SHIP exists for exactly that content and environment, and an instruction file the agent follows. It fails closed.
+
+<Warning>
+  The companion is a workflow guardrail for agents, not a security boundary. Your IAM principal, the EKS access entry and Kubernetes RBAC remain the hard limits on what an agent can do. A client-side hook can be removed by whoever controls the client.
+</Warning>
+
+## Install and use the CLI
+
+The agent's machine needs the `changeguard` CLI, authenticated with an API key of scope `cicd` (**Settings → API Keys**). The companion adds no credential of its own.
+
+```bash
+curl -sL https://install.changeguard.ai/cli | bash
+changeguard login --api-key cg_...        # or export CHANGEGUARD_API_KEY=cg_...
+```
+
+Then install the companion into the project the agent works in. It is a directory of files under `.changeguard/eks-mcp`, not a service:
+
+```bash
+curl -sL https://install.changeguard.ai/eks-mcp/install.sh | bash
+```
+
+The installer unpacks the gate script, the canonical instruction file and the per-agent wrappers. Nothing runs in the background, and nothing is written outside that directory.
+
+## Configure the target environment
+
+The agent passes an EKS cluster name to the MCP tool (`cluster_name`). ChangeGuard AI judges against an environment id (the `cluster_id` your connected environment reports under). Map one to the other, and the companion denies any cluster it cannot map:
+
+```bash
+export CHANGEGUARD_EKS_MCP_ENVIRONMENTS="prod-eks=production,staging-eks=staging"
+```
+
+A JSON object in `~/.changeguard/eks-mcp/environments.json` works the same way. The judged environment must be a [connected environment](/connect/connected-environments) with fresh evidence; an environment ChangeGuard AI has never observed is judged HOLD, because missing evidence is never treated as safe.
+
+## How agents interpret SHIP, HOLD and BLOCK
+
+| Verdict | Gate exit code | What the agent does |
+| --- | --- | --- |
+| SHIP | 0 | May call the privileged tool with exactly the judged content, within 15 minutes. |
+| HOLD | 3 | Does not execute automatically. Reports the reasons, asks for the missing evidence or a human review, judges again when something changed. |
+| BLOCK | 4 | Does not execute. Explains why execution stopped, in ChangeGuard AI's words, and stops. |
+| No judgment | 2 | Does not execute. A missing CLI, a failed API call or unreadable output is not a SHIP. |
+
+The verdict is advisory on the ChangeGuard AI side, as every preflight verdict is; the companion is what turns it into a rule for the agent.
+
+## Use it before privileged EKS MCP operations
+
+The agent's loop, for `apply_yaml` and for `manage_k8s_resource` create, replace and patch:
+
+1. Write the exact content you will send to the tool to a file: the full `yaml_content`, or the JSON `body`.
+2. Judge it: `changeguard-eks-mcp-gate.sh preflight --env production --change payments-api.yaml --summary "Update payments-api to v2.3.1" --agent kiro-cli`. The gate runs `changeguard preflight` against the live environment and, on SHIP, writes a receipt keyed by the SHA-256 of the content and the environment.
+3. On SHIP only, call the privileged tool with the same `cluster_name` and the same content. The hook checks for the receipt and denies anything else: no judgment, a failed judgment, HOLD, BLOCK, an expired receipt, the wrong environment, an unmapped cluster, a malformed call, or a delete (which carries nothing to judge).
+4. After the write, report the outcome: `changeguard-eks-mcp-gate.sh outcome --env production --change payments-api.yaml --outcome success --notes "apply_yaml on prod-eks"`. The record is attached to the verdict that cleared the write, with `detected_by: agent`.
+
+Wire the hook once per agent. Each wrapper only includes the one canonical instruction file, `CHANGEGUARD-EKS-MCP.md`:
+
+<Tabs>
+  <Tab title="Claude Code">
+    Merge `claude-code/settings.json` into `.claude/settings.json`: a `PreToolUse` hook matching `mcp__.*__(apply_yaml|manage_k8s_resource)$` that runs `check --format claude` with `onFailure: block`. Exit 2 denies the call and returns the reason to the agent; an allow leaves your normal tool permissions untouched. Append `claude-code/CLAUDE.md.snippet` to `CLAUDE.md`.
+  </Tab>
+  <Tab title="Kiro">
+    Copy `kiro/hooks/changeguard-eks-mcp.json` to `.kiro/hooks/` (a `PreToolUse` hook on Kiro's internal tool id `mcp_<server>_<tool>`; exit 2 denies and stderr goes back to the agent) and `kiro/steering/changeguard-eks-mcp.md` to `.kiro/steering/`.
+  </Tab>
+  <Tab title="Cursor">
+    Copy `cursor/hooks.json` to `.cursor/hooks.json` (a `preToolUse` hook matching `MCP:apply_yaml|MCP:manage_k8s_resource` with `failClosed: true`; the gate answers `permission: allow` or `deny`) and `cursor/rules/changeguard-eks-mcp.mdc` to `.cursor/rules/`.
+  </Tab>
+  <Tab title="Other agents">
+    Any agent with a pre-tool hook can run `changeguard-eks-mcp-gate.sh check` and read exit 2 as deny. Any agent that only reads instructions can follow `CHANGEGUARD-EKS-MCP.md` without the hook; that is weaker, because an instruction is advice and the hook is mechanical.
+  </Tab>
+</Tabs>
+
+A worked SHIP and a worked BLOCK, with the exact lines the agent and the hook exchange, are in the companion's README.
+
+## What ChangeGuard AI does not do here
+
+- It does not execute the change. The EKS MCP Server stays the agent's execution tool. ChangeGuard AI's own [Cloud Executor](/execute/cloud-executor) is a separate path that acts only under a single-use [Permit](/govern/permit), and this companion does not route anything through it.
+- It does not use Amazon EKS MCP as its Executor, and will not. ChangeGuard AI already has a bounded Executor; `eks-mcp:CallPrivilegedTool` is broader than Permit semantics (one action, one target, one environment, minutes, once); execution authority must stay exact-action scoped; EKS MCP writes do not reach private-endpoint clusters; and the server is in preview and may change.
+- It gains no credentials and no permissions. The companion uses the CLI's own key; ChangeGuard AI is granted nothing new on your AWS account or cluster.
+- It does not enforce at the cluster. IAM, the access entry and RBAC do.
+- It does not judge deletes, or content it was not shown. Judge exactly what will be applied.
+
+<Info>
+  The companion reads only the tool call's `cluster_name`, `yaml_content`, `operation` and `body`. Any agent about to call a privileged Kubernetes tool, through Amazon EKS MCP or otherwise, can use the same pattern. Amazon EKS MCP is the first supported and documented workflow.
+</Info>
