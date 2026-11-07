@@ -54,15 +54,16 @@ Authority is a per-environment decision with two modes. **Advise** (the default)
 | **Incidents and remediation** | Failing workloads attributed to the change that shipped them; a proposed fix with the exact patch; execution under a Permit; verification; one compensating action; escalation | **Live-proven** |
 | **Measured outcomes** | Predicted versus observed CPU, memory and replicas, joined by change identity | **Live** |
 | **Posture evidence** (with Edge) | CIS benchmarks, image CVEs, deprecated APIs, SBOM, runtime signals, RBAC and attack-path analysis, compliance evidence export — evidence support, not a certification | **Supported**, plan-gated |
-| **Engineering Advisor, Opinion, Experience, Reasoning** | The read a senior engineer would add to a verdict; an owned position on an incident; recall of similar past incidents when material; honest ✓/⚠ factors | **Early Access** |
-| **Multiplayer incident workspace** | A shared incident workspace organized around one current understanding | **Early Access** |
+| **Engineering Advisor, Opinion, Experience, Reasoning** | The read a senior engineer would add to a verdict; an owned position on an incident; recall of similar past incidents when material; honest ✓/⚠ factors. On by default on the Professional and Enterprise plans; admins can turn each one off under **Settings → Engineering assistance** | **Live**, plan-gated |
+| **Multiplayer incident workspace** | A shared incident workspace organized around one current understanding: the conversation, an accountable owner, the decision log and the inbox on every incident; the AI participant on the Professional and Enterprise plans | **Live** |
+| **Code Graph** | A deterministic knowledge graph of your repositories, built in your cluster by the Edge indexer when you turn it on (`codeGraph.enabled`); only the graph leaves the cluster, never the source; cited by investigations and shown on the change record | **Live**, install-side opt-in |
 | **Realms** | A tenant split into production and test with separate authority | **Roadmap** |
 | **SSO/SAML; self-hosted inference for judgment and reasoning** | Planned. (An optional Edge-side NVIDIA NIM setting exists for on-cluster scan analysis only — see [AI analysis](/ai/overview).) | **Roadmap** |
 | **Governed autonomous change beyond Kubernetes** | The same judgment, Permit and verification wherever a production change originates, for every actor that can act on infrastructure | **Vision** |
 
 ## What ChangeGuard AI does not do today
 
-- **It does not learn from every change.** The outcome record is instrumented — a verdict is recorded before a change and what followed is recorded after — so that prediction can be measured against reality. No model, threshold, policy or prompt is modified by an outcome. Recall of similar past incidents (Early Access) is retrieval, not retraining.
+- **It does not learn from every change.** The outcome record is instrumented — a verdict is recorded before a change and what followed is recorded after — so that prediction can be measured against reality. No model, threshold, policy or prompt is modified by an outcome. Recall of similar past incidents (Engineering Experience) is retrieval, not retraining.
 - **It does not act on its own by default.** Every environment starts in Advise. Auto is opt-in and policy-bounded.
 - **It does not cover infrastructure beyond Kubernetes.** Terraform, IAM, cloud resources, networking and databases are vision, not shipping capability.
 - **It does not hold a certification.** SOC 2, ISO 27001 and FedRAMP are not claimed. See [Testing and assurance](/security/testing-and-assurance) for what _is_ proven.

@@ -36,9 +36,9 @@ Expectations you can plan around, in one place, using the same claim classes as 
 
 | Capability | Status | Notes |
 | --- | --- | --- |
-| Engineering Advisor / Opinion / Experience / Reasoning factors | **Early Access** | Off by default, per-tenant flags — [the full list](/concepts/overview). |
-| Multiplayer incident workspace | **Early Access** | Flag `WORKSPACE_ENABLED`. |
-| Code Graph (repo knowledge graphs for investigation) | **Early Access** | Ships in the Edge chart, off by default (`codeGraph.enabled`). |
+| Engineering Advisor / Opinion / Experience / Reasoning factors | **Live** (Professional, Enterprise) | Generally available since 2026-11-07: on by default on those plans, and each one has an off switch for admins under **Settings → Engineering assistance**. The evaluation plan shows where each appears and which plan includes it. [Details](/get-started/engineering-advisor). |
+| Multiplayer incident workspace | **Live** (every plan) | The shared human conversation, owner, decisions and inbox on every incident. The AI participant (replies to `@changeguard-ai`, summaries) needs the Professional or Enterprise plan. |
+| Code Graph (repo knowledge graphs for investigation) | **Live** (every plan; install-side opt-in) | The indexer ships in the Edge chart and stays off until you enable it (`codeGraph.enabled`): it is your decision to read your repositories in your cluster. Only the derived graph leaves the cluster, never source. |
 
 ## Buying and AWS validation
 
