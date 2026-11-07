@@ -1,7 +1,7 @@
 ---
 title: "Engineering Advisor"
 description: "The read a senior engineer would give before a change proceeds — surfaced only when it materially helps."
-tag: "Early Access"
+tag: "GA"
 ---
 
 The **Engineering Advisor** is the judgment layer on top of the pre-flight check: alongside the **SHIP / HOLD / BLOCK** verdict and the CSC Score, it gives the read a senior engineer would — grounded in what's actually live in your cluster right now (active incidents, recent failures, what this change touches), and honest about what it can't see.
@@ -18,7 +18,7 @@ An illustrative example of the Advisor's note on a pre-flight check:
   </Card>
 
   <Card title="Try this yourself" icon="rocket" href="/get-started/install">
-    Install on your own cluster and follow [Your First Recommendation](/get-started/first-30-minutes) — you'll run a real pre-flight in minutes. Advisor notes appear where the Early Access flag is enabled for your tenant.
+    Install on your own cluster and follow [Your First Recommendation](/get-started/first-30-minutes) — you'll run a real pre-flight in minutes. Advisor notes appear on pre-flight checks with live environment evidence, on the Professional and Enterprise plans.
   </Card>
 </CardGroup>
 
@@ -28,19 +28,23 @@ To understand what stands behind a note like that — evidence, what the system 
 
 If the Advisor has nothing material to add beyond the score and the verdict, it stays **silent**. Restraint is the feature — you should never see filler advice, and when a note does appear it's because something changed the decision.
 
-## Availability — Early Access
+## Availability — generally available
 
-<Warning>
-  The Engineering Advisor is **Early Access**: real and running, but **off by default** (feature flag `AI_ENGINEERING_ADVISOR_ENABLED`) and offered to design partners or on request. If you don't see it in your tenant, that's expected — it is not self-serve today. [Contact us](mailto:support@changeguard.ai) to join the Early Access program.
-</Warning>
+The Engineering Advisor is **generally available on the Professional and Enterprise plans** (since 2026-11-07). It is on by default for those plans, and an admin can turn it off at any time under **Settings → Engineering assistance**; every change is recorded in the audit trail with who made it. The evaluation plan shows where the Advisor appears and which plan includes it, and never spends a model call on its behalf.
 
-Don't plan production dependencies on Early Access capabilities. What every tenant has **today, GA**:
+What you will see, and why:
+
+- **A note** when the Advisor has something material to add: the pre-flight response carries `advice_status: spoke` and every point cites the record it came from.
+- **Nothing** when it does not (`advice_status: silent`): restraint is the feature.
+- **Nothing, and a reason** when it could not run: `no_environment_evidence` (the check had no live environment to read), or `unavailable` (your plan does not include it, an admin turned it off, or the platform paused it). The product tells you which.
+
+What every plan has, GA:
 
 - The **pre-flight check** — an on-demand SHIP / HOLD / BLOCK verdict with the score and reasons. See [Connect your first cluster](/get-started/connect-first-cluster#step-3--see-your-cluster-in-the-product).
 - **Incident investigation** — root cause with **cited evidence**, a proposed fix, and how to verify it. See [Your First Recommendation](/get-started/first-30-minutes).
 
-## Related Early Access capabilities
+## Related capabilities
 
-The Advisor is one of a set of judgment capabilities in Early Access — **Engineering Opinion** (an owned, evidence-tied position on an incident), **Engineering Experience** (institutional memory from similar past incidents), and **reasoning / confidence factors**. The full list, with flags, is in [Product concepts](/concepts/overview#early-access).
+The Advisor is one of a set of judgment capabilities that are generally available on the Professional and Enterprise plans — **Engineering Opinion** (an owned, evidence-tied position on an incident), **Engineering Experience** (institutional memory from similar past incidents) and **Engineering Reasoning** (the confidence factors and "why not the obvious move"). Each has its own switch under **Settings → Engineering assistance**; Reasoning and Experience need Opinion. The full list is in [Core concepts](/concepts/overview).
 
 Next: [**Understanding your score →**](/how-it-works)
