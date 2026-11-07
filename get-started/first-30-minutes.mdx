@@ -21,10 +21,10 @@ This page is one path with no branching, and it ends at the moment the product h
     Your cluster's **CSC Score** appears on its environment page within ~10 seconds of connecting — a deterministic 0–100 read of deploy readiness. Every point ties to a concrete signal you can inspect: [Understanding your score](/how-it-works).
   </Step>
   <Step title="Run a pre-flight check — and meet the Advisor">
-    Open **Preflight → Judge a change** and evaluate a change against this environment. You get **SHIP / HOLD / BLOCK** with the score and reasons — a judgment, which authorizes nothing and blocks nothing here (your CI decides what to enforce). Where the [Engineering Advisor](/get-started/engineering-advisor) is enabled (Early Access), its note appears alongside the verdict: the read a senior engineer would give.
+    Open **Preflight → Judge a change** and evaluate a change against this environment. You get **SHIP / HOLD / BLOCK** with the score and reasons — a judgment, which authorizes nothing and blocks nothing here (your CI decides what to enforce). On the Professional and Enterprise plans the [Engineering Advisor](/get-started/engineering-advisor)'s note appears alongside the verdict: the read a senior engineer would give.
 
     <Info>
-      Two things that are correct, not broken: if the Advisor has nothing material to add it stays **silent** — restraint is the feature. And if you don't see the Advisor at all, that's expected — it's Early Access, off by default.
+      Two things that are correct, not broken: if the Advisor has nothing material to add it stays **silent** — restraint is the feature. And on the evaluation plan the Advisor's place shows which plan includes it, rather than a note.
     </Info>
   </Step>
   <Step title="Trigger a sample incident, safely">
@@ -43,7 +43,7 @@ This page is one path with no branching, and it ends at the moment the product h
     The new pods can't pull the image, the rollout starts failing, and ChangeGuard AI sees both the change and the failure. Within a few minutes, an incident appears for `sample-api` — **linked to the image change you just made**. Cause, not just symptom.
   </Step>
   <Step title="Understand the recommendation">
-    Open the incident. The root cause comes with **cited evidence** — the events, the failing rollout, and the change that shipped it. ChangeGuard AI proposes the fix and states the criteria to verify it worked. At the default autonomy level it applies nothing — this is advice you act on. Where the **Engineering Opinion** is enabled (Early Access), you'll also see an owned position: belief, confidence, tradeoffs, and what would change its mind.
+    Open the incident. The root cause comes with **cited evidence** — the events, the failing rollout, and the change that shipped it. ChangeGuard AI proposes the fix and states the criteria to verify it worked. At the default autonomy level it applies nothing — this is advice you act on. On the Professional and Enterprise plans you'll also see the **Engineering Opinion**, an owned position: belief, confidence, tradeoffs, and what would change its mind.
   </Step>
   <Step title="View the Current Understanding">
     Where incident context is enabled, the incident opens with the **Current Understanding** — the maintained read of what's happening right now: what changed, what it broke, and where things stand. It's what a teammate joining mid-incident needs, without scrolling the history. Every incident also carries an append-only **activity timeline** — your audit trail of what was observed and decided.

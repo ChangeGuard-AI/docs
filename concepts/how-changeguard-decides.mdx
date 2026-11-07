@@ -12,13 +12,13 @@ Every recommendation flows through the same chain — and each stage is labeled 
 | Stage | What it contributes | Maturity |
 | --- | --- | --- |
 | **Evidence** | Cluster state, deployments and their diffs, GitOps sync history, events, scan findings, incident timelines — the raw record. Every claim downstream must cite it. | GA |
-| **Opinion** | An owned position on an incident: belief, confidence, the tradeoff taken, and open unknowns. | Early Access |
-| **Experience** | Institutional memory — what similar past incidents did — woven in only when it changes the decision. | Early Access |
-| **Reason** | Honest ✓ / ⚠ confidence factors and "why not the obvious move." | Early Access |
-| **Engineering Advisor** | The senior-engineer read before a change proceeds, surfaced only when it materially helps. | Early Access |
+| **Opinion** | An owned position on an incident: belief, confidence, the tradeoff taken, and open unknowns. | GA (Professional, Enterprise) |
+| **Experience** | Institutional memory — what similar past incidents did — woven in only when it changes the decision. | GA (Professional, Enterprise; needs Opinion) |
+| **Reason** | Honest ✓ / ⚠ confidence factors and "why not the obvious move." | GA (Professional, Enterprise; needs Opinion) |
+| **Engineering Advisor** | The senior-engineer read before a change proceeds, surfaced only when it materially helps. | GA (Professional, Enterprise) |
 | **Verification** | After any applied fix: confirmation against real workload health before success is claimed — and one audited rollback if it fails. | GA (with opt-in remediation) |
 
-What every tenant has today, GA: the deterministic **CSC Score**, the **SHIP / HOLD / BLOCK** pre-flight verdict, and **incident investigation with cited evidence**. The Early Access stages add judgment on top — they never replace the evidence discipline underneath.
+What every tenant has today, GA: the deterministic **CSC Score**, the **SHIP / HOLD / BLOCK** pre-flight verdict, and **incident investigation with cited evidence**. The judgment stages add on top of that on the Professional and Enterprise plans, each with its own off switch under **Settings → Engineering assistance** — they never replace the evidence discipline underneath.
 
 ## Why the Advisor sometimes says nothing
 
