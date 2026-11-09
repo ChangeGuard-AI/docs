@@ -1,0 +1,66 @@
+---
+title: "Engineering intelligence: general availability"
+sidebarTitle: "GA release (Nov 2026)"
+description: "The November 2026 releases that made the Engineering Advisor, Opinion, Reasoning and Experience, the incident workspace and the Code Graph generally available, and made every AI capability resilient to the loss of one model provider."
+keywords: ["release notes", "general availability", "engineering intelligence", "model resilience", "ChangeGuard AI release"]
+---
+
+## What is generally available
+
+Released **7 November 2026** (application version `dev-ee18a835`) and in production for every tenant on the plan that carries it:
+
+| Capability | Plan | Default | Your control |
+| --- | --- | --- | --- |
+| [Engineering Advisor](/get-started/engineering-advisor) | Professional, Enterprise | On | Settings > Engineering assistance |
+| [Engineering Opinion](/intelligence/engineering-opinion) | Professional, Enterprise | On | Settings > Engineering assistance |
+| [Engineering Reasoning](/intelligence/engineering-reasoning) | Professional, Enterprise | On (needs Opinion) | Settings > Engineering assistance |
+| [Engineering Experience](/intelligence/engineering-experience) | Professional, Enterprise | On (needs Opinion) | Settings > Engineering assistance |
+| [Incident workspace](/investigate/incident-workspace) | Every plan (AI participant: Professional, Enterprise) | On | Settings > Engineering assistance |
+| [Code Graph](/investigate/code-graph) | Every plan | On in the product; off in the chart until you enable `codeGraph.enabled` | Settings > Engineering assistance, and the chart |
+
+Nothing in this release changes how a change is judged, authorized, executed or verified. SHIP / HOLD / BLOCK, the CSC Score, Permits, the Executors and verification are unchanged and make no model call.
+
+## What changed for customers
+
+- **Availability is a per-tenant decision, not a hidden flag.** Each capability resolves from your plan, your own setting and the platform switch, and fails closed. There is nothing to request or enrol in; the product tells you in plain words when a capability is not on your plan, turned off in your workspace, or unavailable.
+- **A customer control.** Settings > Engineering assistance: six switches, admin only, every change audited with who made it. Turning the Opinion off turns Reasoning and Experience off with it, and the page says so.
+- **No model call is spent for a tenant without the entitlement**, on any path: the opinion route, automatic formation after an analysis, or a mention of the AI participant.
+- **Every surface renders every state**: loading, empty, error, disabled, not entitled, off by the customer; all pass accessibility checks (WCAG 2.1 and 2.2 A and AA, zero serious or critical findings).
+- **The Advisor speaks on both judgment surfaces** (the dashboard check and CI) and reports why when it does not (`advice_status`: spoke, silent, no environment evidence, unavailable).
+- **The incident workspace** gained keyset paging for long conversations and an `ai_participation` flag; a mention on a plan without the AI participant is recorded and never enqueued.
+- **The Code Graph** validates what it ingests (a graph with no nodes or id-less nodes is refused and never replaces a good snapshot) and pins the indexer to a verified deterministic release (`0.9.103`, chart `5.3.12`).
+
+## Model resilience, 9 November 2026
+
+Released as application version `dev-4f8b3e45`. Every AI capability now reaches Amazon Bedrock through one router with a preferred model (Anthropic Claude) and a **permanent, evaluated fallback** (Kimi K3.1 by Moonshot AI, on Amazon Bedrock, US inference). Failover is narrow (access or availability failures only), at most one fallback attempt per request, with a circuit breaker that returns to the preferred model by itself. The fallback stays configured, permitted, tested and monitored whether or not the preferred model is available.
+
+Every AI result records the model that produced it; when the fallback formed an opinion, the card says so. When no model can answer, the product says the AI model is unavailable, with a reference, and stores nothing. Operations the fallback was not evaluated for (Ask ChangeGuard, the weekly digest, the AI paragraph under a verdict, workload patch drafting) fail closed while the preferred model is unavailable. Details: [Model availability](/intelligence/model-availability).
+
+## Configuration and migration
+
+- No schema migration for either release.
+- No action for existing installs. Capabilities are on where the plan carries them; admins may turn any off.
+- Code Graph needs `codeGraph.enabled: true` and a `repos` list in the Edge chart (`5.3.12` or later) to produce a graph.
+- Operators of the Edge collector: chart `5.3.12` adds `codeGraph.graphifyVersion`.
+
+## Supported environments
+
+Kubernetes on Amazon EKS, through Fleet (read-only, nothing to install) or the optional Edge collector. The Code Graph indexer needs the Edge chart. Unchanged by this release.
+
+## Known limitations
+
+- The Advisor reasons about the environment's state and recent record, not the diff; it needs live environment evidence (Fleet or Edge) and stays silent without it.
+- The Opinion forms only from a root-cause analysis and sees the analysis, its evidence and recalled experience, never the raw diff.
+- Experience recalls per workspace, from recorded outcomes only; a workspace without reported outcomes has nothing to recall.
+- Ask ChangeGuard has no model fallback yet.
+- On the fallback an opinion takes about 11 seconds; the fallback model states higher confidence than thin or stale evidence supports on some cases (while choosing the right move). The backend-derived confidence factors still show the weak spots.
+- Workspace live delivery is best-effort; the inbox is per user; summaries are on demand.
+- Code Graph search is substring, not semantic; graphs exist only for listed repositories after the first scheduled run.
+
+## Verification
+
+Both releases passed the full CodeCommit quality gate (backend suite against PostgreSQL with race tests, UI unit and production build, browser end-to-end including 31 security-critical checks, MCP, prediction, operations and performance gates), and production acceptance as the two synthetic customers on the acceptance environment: the engineering-assistance journeys (8 of 8 scenes) on 7 November, and the fallback acceptance (5 of 5, twice) and a 36-of-36 post-release regression on 9 November. Assurance in general: [Testing and assurance](/security/testing-and-assurance).
+
+## Support
+
+Questions and issues: [support@changeguard.ai](mailto:support@changeguard.ai). The consolidated status of every capability is on [Known limitations and roadmap](/concepts/limitations-and-roadmap).

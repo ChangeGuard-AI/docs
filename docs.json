@@ -181,6 +181,7 @@
           {
             "group": "Releases & roadmap",
             "pages": [
+              "releases/ga-engineering-intelligence",
               "concepts/limitations-and-roadmap",
               "changelog"
             ]
