@@ -71,6 +71,10 @@
             ]
           },
           {
+            "group": "Engineering intelligence",
+            "pages": []
+          },
+          {
             "group": "Govern",
             "icon": "ticket",
             "pages": [
@@ -98,6 +102,10 @@
               "autonomy/compensating-actions",
               "autonomy/audit-trail"
             ]
+          },
+          {
+            "group": "Investigate",
+            "pages": []
           },
           {
             "group": "Security",
