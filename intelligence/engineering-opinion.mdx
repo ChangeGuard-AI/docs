@@ -1,0 +1,53 @@
+---
+title: "Engineering Opinion"
+description: "An owned position on an incident: the most likely cause, a confidence in words, what would change the call, and one next move. Generally available on Professional and Enterprise."
+keywords: ["engineering opinion", "incident root cause", "AI opinion", "investigation context"]
+---
+
+The **Engineering Opinion** is the read a senior engineer would give once the root-cause analysis is in: not a list of possibilities, but a position. It says what is most likely happening, how sure it is and why, what the competing explanation is, what it cannot tell yet, what would change its mind, and what to do next.
+
+It recommends. It never executes, and a passive recommendation (investigate, wait) can never carry a mutating instruction.
+
+## Where it appears
+
+Open an incident and expand **Investigation context**. The opinion is the card under **Current understanding**:
+
+- **Most likely**: the belief, in one sentence, with the decision badge: **investigate**, **wait**, **act** or **escalate**.
+- **Confidence**: in words (for example "reasonably confident"), backed by a number between 5 and 95 percent that the backend reconciles with the label.
+- **Why this over** the next-most-likely explanation, each reason tied to a cited evidence line or the root cause.
+- **Unknown**: what the evidence does not establish yet.
+- **Would change the call**: the falsifier. If this turned up, the position would flip.
+- **Next**: the recommended move.
+
+When the opinion forms, it is posted once to the incident conversation; it is posted again only when it changes materially. The **Current understanding** read at the top of the context is maintained from it.
+
+Where [Engineering Reasoning](/intelligence/engineering-reasoning) is on, the card also shows the confidence factors and "why not the obvious move"; where [Engineering Experience](/intelligence/engineering-experience) is on and history changed the decision, it shows "Seen before".
+
+## How it forms
+
+1. An incident gets a root-cause analysis (automatically on new incidents, or when you re-analyze).
+2. For an entitled tenant with the Opinion on, ChangeGuard AI assembles the grounding: the incident, the analysis, its evidence lines, the count of similar incidents, the prior opinion if any, and the recalled experience.
+3. One bounded model call forms the position. Every reason must bind to a shown evidence line or the root cause; uncited reasons are dropped, filler is rejected, and an opinion with no attributable reason is rejected and not stored.
+4. The opinion is stored on the incident against the evidence it saw. Re-running with the same evidence returns the stored read without a new model call; new evidence re-forms it.
+
+You can also ask for the read explicitly from the incident (`POST /api/incidents/{id}/opinion`); the same budgets and the same validation apply.
+
+## Prerequisites and limits
+
+| | |
+| --- | --- |
+| Plan | Professional or Enterprise (plan feature `ai`). The 14-day evaluation reads incidents but is refused an opinion (403) and spends no model call. |
+| Setting | **Settings > Engineering assistance > Engineering Opinion**, on by default where the plan carries it. Turning it off also turns off Reasoning and Experience. |
+| Evidence | A root-cause analysis on the incident. Without one, nothing forms. |
+| Budget | Opinions and AI replies share a budget of 20 per incident and 100 per workspace per hour. Over budget, the stored read is returned unchanged. |
+| What it sees | The analysis, its evidence lines and the recalled experience. Not the raw diff, not your business context, not who is on call. |
+
+## Provenance
+
+The stored opinion records which model formed it. When the preferred model was unavailable and the permanent fallback answered, the card says so: *Formed by the fallback model, Kimi K3.1 (Moonshot AI), on Amazon Bedrock while the preferred model was unavailable.* The audit trail (`ai_opinion_formed`, `ai_opinion_revised`) carries the full provenance. See [Model availability](/intelligence/model-availability).
+
+## Related
+
+- [Engineering intelligence overview](/intelligence/overview)
+- [How ChangeGuard AI makes decisions](/concepts/how-changeguard-decides)
+- [The incident workspace](/investigate/incident-workspace)

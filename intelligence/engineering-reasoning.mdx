@@ -1,0 +1,42 @@
+---
+title: "Engineering Reasoning"
+description: "The reasoning behind an opinion's confidence: what raises it, what lowers it, and why not the obvious move. Generally available with the Engineering Opinion."
+keywords: ["engineering reasoning", "confidence factors", "why not the obvious move", "AI explainability"]
+---
+
+**Engineering Reasoning** shows why an [Engineering Opinion](/intelligence/engineering-opinion) is as confident as it is, and names the reflex move it decided against. It is reasoning you can check, not a longer explanation.
+
+## What you see
+
+Inside the opinion card:
+
+- **Confidence factors**: at most four lines, each marked as supporting (✓) or cautioning (⚠). Examples: *Root-cause analysis is high-confidence*; *5 supporting observations in the analysis*; *Open unknown: ...*; *A competing explanation isn't ruled out*. Supports lead, caveats follow, and at least two caveat slots are reserved so weak spots are never crowded out by supports.
+- **Why not the obvious move**: the reflex an on-call engineer would reach for (a blind rollback, a restart) and why it is not the recommended move here. It appears only when there is a genuine reflex to argue against and it is distinct from the chosen move.
+
+## Where the factors come from
+
+The factors are derived by the backend from signals it holds, not written by the model:
+
+| Signal | Factor |
+| --- | --- |
+| The root-cause analysis and its confidence band | Support for medium or high confidence; caveat for a low-confidence or absent analysis |
+| The number of supporting observations in the analysis | Support, with the count |
+| The target's fix history, as the opinion recalled it | Caveat when a past fix on this target rolled back or failed; caveat when the read leans on a similar incident |
+| The model's declared unknowns | Caveat with the first unknown |
+| A competing explanation not ruled out | Caveat |
+| A low overall read | Caveat |
+
+"Why not the obvious move" is the one model-authored piece, kept only when it is distinct from the chosen move and from the cause tradeoff.
+
+## Prerequisites and limits
+
+| | |
+| --- | --- |
+| Plan | Professional or Enterprise (plan feature `ai`). |
+| Setting | **Settings > Engineering assistance > Engineering Reasoning**; requires the Engineering Opinion to be on. |
+| Limits | Factors reflect the signals the platform has (the analysis, the evidence count, the fix history). They cannot weigh evidence the platform never saw. |
+
+## Related
+
+- [Engineering intelligence overview](/intelligence/overview)
+- [Engineering Experience](/intelligence/engineering-experience)

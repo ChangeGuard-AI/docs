@@ -73,7 +73,9 @@
           {
             "group": "Engineering intelligence",
             "pages": [
-              "intelligence/overview"
+              "intelligence/overview",
+              "intelligence/engineering-opinion",
+              "intelligence/engineering-reasoning"
             ]
           },
           {
