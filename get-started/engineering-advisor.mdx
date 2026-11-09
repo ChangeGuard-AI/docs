@@ -16,8 +16,8 @@ An illustrative example of the Advisor's note on a pre-flight check:
     Open the **interactive demo** and choose the Engineering Advisor scenario: a live pre-flight where the score says SHIP and the Advisor says wait — and is right. The exact moment above, played out.
   </Card>
 
-  <Card title="Try this yourself" icon="rocket" href="/get-started/install">
-    Install on your own cluster and follow [Your First Recommendation](/get-started/first-30-minutes) — you'll run a real pre-flight in minutes. Advisor notes appear where the Early Access flag is enabled for your tenant.
+  <Card title="Try this yourself" icon="rocket" href="/start-here/connect-an-environment">
+    Connect an environment read-only and run a pre-flight check against it. On Professional and Enterprise the Advisor's note appears beside the verdict whenever it has something material to add.
   </Card>
 </CardGroup>
 
@@ -27,19 +27,34 @@ To understand what stands behind a note like that — evidence, what the system 
 
 If the Advisor has nothing material to add beyond the score and the verdict, it stays **silent**. Restraint is the feature — you should never see filler advice, and when a note does appear it's because something changed the decision.
 
-## Availability — Early Access
+## What it raises, and what it cannot see
 
-<Warning>
-  The Engineering Advisor is **Early Access**: real and running, but **off by default** (feature flag `AI_ENGINEERING_ADVISOR_ENABLED`) and offered to design partners or on request. If you don't see it in your tenant, that's expected — it is not self-serve today. [Contact us](mailto:support@changeguard.ai) to join the Early Access program.
-</Warning>
+The Advisor reads two records the platform already holds for the target environment: its own open or analyzed incidents, and its recent change record. It raises at most the one or two things that would change the decision:
 
-Don't plan production dependencies on Early Access capabilities. What every tenant has **today, GA**:
+- **An active incident in the environment right now**, with why it matters for this change and what would make the Advisor reconsider.
+- **A notably bad recent change record on this environment**, from reported outcomes.
 
-- The **pre-flight check** — an on-demand SHIP / HOLD / BLOCK verdict with the score and reasons. See [Connect your first cluster](/get-started/connect-first-cluster#step-3--see-your-cluster-in-the-product).
-- **Incident investigation** — root cause with **cited evidence**, a proposed fix, and how to verify it. See [Your First Recommendation](/get-started/first-30-minutes).
+Every point cites the incident or change record it rests on; counts are the backend's own (a read bounded at 50 says "more than 50", never a false exact number). The Advisor never alters the verdict, never blocks and never executes; it makes no model call.
 
-## Related Early Access capabilities
+It reasons about the environment's current state and recent record, not the specific change: it cannot see the diff, Terraform, or who is on call, and it says so in its `blindspots` line. It speaks only with live environment evidence (Fleet or Edge); a judgment with no environment connected reports `no_environment_evidence`.
 
-The Advisor is one of a set of judgment capabilities in Early Access — **Engineering Opinion** (an owned, evidence-tied position on an incident), **Engineering Experience** (institutional memory from similar past incidents), and **reasoning / confidence factors**. The full list, with flags, is in [Product concepts](/concepts/overview#early-access).
+## Availability
+
+The Engineering Advisor is **generally available** on **Professional and Enterprise** (plan feature `advisor`) and on by default there. It appears on both judgment surfaces: the dashboard check and the pre-flight call your CI makes (`POST /api/cicd/preflight`).
+
+| Response `advice_status` | Meaning |
+| --- | --- |
+| `spoke` | A note was added beside the verdict |
+| `silent` | Nothing material to add; restraint is the feature |
+| `no_environment_evidence` | The judgment had no live environment to read (artifact-only or nothing connected) |
+| `unavailable` | Not on this plan, turned off in Settings, or stopped platform-wide; the product says which |
+
+An admin can turn it off for the whole workspace in **Settings > Engineering assistance**; every change there is audited. On the 14-day evaluation and Starter the check reports `unavailable` and names the plan; the verdict itself is unchanged.
+
+What every plan has, with or without the Advisor: the **pre-flight check** (SHIP / HOLD / BLOCK with the score and reasons) and **incident investigation** with cited evidence, a proposed fix and how to verify it.
+
+## Related capabilities
+
+The Advisor is one of four engineering-intelligence capabilities, all generally available: the [Engineering Opinion](/intelligence/engineering-opinion) (an owned, evidence-tied position on an incident), [Engineering Reasoning](/intelligence/engineering-reasoning) (confidence factors and why not the obvious move) and [Engineering Experience](/intelligence/engineering-experience) (your workspace's own history, recalled when it changes the decision). Start with the [overview](/intelligence/overview).
 
 Next: [**Understanding your score →**](/how-it-works)

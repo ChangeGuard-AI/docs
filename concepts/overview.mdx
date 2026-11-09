@@ -1,13 +1,13 @@
 ---
 title: "Core concepts"
 sidebarTitle: "Core concepts"
-description: "The vocabulary the product, the docs and the website all use — judgment, Permit, Executor, observation; Advise and Auto; Fleet, Edge and the Executor — with every capability labeled live, live-proven, supported, Early Access, roadmap or vision."
+description: "The vocabulary the product, the docs and the website all use: judgment, Permit, Executor, observation; Advise and Auto; Fleet, Edge and the Executor; engineering intelligence and investigation, with every capability labeled live, live-proven, supported, roadmap or vision."
 ---
 
 This is the vocabulary the product, the docs, and the website all use. Each concept is labeled by its claim class so there is never ambiguity about what is available to you today.
 
 <Info>
-  **How we label claims.** **Live** = running in production. **Live-proven** = running in production _and_ exercised end to end by production acceptance and continuous security testing. **Supported** = available, used where the topology calls for it. **Early Access** = real, off by default, on request. **Roadmap** = planned, not shipping. **Vision** = direction, not a feature. We never describe an emerging capability as if it ships today.
+  **How we label claims.** **Live** = running in production, generally available (plan gating noted). **Live-proven** = running in production _and_ exercised end to end by production acceptance and continuous security testing. **Supported** = available, used where the topology calls for it. **Roadmap** = planned, not shipping. **Vision** = direction, not a feature. No capability is in Early Access today; when one is, it is labeled as such here. We never describe an emerging capability as if it ships today.
 </Info>
 
 ## The idea
@@ -54,19 +54,20 @@ Authority is a per-environment decision with two modes. **Advise** (the default)
 | **Incidents and remediation** | Failing workloads attributed to the change that shipped them; a proposed fix with the exact patch; execution under a Permit; verification; one compensating action; escalation | **Live-proven** |
 | **Measured outcomes** | Predicted versus observed CPU, memory and replicas, joined by change identity | **Live** |
 | **Posture evidence** (with Edge) | CIS benchmarks, image CVEs, deprecated APIs, SBOM, runtime signals, RBAC and attack-path analysis, compliance evidence export — evidence support, not a certification | **Supported**, plan-gated |
-| **Engineering Advisor, Opinion, Experience, Reasoning** | The read a senior engineer would add to a verdict; an owned position on an incident; recall of similar past incidents when material; honest ✓/⚠ factors | **Early Access** |
-| **Multiplayer incident workspace** | A shared incident workspace organized around one current understanding | **Early Access** |
+| **Engineering Advisor, Opinion, Reasoning, Experience** | The read a senior engineer would add to a verdict; an owned position on an incident; honest ✓/⚠ confidence factors; recall of your own similar past incidents when material. [Engineering intelligence](/intelligence/overview) | **Live-proven**, Professional and Enterprise |
+| **Incident workspace** | A shared incident conversation organized around one current understanding, with an accountable owner, a decision log, an inbox and the AI participant. [Details](/investigate/incident-workspace) | **Live-proven** (AI participant: Professional and Enterprise) |
+| **Code Graph** | A graph of your repositories' symbols and relations, built in your cluster, queried from a change record, by root-cause analysis and by MCP clients. Only the graph leaves your cluster. [Details](/investigate/code-graph) | **Live**, opt in per install |
 | **Realms** | A tenant split into production and test with separate authority | **Roadmap** |
 | **SSO/SAML; self-hosted inference for judgment and reasoning** | Planned. (An optional Edge-side NVIDIA NIM setting exists for on-cluster scan analysis only — see [AI analysis](/ai/overview).) | **Roadmap** |
 | **Governed autonomous change beyond Kubernetes** | The same judgment, Permit and verification wherever a production change originates, for every actor that can act on infrastructure | **Vision** |
 
 ## What ChangeGuard AI does not do today
 
-- **It does not learn from every change.** The outcome record is instrumented — a verdict is recorded before a change and what followed is recorded after — so that prediction can be measured against reality. No model, threshold, policy or prompt is modified by an outcome. Recall of similar past incidents (Early Access) is retrieval, not retraining.
+- **It does not learn from every change.** The outcome record is instrumented — a verdict is recorded before a change and what followed is recorded after — so that prediction can be measured against reality. No model, threshold, policy or prompt is modified by an outcome. Recall of your own similar past incidents ([Engineering Experience](/intelligence/engineering-experience)) is retrieval, not retraining.
 - **It does not act on its own by default.** Every environment starts in Advise. Auto is opt-in and policy-bounded.
 - **It does not cover infrastructure beyond Kubernetes.** Terraform, IAM, cloud resources, networking and databases are vision, not shipping capability.
 - **It does not hold a certification.** SOC 2, ISO 27001 and FedRAMP are not claimed. See [Testing and assurance](/security/testing-and-assurance) for what _is_ proven.
 
 ## A note on honesty
 
-If a capability isn't labeled **Live** or **Live-proven** above, treat it as not-yet-generally-available and check with your ChangeGuard AI contact before depending on it. The [website](https://changeguard.ai) uses these exact same labels — so what you evaluate is what you can turn on.
+If a capability isn't labeled **Live**, **Live-proven** or **Supported** above, treat it as not-yet-generally-available and check with your ChangeGuard AI contact before depending on it. The [website](https://changeguard.ai) uses these exact same labels — so what you evaluate is what you can turn on.
