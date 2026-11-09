@@ -1,0 +1,54 @@
+---
+title: "Engineering intelligence"
+sidebarTitle: "Overview"
+description: "What ChangeGuard AI adds to a judgment and an incident, how it is grounded in evidence, who gets it, and how to turn it on or off."
+keywords: ["engineering advisor", "engineering opinion", "engineering reasoning", "engineering experience", "AI incident analysis", "Amazon Bedrock"]
+---
+
+Engineering intelligence is the part of ChangeGuard AI that reads like a senior engineer: it adds context to a pre-flight judgment, takes an owned position on an incident, shows the reasoning behind its confidence, and recalls what happened the last time something similar broke. It is **generally available** since the release of 7 November 2026.
+
+It never decides for you. A verdict stays SHIP, HOLD or BLOCK on the evidence; advice stays advice; execution still needs a [Permit](/govern/permit).
+
+## The four capabilities
+
+| Capability | Where it appears | What it adds | Needs |
+| --- | --- | --- | --- |
+| [Engineering Advisor](/get-started/engineering-advisor) | Beside a pre-flight verdict, on the dashboard check and in CI | The one or two things to raise before shipping into this environment: an active incident in it, a bad recent change record on it. Silent when nothing is material. | Professional or Enterprise; live environment evidence |
+| [Engineering Opinion](/intelligence/engineering-opinion) | The Investigation context of an incident | The most likely cause, a confidence in words, the competing explanation, what it cannot tell yet, what would change its mind, and one next move: investigate, wait, act or escalate | Professional or Enterprise; a root-cause analysis on the incident |
+| [Engineering Reasoning](/intelligence/engineering-reasoning) | Inside the opinion | What raises and lowers the confidence, as at most four factors from real signals, and why not the obvious move | Opinion on |
+| [Engineering Experience](/intelligence/engineering-experience) | Inside the opinion, as "Seen before" | The outcomes of past fixes on the same target and strong similar past incidents in your workspace, only when they changed the decision | Opinion on; recorded outcomes in your workspace |
+
+The two collaboration capabilities released with them are documented under Investigate: the [incident workspace](/investigate/incident-workspace) and the [Code Graph](/investigate/code-graph).
+
+## Grounded in evidence, explicit about uncertainty
+
+Every claim an opinion or an advisor note makes is bound to a record ChangeGuard AI holds: an incident, a change record, a root-cause analysis, an evidence line, a remediation outcome. A reason that cannot be attributed to evidence is dropped before you see it; an opinion with no attributable reason is rejected and not stored.
+
+Uncertainty is part of the output, not a footnote:
+
+- The Advisor says what it cannot see (`blindspots`) and stays silent below its materiality floors.
+- The Opinion carries a confidence between 5 and 95 percent, stated in words, with the open unknowns and the falsifier (what would change the call).
+- Reasoning factors are derived by the backend from the signals it has; they cannot weigh evidence the platform never saw.
+- Experience states similarity as similarity, never identity, and always with the backend's exact counts.
+
+Where there is no evidence to stand on, the capability stays quiet: an Advisor with no live environment evidence reports `no_environment_evidence`; an Opinion forms nothing without a root-cause analysis; Experience recalls nothing from a workspace without recorded outcomes.
+
+## Who gets it, and how to control it
+
+Availability is decided per tenant and per request from three inputs: the plan, your own setting, and the platform switch.
+
+| Input | Where | Effect |
+| --- | --- | --- |
+| Plan | Professional and Enterprise carry the Advisor (`advisor`) and the Opinion, Reasoning and Experience (`ai`). The 14-day evaluation and Starter do not. | A tenant without the entitlement is told so in the product (`not_entitled`) and no model call is spent for it. |
+| Your setting | **Settings > Engineering assistance**: one switch per capability, admin only, every change audited with who made it | Off means off for everyone in the workspace. Turning the Opinion off turns Reasoning and Experience off with it. |
+| Platform switch | Operated by ChangeGuard AI, deployment-wide | Used to stop a capability for every workspace in an emergency; the product then shows `unavailable` and your own setting is kept. |
+
+Each capability is on by default where the plan carries it; there is nothing to request or enrol in.
+
+## When the model is unavailable
+
+Judgments, the CSC Score, Permits, execution and verification make no model call and are unaffected by any model's availability. The capabilities on this page reach Amazon Bedrock through one router with a preferred model and a permanent, evaluated fallback; when neither can answer, the product says so in plain words and nothing is stored. See [Model availability](/intelligence/model-availability).
+
+## Challenge it
+
+You are supposed to push back. Every opinion lists the evidence it rests on; the incident conversation records what was observed and decided, in order; a re-run of the pre-flight updates a verdict when reality changed; and an override you make is recorded as evidence against the judgment's track record. See [How ChangeGuard AI makes decisions](/concepts/how-changeguard-decides).

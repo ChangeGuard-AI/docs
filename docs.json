@@ -72,7 +72,9 @@
           },
           {
             "group": "Engineering intelligence",
-            "pages": []
+            "pages": [
+              "intelligence/overview"
+            ]
           },
           {
             "group": "Govern",
