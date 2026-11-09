@@ -1,0 +1,60 @@
+---
+title: "Incident workspace"
+description: "The shared conversation on an incident for the people and the AI working it: comments, mentions, an accountable owner, the decision log, AI observations and replies, and an inbox. Generally available on every plan."
+keywords: ["incident workspace", "multiplayer incident", "incident collaboration", "@changeguard-ai", "inbox"]
+---
+
+Every incident has a **workspace**: one conversation, organized around one current understanding, for everyone working it. People comment and reply in threads, mention each other, assign an accountable owner and see every decision as it is made. The AI participant posts its observations and recommendations there, answers when it is mentioned, and summarizes on request.
+
+The AI holds no credentials and executes nothing in the workspace. Execution still flows only through the remediation engine, its policy checks and a [Permit](/govern/permit).
+
+## What is in the workspace
+
+- **Conversation**: comments and threaded replies, live over server-sent events, with keyset paging for long incidents.
+- **Owner**: one accountable human, assigned from your team. The AI can never be the owner.
+- **Decision log**: assignments, and the remediation approvals and rejections mirrored from the engine, in order.
+- **AI observations and recommendations**: the analysis engine's root cause and proposed fix, posted as they land.
+- **`@changeguard-ai` replies**: mention the AI participant in a comment and it answers in the thread, grounded in the incident's record.
+- **Summary**: an on-demand summary of the incident so far.
+- **Inbox**: your mentions across incidents, with manual read-marking.
+
+The incident **timeline** includes the conversation whenever the workspace is on for the tenant.
+
+## Membership and permissions
+
+| Action | Who |
+| --- | --- |
+| Read the workspace, comment, reply, mention | Any signed-in member of the tenant |
+| Edit a comment | Its author only. The author is always the authenticated user, never a field in the request. |
+| Assign the owner | Any member; the owner must be a real user of the tenant |
+| Approve or reject a remediation | Decided in the remediation engine under your Advise or Auto setting; the workspace mirrors the decision |
+| Turn the workspace off for the whole tenant | An admin, in **Settings > Engineering assistance**; the change is audited |
+
+Humans can post only ordinary comments; the AI's post kinds (observations, recommendations, replies, summaries) cannot be forged by a person.
+
+## The AI participant
+
+| Plan | Human workspace | AI participant |
+| --- | --- | --- |
+| 14-day evaluation, Starter | Yes | No. A mention is recorded (`ai_mentioned: false`, `ai_unavailable: not_entitled`) and no model call is spent. |
+| Professional, Enterprise | Yes | Yes: replies, summaries and analysis posts (plan feature `ai`) |
+
+Replies and opinions share a budget of 20 per incident and 100 per workspace per hour, so a mention loop cannot run up model spend. A reply the model fails to produce is reported in the conversation in plain words. Replies are formed on Amazon Bedrock with the same preferred-and-fallback routing as the other AI capabilities and carry the same provenance; see [Model availability](/intelligence/model-availability).
+
+## API
+
+`GET /api/incidents/{id}/workspace` (participants, the first page of the conversation, `next_before` and `next_before_id` cursors, `ai_identity`, `ai_participation`); `GET` and `POST /api/incidents/{id}/comments`; `PATCH /api/incidents/{id}/comments/{cid}`; `POST /api/incidents/{id}/assign`; `GET /api/incidents/{id}/decisions`; `POST /api/incidents/{id}/summary` (plan `ai`); `GET /api/directory/users`; `GET /api/inbox`; `POST /api/inbox/{id}/read`. Every route answers 404 `disabled` when the workspace is off for the tenant.
+
+## Prerequisites and limits
+
+| | |
+| --- | --- |
+| Plan | Every plan for the human workspace; the AI participant needs Professional or Enterprise. An expired evaluation keeps reading its incidents and conversations. |
+| Setting | **Settings > Engineering assistance > Incident workspace**, on by default. Off removes the conversation from the timeline too; nothing from it is shown anywhere. |
+| Limits | Live delivery is best-effort (the panel polls while waiting on the AI and refetches on events); the inbox is per user and read-marking is manual; the AI summary is on demand only. |
+
+## Related
+
+- [The change record](/start-here/the-change-record)
+- [Code Graph](/investigate/code-graph)
+- [Audit trail](/autonomy/audit-trail)

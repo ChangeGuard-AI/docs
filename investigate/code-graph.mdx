@@ -1,0 +1,60 @@
+---
+title: "Code Graph"
+description: "A knowledge graph of your repositories, built in your cluster and queried from a change record, from MCP clients and by root-cause analysis. Only the graph leaves your cluster, never the source. Generally available on every plan; you opt in per install."
+keywords: ["code graph", "repository knowledge graph", "source code relationships", "incident investigation", "graphify"]
+---
+
+The **Code Graph** connects a change to the code behind it. For the repositories you choose, an indexer running in your cluster builds a deterministic graph of functions, types, files and their relations, and ships **only the graph** to ChangeGuard AI. On a change record that names one of those repositories you can search the symbols the change touches and follow their relations; root-cause analysis cites the graph as the code behind a change; MCP clients can query it.
+
+It is generally available on every plan, and it is **off until you turn it on in your install**: cloning your repositories inside your cluster is your decision.
+
+## What leaves your cluster
+
+| Stays in your cluster | Sent to ChangeGuard AI |
+| --- | --- |
+| The cloned repositories and every line of source | The graph: symbol names, file paths, relation edges, the commit SHA, counts |
+| Any credential the clone used | Nothing about the credential |
+
+The indexer runs as a CronJob from a pinned [graphify](https://pypi.org/project/graphifyy/) release (`0.9.103`, verified deterministic: two runs of the same commit produce the same graph), as non-root with all capabilities dropped. The report is capped at 64 KiB and a graph at 32 MiB; five snapshots per repository are kept and older ones pruned.
+
+## Turn it on
+
+In the Edge chart (`changeguard-operator`), set the repositories to index and enable the indexer:
+
+```yaml
+codeGraph:
+  enabled: true
+  schedule: "0 3 * * *"          # nightly by default
+  graphifyVersion: "0.9.103"     # pinned; change deliberately
+  repos:
+    - https://github.com/your-org/your-service.git
+```
+
+Private repositories need a URL form your cluster can clone without a prompt (HTTPS with a token, or an internal mirror). The indexer posts to `POST /api/ingest/codegraph` with the environment's agent key, under the same enrollment boundary as every other ingest; a graph with no nodes or with id-less nodes is rejected (400) and never replaces a good snapshot.
+
+The first graph appears after the first scheduled run. Until then the change record's Code Graph panel says what would index it.
+
+## Where you use it
+
+- **A change record** that names an indexed repository (matched by its `owner/name`): the panel shows what is indexed (repository, snapshot, symbol and relation counts, when), a search box, matching symbols with keyboard-operable expansion, and each symbol's direct relations with their files. Search is substring, not semantic.
+- **Root-cause analysis**: the graph is cited as the code behind the change; it never stands in for runtime or CI evidence.
+- **MCP clients**: `changeguard_code_graph_search` and `changeguard_code_graph_node` on the ChangeGuard MCP server.
+
+## Permissions and control
+
+| | |
+| --- | --- |
+| Plan | Every plan, including the 14-day evaluation. A suspended account has nothing. |
+| Setting | **Settings > Engineering assistance > Code Graph**, admin only, audited. Off stops ingest (403 `disabled`, nothing stored), queries (404 `disabled`) and the code context in root-cause analysis. |
+| Install | `codeGraph.enabled` in the chart, off by default. The install-side switch is yours; the product cannot turn it on for you. |
+| Isolation | Graphs are stored per tenant under row-level security; one tenant's graph is never visible to another. |
+
+## Source-revision provenance
+
+Each snapshot records the commit SHA it was built from, and the panel shows it with the snapshot's age, so an investigation can tell whether the graph it is reading matches the revision that shipped.
+
+## Related
+
+- [Incident workspace](/investigate/incident-workspace)
+- [Security: data handling](/security/data-handling)
+- [Edge operator reference: Helm chart](/operator/helm-chart)

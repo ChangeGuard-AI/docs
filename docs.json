@@ -111,7 +111,10 @@
           },
           {
             "group": "Investigate",
-            "pages": []
+            "pages": [
+              "investigate/incident-workspace",
+              "investigate/code-graph"
+            ]
           },
           {
             "group": "Security",
