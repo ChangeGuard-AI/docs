@@ -1,0 +1,39 @@
+---
+title: "Engineering Experience"
+description: "Your workspace's own engineering history, recalled into an opinion only when it changes the decision: past fix outcomes on the same target and strong similar incidents. Generally available with the Engineering Opinion."
+keywords: ["engineering experience", "tenant memory", "institutional memory", "similar incidents", "historical context"]
+---
+
+**Engineering Experience** is institutional memory: what happened the last time a fix was applied to this target, and what strong similar incidents in your workspace looked like. It is recalled into an [Engineering Opinion](/intelligence/engineering-opinion) and shown as **Seen before**, only when the history actually changed the decision.
+
+It is one input to a decision, never a decision. Similarity is stated as similarity, never as identity.
+
+## What it recalls
+
+| Memory | Source | Shown as |
+| --- | --- | --- |
+| Terminal outcomes of past fixes on the same target | Remediation records in your workspace: verified, rolled back, failed, with the sample size (this incident excluded) | Exact counts from the backend, for example "2 of 3 fixes on this target rolled back", with citations to the real remediation records |
+| Strong similar past incidents | Incidents in your workspace whose stored embeddings are at least 0.55 similar | Cited incidents, marked as similar, with the backend's count |
+
+Recall has a restraint gate. It is eligible only when there is a failure or rollback on record, at least two terminal outcomes on the target, or a strong similar incident. Below that, nothing is recalled and nothing is shown.
+
+## What "tenant memory" means for your data
+
+- Memory is **per workspace**. It is built only from your own incidents and remediation outcomes; it never reads another tenant's history.
+- It is **retrieval, not retraining**. No model, threshold, policy or prompt is modified by an outcome. The embeddings used for similarity are stored per tenant and read under the same row-level isolation as everything else.
+- It only exists where there is history. A workspace with no reported outcomes has nothing to recall, and the product says so by staying quiet.
+
+## Prerequisites and limits
+
+| | |
+| --- | --- |
+| Plan | Professional or Enterprise (plan feature `ai`). |
+| Setting | **Settings > Engineering assistance > Engineering Experience**; requires the Engineering Opinion to be on. |
+| History | Recorded terminal outcomes and stored incident embeddings in your workspace. Report outcomes to build it. |
+| Limits | Recall is per workspace and only from recorded outcomes; similarity is embedding proximity, stated as such. |
+
+## Related
+
+- [Engineering intelligence overview](/intelligence/overview)
+- [Engineering Reasoning](/intelligence/engineering-reasoning)
+- [Security: data handling](/security/data-handling)

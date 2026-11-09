@@ -75,7 +75,9 @@
             "pages": [
               "intelligence/overview",
               "intelligence/engineering-opinion",
-              "intelligence/engineering-reasoning"
+              "intelligence/engineering-reasoning",
+              "intelligence/engineering-experience",
+              "intelligence/model-availability"
             ]
           },
           {
