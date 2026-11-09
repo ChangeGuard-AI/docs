@@ -48,7 +48,7 @@ The November 2026 releases added capabilities that use AI models and, optionally
 
 ### Judgment and execution make no model call
 
-SHIP / HOLD / BLOCK, the CSC Score, Permits, execution and verification are deterministic and never call a model. The AI participant in the incident workspace holds no credentials and executes nothing; execution still flows only through the remediation engine, its policy checks and a [Permit](/govern/permit). An AI result is advice with provenance, never an authorization.
+SHIP / HOLD / BLOCK, the CSC Score, Permits, execution and verification are deterministic and never call a model. Neither does the Engineering Advisor: it is a projection over the incidents and change records the platform already holds. The AI participant in the incident workspace holds no credentials and executes nothing; execution still flows only through the remediation engine, its policy checks and a [Permit](/govern/permit). An AI result is advice with provenance, never an authorization.
 
 ### AI models on Amazon Bedrock
 
@@ -58,7 +58,6 @@ Every AI capability reaches Amazon Bedrock through one router in the control pla
 
 | Capability | Sent to the model | Never sent |
 | --- | --- | --- |
-| Engineering Advisor | The environment's current state and recent record (evidence from Fleet or Edge) | The diff of the change |
 | Engineering Opinion, Reasoning, Experience | The root-cause analysis, its cited evidence and any recalled experience from your own workspace | The raw diff, Secret values, source code |
 | Incident workspace (`@changeguard-ai` replies, summaries) | The incident's record and the conversation it is asked about | Anything outside that incident |
 | Root-cause analysis | The incident's evidence and, where a repository is indexed, the Code Graph as the code behind the change | Source code |

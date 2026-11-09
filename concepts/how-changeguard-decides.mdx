@@ -18,7 +18,7 @@ Every recommendation flows through the same chain — and each stage is labeled 
 | **Engineering Advisor** | The senior-engineer read before a change proceeds, surfaced only when it materially helps. [Details](/get-started/engineering-advisor) | Professional and Enterprise |
 | **Verification** | After any applied fix: confirmation against real workload health before success is claimed — and one audited rollback if it fails. | Every paid plan, with execution enabled |
 
-What every tenant has: the deterministic **CSC Score**, the **SHIP / HOLD / BLOCK** pre-flight verdict, and **incident investigation with cited evidence**. The intelligence stages add judgment on top — they never replace the evidence discipline underneath, and an admin can turn any of them off in **Settings > Engineering assistance**. They run on Amazon Bedrock with a preferred model and a permanent fallback; when no model can answer, the product says so and the deterministic stages are unaffected ([model availability](/intelligence/model-availability)).
+What every tenant has: the deterministic **CSC Score**, the **SHIP / HOLD / BLOCK** pre-flight verdict, and **incident investigation with cited evidence**. The intelligence stages add judgment on top — they never replace the evidence discipline underneath, and an admin can turn any of them off in **Settings > Engineering assistance**. The Opinion, Experience and Reason stages run on Amazon Bedrock with a preferred model and a permanent fallback; the Advisor is a projection over records the platform already holds and makes no model call. When no model can answer, the product says so and the deterministic stages are unaffected ([model availability](/intelligence/model-availability)).
 
 ## Why the Advisor sometimes says nothing
 

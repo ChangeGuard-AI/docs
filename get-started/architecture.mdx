@@ -114,7 +114,7 @@ flowchart TB
     correlate["Correlate change → impact"]
     csc["Compute CSC Score (deterministic)"]
     rca["Root-cause analysis + evidence"]
-    advisor["AI reasoning<br/>(Advisor / Opinion / Reasoning / Experience)"]
+    advisor["AI reasoning<br/>(Opinion / Reasoning / Experience)"]
     correlate --> csc
     correlate --> rca
     rca --> advisor
@@ -122,7 +122,7 @@ flowchart TB
 ```
 
 <Note>
-  The deterministic **CSC Score** and the **AI reasoning** capabilities are distinct. Scoring is deterministic, makes no model call and is available on every plan; the reasoning layers (Engineering Advisor, Engineering Opinion, Reasoning and Experience) are generally available on the Professional and Enterprise plans, on by default, and switchable per workspace in **Settings → Engineering assistance**. See [Engineering intelligence](/intelligence/overview) and [Product concepts](/concepts/overview).
+  The deterministic **CSC Score** and the **AI reasoning** capabilities are distinct. Scoring is deterministic, makes no model call and is available on every plan. The engineering-intelligence layers are generally available on the Professional and Enterprise plans, on by default, and switchable per workspace in **Settings → Engineering assistance**: the Engineering Advisor is a projection over records the platform already holds and makes no model call; the Engineering Opinion, with Reasoning and Experience, is formed by a model on Amazon Bedrock. See [Engineering intelligence](/intelligence/overview) and [Product concepts](/concepts/overview).
 </Note>
 
 ## The execution path
