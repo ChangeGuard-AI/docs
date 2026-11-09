@@ -66,14 +66,14 @@
               "how-it-works",
               "concepts/how-changeguard-decides",
               "platform/csc-score",
-              "gate-your-pipeline",
-              "get-started/engineering-advisor"
+              "gate-your-pipeline"
             ]
           },
           {
             "group": "Engineering intelligence",
             "pages": [
               "intelligence/overview",
+              "get-started/engineering-advisor",
               "intelligence/engineering-opinion",
               "intelligence/engineering-reasoning",
               "intelligence/engineering-experience",
