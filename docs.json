@@ -66,8 +66,18 @@
               "how-it-works",
               "concepts/how-changeguard-decides",
               "platform/csc-score",
-              "gate-your-pipeline",
-              "get-started/engineering-advisor"
+              "gate-your-pipeline"
+            ]
+          },
+          {
+            "group": "Engineering intelligence",
+            "pages": [
+              "intelligence/overview",
+              "get-started/engineering-advisor",
+              "intelligence/engineering-opinion",
+              "intelligence/engineering-reasoning",
+              "intelligence/engineering-experience",
+              "intelligence/model-availability"
             ]
           },
           {
@@ -97,6 +107,13 @@
               "autonomy/verification",
               "autonomy/compensating-actions",
               "autonomy/audit-trail"
+            ]
+          },
+          {
+            "group": "Investigate",
+            "pages": [
+              "investigate/incident-workspace",
+              "investigate/code-graph"
             ]
           },
           {
@@ -164,6 +181,7 @@
           {
             "group": "Releases & roadmap",
             "pages": [
+              "releases/ga-engineering-intelligence",
               "concepts/limitations-and-roadmap",
               "changelog"
             ]

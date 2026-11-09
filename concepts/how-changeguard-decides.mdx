@@ -7,18 +7,18 @@ This is the page to read before trusting a recommendation. It is not an AI archi
 
 ## The decision pipeline
 
-Every recommendation flows through the same chain — and each stage is labeled by maturity, so you know what ships today:
+Every recommendation flows through the same chain — and each stage is labeled by availability, so you know what applies to you:
 
-| Stage | What it contributes | Maturity |
+| Stage | What it contributes | Availability |
 | --- | --- | --- |
-| **Evidence** | Cluster state, deployments and their diffs, GitOps sync history, events, scan findings, incident timelines — the raw record. Every claim downstream must cite it. | GA |
-| **Opinion** | An owned position on an incident: belief, confidence, the tradeoff taken, and open unknowns. | Early Access |
-| **Experience** | Institutional memory — what similar past incidents did — woven in only when it changes the decision. | Early Access |
-| **Reason** | Honest ✓ / ⚠ confidence factors and "why not the obvious move." | Early Access |
-| **Engineering Advisor** | The senior-engineer read before a change proceeds, surfaced only when it materially helps. | Early Access |
-| **Verification** | After any applied fix: confirmation against real workload health before success is claimed — and one audited rollback if it fails. | GA (with opt-in remediation) |
+| **Evidence** | Cluster state, deployments and their diffs, GitOps sync history, events, scan findings, incident timelines — the raw record. Every claim downstream must cite it. | Every plan |
+| **Opinion** | An owned position on an incident: belief, confidence, the tradeoff taken, and open unknowns. [Details](/intelligence/engineering-opinion) | Professional and Enterprise |
+| **Experience** | Institutional memory — what similar past incidents in your workspace did — woven in only when it changes the decision. [Details](/intelligence/engineering-experience) | Professional and Enterprise, with the Opinion |
+| **Reason** | Honest ✓ / ⚠ confidence factors and "why not the obvious move." [Details](/intelligence/engineering-reasoning) | Professional and Enterprise, with the Opinion |
+| **Engineering Advisor** | The senior-engineer read before a change proceeds, surfaced only when it materially helps. [Details](/get-started/engineering-advisor) | Professional and Enterprise |
+| **Verification** | After any applied fix: confirmation against real workload health before success is claimed — and one audited rollback if it fails. | Every paid plan, with execution enabled |
 
-What every tenant has today, GA: the deterministic **CSC Score**, the **SHIP / HOLD / BLOCK** pre-flight verdict, and **incident investigation with cited evidence**. The Early Access stages add judgment on top — they never replace the evidence discipline underneath.
+What every tenant has: the deterministic **CSC Score**, the **SHIP / HOLD / BLOCK** pre-flight verdict, and **incident investigation with cited evidence**. The intelligence stages add judgment on top — they never replace the evidence discipline underneath, and an admin can turn any of them off in **Settings > Engineering assistance**. The Opinion, Experience and Reason stages run on Amazon Bedrock with a preferred model and a permanent fallback; the Advisor is a projection over records the platform already holds and makes no model call. When no model can answer, the product says so and the deterministic stages are unaffected ([model availability](/intelligence/model-availability)).
 
 ## Why the Advisor sometimes says nothing
 
@@ -43,4 +43,4 @@ You are supposed to push back. The product is built to make that cheap:
   That last point is the accountability loop: ChangeGuard AI keeps score on itself. Prevented incidents, false positives, and missed failures are tracked per tenant from real outcomes — not self-reported.
 </Note>
 
-See it end-to-end on [Your First Recommendation](/get-started/first-30-minutes), or meet the judgment layer on [Engineering Advisor](/get-started/engineering-advisor).
+See it end-to-end on [Your First Recommendation](/get-started/first-30-minutes), or start with the [engineering intelligence overview](/intelligence/overview).

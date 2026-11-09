@@ -1,0 +1,51 @@
+---
+title: "Model availability and degraded behavior"
+sidebarTitle: "Model availability"
+description: "Which AI models ChangeGuard AI uses on Amazon Bedrock, how it fails over to a permanent fallback, what each result records about the model that produced it, and what you see when no model can answer."
+keywords: ["Amazon Bedrock", "Claude", "Kimi K3.1", "model fallback", "AI availability", "provenance"]
+---
+
+Every AI capability in ChangeGuard AI reaches Amazon Bedrock through one router in the control plane. Nothing about judgment depends on it: **SHIP / HOLD / BLOCK, the CSC Score, Permits, execution and verification make no model call.**
+
+## The models
+
+| Role | Model | Where it runs |
+| --- | --- | --- |
+| Preferred | Anthropic Claude (Opus 4.6) on Amazon Bedrock | Amazon Bedrock, US cross-Region inference (us-east-1, us-east-2, us-west-2) |
+| Permanent fallback | Kimi K3.1 (Moonshot AI) on Amazon Bedrock | Amazon Bedrock, US cross-Region inference (the same three Regions) |
+
+The fallback is a permanent part of the architecture. It stays configured, permitted, tested and monitored whether or not the preferred model is available; recovery of the preferred model never removes it. It was selected from a 30-scenario evaluation against Amazon Nova Pro using ChangeGuard AI's production prompts and validators (76 real calls per model); it serves only the operations it passed: the Engineering Opinion (with Reasoning and Experience), root-cause analysis, `@changeguard-ai` replies, incident summaries and change predictions.
+
+Requests are processed in the United States: the US inference profile may route a request to any of the three Regions listed. Amazon Bedrock does not share prompts or outputs with model providers, and neither AWS nor the providers use them to train models. ChangeGuard AI has not enabled Bedrock model-invocation logging.
+
+## How failover works
+
+1. The preferred model is tried first.
+2. Only an access or availability failure moves the request to the fallback: access denied, throttled, service unavailable, a timeout, or the preferred model's circuit being open after such failures. At most one fallback attempt per request.
+3. An answer is never second-guessed. A read you may not like is not a reason to ask another model, and a request the model rejected or a filtered or empty answer is not retried elsewhere.
+4. A circuit breaker opens after repeated availability failures and probes the preferred model by itself; when it answers again, it serves again. Recovery needs no action from anyone.
+
+Operations that were not part of the evaluation have no fallback and fail closed while the preferred model is unavailable: Ask ChangeGuard, the weekly digest, the AI paragraph under pre-flight and validation verdicts (the verdict itself is unaffected), and the drafting of workload patches, which stays on the preferred model by policy.
+
+## What you see
+
+| Situation | What the product shows |
+| --- | --- |
+| The preferred model answered | The read, as usual. |
+| The fallback answered | The read, with its provenance on the opinion card: *Formed by the fallback model, Kimi K3.1 (Moonshot AI), on Amazon Bedrock while the preferred model was unavailable.* The same checks and validators apply; there is no separate experience per model. |
+| No model could answer | Plain words and a reference, for example *the AI model is unavailable right now; try again in a few minutes (reference m...)*. Nothing is stored and nothing is posted. The reference lets support find the request. |
+| A capability has no fallback and the preferred model is unavailable | The AI-written part is absent; everything deterministic around it (the verdict, the findings) is unchanged. |
+
+## Provenance in the record
+
+Every AI result and its audit row record the model that answered, its provider and role (primary or fallback), why the fallback was used, the prompt version, token usage, latency, a correlation id and the Bedrock request ids. Customers read plain words and a reference; the provider's own error text stays in ChangeGuard AI's operational logs. Prompts are never logged.
+
+## Verified in production
+
+The failover was exercised against real Amazon Bedrock on 9 November 2026 with the production configuration: the preferred model refused for the account, every approved operation answered by the fallback and passing the production validators, and a real both-models-down run reading as unavailable. The production acceptance that day formed an Engineering Opinion on the fallback, persisted it, audited it with the router's provenance and showed it in the product with the line above. Details and evidence are in the release notes: [Engineering intelligence GA release](/releases/ga-engineering-intelligence).
+
+## Related
+
+- [Engineering intelligence overview](/intelligence/overview)
+- [Security: data handling](/security/data-handling)
+- [Known limitations and roadmap](/concepts/limitations-and-roadmap)
