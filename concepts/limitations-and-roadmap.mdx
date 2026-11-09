@@ -1,9 +1,9 @@
 ---
 title: "Known limitations and roadmap"
-description: "One consolidated, honest list: what is live and live-proven today, what is supported, what is Early Access, what is roadmap, what is vision — and what isn't supported yet."
+description: "One consolidated, honest list: what is live and live-proven today, what is supported, what is roadmap, what is vision, and what isn't supported yet."
 ---
 
-Expectations you can plan around, in one place, using the same claim classes as the rest of the product: **Live** = running in production for every tenant (plan gating noted); **Live-proven** = running in production _and_ exercised end to end by production acceptance and continuous security testing; **Supported** = available, used where the topology calls for it; **Early Access** = real but off by default and not self-serve; **Roadmap** = planned, not shipping; **Vision** = direction, not a feature; **Not yet supported** means exactly that — don't design around it until it moves.
+Expectations you can plan around, in one place, using the same claim classes as the rest of the product: **Live** = running in production, generally available (plan gating noted); **Live-proven** = running in production _and_ exercised end to end by production acceptance and continuous security testing; **Supported** = available, used where the topology calls for it; **Roadmap** = planned, not shipping; **Vision** = direction, not a feature; **Not yet supported** means exactly that — don't design around it until it moves. No capability is in Early Access as of the November 2026 releases.
 
 ## Judgment, authority, execution, outcome
 
@@ -32,13 +32,17 @@ Expectations you can plan around, in one place, using the same claim classes as 
 | Argo CD / Flux change discovery | **Supported** (Edge) | Fleet-only environments do not read GitOps controller state. |
 | Collector resource tuning | **Supported** (chart ≥ 5.3.6) | Defaults 25m/64Mi requests, 500m/512Mi limits; override via `agent.collector.resources`. |
 
-## Reasoning and collaboration
+## Engineering intelligence and investigation
+
+Generally available since 7 November 2026 ([release notes](/releases/ga-engineering-intelligence)). Each capability is on by default where the plan carries it, and an admin can turn it off in **Settings > Engineering assistance**.
 
 | Capability | Status | Notes |
 | --- | --- | --- |
-| Engineering Advisor / Opinion / Experience / Reasoning factors | **Early Access** | Off by default, per-tenant flags — [the full list](/concepts/overview). |
-| Multiplayer incident workspace | **Early Access** | Flag `WORKSPACE_ENABLED`. |
-| Code Graph (repo knowledge graphs for investigation) | **Early Access** | Ships in the Edge chart, off by default (`codeGraph.enabled`). |
+| Engineering Advisor | **Live-proven** (Professional, Enterprise) | Beside the verdict on both judgment surfaces; needs live environment evidence; silent when nothing is material. [Details](/get-started/engineering-advisor) |
+| Engineering Opinion, with Reasoning and Experience | **Live-proven** (Professional, Enterprise) | Forms from a root-cause analysis; recommends, never executes. Reasoning and Experience require the Opinion. [Details](/intelligence/overview) |
+| Incident workspace | **Live-proven** (every plan; the AI participant on Professional and Enterprise) | The conversation, owner, decision log and inbox on every incident. [Details](/investigate/incident-workspace) |
+| Code Graph | **Live** (every plan) | Built in your cluster by the Edge indexer; off in the chart until you set `codeGraph.enabled`. Only the graph leaves your cluster. [Details](/investigate/code-graph) |
+| AI model fallback | **Live-proven** | Every AI capability fails over from the preferred model (Anthropic Claude) to a permanent, evaluated fallback (Kimi K3.1 on Amazon Bedrock) on access or availability failures, with provenance on every result. Ask ChangeGuard is not covered. [Details](/intelligence/model-availability) |
 
 ## Buying and AWS validation
 
@@ -54,7 +58,8 @@ Expectations you can plan around, in one place, using the same claim classes as 
 | Realms — a tenant split into production and test with separate authority | **Roadmap** | Designed; not built, not shipping. |
 | SSO / SAML for app sign-in | **Roadmap** | Not available as of this release. |
 | Self-hosted inference for judgment and reasoning | **Roadmap** | Judgment and reasoning run on Amazon Bedrock in the control plane today. (An optional Edge-side NVIDIA NIM setting exists for on-cluster scan analysis only — see [AI analysis](/ai/overview).) |
-| Outcome-informed prediction | **Future** | Verdicts and outcomes are recorded so prediction can be measured against reality; no model, threshold, policy or prompt is modified by an outcome today. ChangeGuard does not "learn from every change". |
+| Outcome-informed prediction | **Future** | Verdicts and outcomes are recorded so prediction can be measured against reality; no model, threshold, policy or prompt is modified by an outcome today. ChangeGuard does not "learn from every change"; Engineering Experience is retrieval of your own records, not retraining. |
+| Model fallback for Ask ChangeGuard | **Roadmap** | Ask ChangeGuard still depends on the preferred model alone; the other AI capabilities fail over. |
 | Governed autonomous change beyond Kubernetes (Terraform, IAM, cloud resources, networking, databases) | **Vision** | The same judgment, Permit and verification wherever a production change originates. Not shipping. |
 
 ## Not yet supported
@@ -69,5 +74,5 @@ Expectations you can plan around, in one place, using the same claim classes as 
 | Formal certifications (SOC 2, ISO 27001, FedRAMP) | **Not held** | Not claimed. See [Testing and assurance](/security/testing-and-assurance) for what _is_ proven. |
 
 <Note>
-  This page is maintained with releases. If a capability isn't listed and isn't marked Live or Live-proven in [Core concepts](/concepts/overview), treat it as not-yet-available and ask before depending on it — we would rather tell you "not yet" than let a plan assume otherwise.
+  This page is maintained with releases. If a capability isn't listed and isn't marked Live, Live-proven or Supported in [Core concepts](/concepts/overview), treat it as not-yet-available and ask before depending on it — we would rather tell you "not yet" than let a plan assume otherwise.
 </Note>
