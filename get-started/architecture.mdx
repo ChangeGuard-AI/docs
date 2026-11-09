@@ -96,7 +96,7 @@ flowchart LR
 | Logs you explicitly ingest | — |
 
 <Note>
-  **Optional code graph.** If you enable the code-graph feature, ChangeGuard AI reads your repositories **in-cluster** and ships **only the derived knowledge graph** — never your raw source. Your source code still does not leave the cluster.
+  **Optional Code Graph.** If you enable the [Code Graph](/investigate/code-graph) in the Edge chart, an indexer in your cluster clones the repositories you list and ships **only the derived knowledge graph** (symbol names, file paths, relations and the commit SHA), never your raw source. Your source code still does not leave the cluster.
 </Note>
 
 <Info>
@@ -105,7 +105,7 @@ flowchart LR
 
 ## Where the AI runs
 
-All correlation, scoring, and AI reasoning run **in the control plane** — not in your cluster. AI analysis is powered by **Amazon Bedrock** (Claude models). The in-cluster collector does no analysis; it reads state and pushes it out. This keeps the cluster footprint tiny (one small collector pod with no persistent storage) and means model/analysis changes ship on the control-plane side without touching your cluster.
+All correlation, scoring, and AI reasoning run **in the control plane** — not in your cluster. AI analysis is powered by **Amazon Bedrock**: Anthropic Claude as the preferred model, with Kimi K3.1 (Moonshot AI) as a permanent, evaluated fallback for the operations it was evaluated for; see [Model availability](/intelligence/model-availability). The in-cluster collector does no analysis; it reads state and pushes it out. This keeps the cluster footprint tiny (one small collector pod with no persistent storage) and means model/analysis changes ship on the control-plane side without touching your cluster.
 
 ```mermaid
 flowchart TB
@@ -114,7 +114,7 @@ flowchart TB
     correlate["Correlate change → impact"]
     csc["Compute CSC Score (deterministic)"]
     rca["Root-cause analysis + evidence"]
-    advisor["AI reasoning<br/>(Advisor / Opinion — Early Access)"]
+    advisor["AI reasoning<br/>(Advisor / Opinion / Reasoning / Experience)"]
     correlate --> csc
     correlate --> rca
     rca --> advisor
@@ -122,7 +122,7 @@ flowchart TB
 ```
 
 <Note>
-  The deterministic **CSC Score** and the **AI reasoning** capabilities are distinct. Scoring is deterministic and generally available; the reasoning layers (Engineering Advisor, Engineering Opinion, and related) are **Early Access** and off by default. See [Product concepts](/concepts/overview).
+  The deterministic **CSC Score** and the **AI reasoning** capabilities are distinct. Scoring is deterministic, makes no model call and is available on every plan; the reasoning layers (Engineering Advisor, Engineering Opinion, Reasoning and Experience) are generally available on the Professional and Enterprise plans, on by default, and switchable per workspace in **Settings → Engineering assistance**. See [Engineering intelligence](/intelligence/overview) and [Product concepts](/concepts/overview).
 </Note>
 
 ## The execution path
