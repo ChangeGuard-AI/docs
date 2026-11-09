@@ -3,6 +3,16 @@ title: "Changelog"
 description: "Release history and what shipped when"
 ---
 
+## Engineering intelligence generally available, and model resilience, November 2026
+
+**7 November 2026 (application version `dev-ee18a835`).** The Engineering Advisor, Engineering Opinion, Engineering Reasoning and Engineering Experience, the incident workspace and the Code Graph are generally available: the Advisor, Opinion, Reasoning and Experience on the Professional and Enterprise plans; the incident workspace on every plan, with its AI participant on Professional and Enterprise; the Code Graph on every plan, off until you enable it in your install. Nothing is in Early Access. Availability resolves per tenant from your plan, your own setting and the platform switch, and fails closed. A new admin-only, audited control, **Settings → Engineering assistance**, turns each capability on or off per workspace. Nothing about judgment, authorization, execution or verification changed.
+
+**9 November 2026 (application version `dev-4f8b3e45`).** Every AI capability now reaches Amazon Bedrock through one router with a preferred model (Anthropic Claude) and a permanent, evaluated fallback (Kimi K3.1 by Moonshot AI, on Amazon Bedrock, US inference). Failover is narrow (access or availability failures only), at most one fallback attempt per request, with a circuit breaker that returns to the preferred model by itself. Every AI result records the model that produced it, and an opinion formed on the fallback says so on its card. Operations the fallback was not evaluated for fail closed while the preferred model is unavailable.
+
+Full notes, prerequisites, limitations and verification: [Engineering intelligence GA release](/releases/ga-engineering-intelligence). No schema migration and no action for existing installs; the Code Graph needs the Edge chart `5.3.12` or later.
+
+---
+
 ## AWS Marketplace and AWS Foundational Technical Review, October 2026
 
 - **Available in AWS Marketplace.** ChangeGuard AI has a public SaaS listing in AWS Marketplace. The 14-day free trial covers up to 10 EKS environments and does not become a paid subscription; execution stays off unless you set it up. [View the listing](https://aws.amazon.com/marketplace/pp/prodview-yfod2c6qxcfpk).
