@@ -21,8 +21,11 @@ Open **Environments → Connected environments**. Each card is one environment, 
 | **Autonomy** | Advise (default) or Auto |
 | **Freshness** | When evidence last arrived, against the 5-minute staleness bound and the 15-minute judgment bound |
 
-<Frame caption="Two EKS environments, both Ready on Fleet + Edge evidence, both execution-ready on the Cloud Executor, both in Advise — and each environment's latest Permit, including one revoked by a human.">
-  <img src="/images/connected-environments.jpg" alt="Connected environments: two EKS environments, each with status Ready, evidence source Fleet + Edge, judgment readiness Ready, execution Cloud Executor Ready, autonomy Advise, the latest Permit state and freshness" />
+<Frame caption="Two EKS environments in two states. northwind-prod is Ready on Edge evidence, executes through the Local Executor, runs in Advise, and its latest Permit was consumed and verified. changeguard-acceptance is authorized and connecting: its Cloud Executor is ready, but it has no evidence until Fleet's first read.">
+  <img
+    src="/images/connected-environments.jpg"
+    alt="Connected environments: northwind-prod with status Ready, evidence source Edge, judgment readiness Ready, execution Local Executor ready, autonomy Advise, latest Permit consumed and verified, updated seconds ago; changeguard-acceptance with status Connecting, no evidence yet, execution Cloud Executor ready, waiting for Fleet's first read"
+  />
 </Frame>
 
 ## Flows
